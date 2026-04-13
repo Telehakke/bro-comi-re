@@ -17,19 +17,21 @@ export class FileManager {
     static fromZip = async (zip: File): Promise<FileManager> => {
         const zipReader = new ZipReader(new BlobReader(zip));
         const entries = await zipReader.getEntries();
-        const images = entries.filter((entry) => {
-            const name = entry.filename;
-            if (name.startsWith("__")) return false;
-            if (name.startsWith(".")) return false;
-            if (name.endsWith(".jpg")) return true;
-            if (name.endsWith(".jpeg")) return true;
-            if (name.endsWith(".png")) return true;
-            if (name.endsWith(".webp")) return true;
-            if (name.endsWith(".avif")) return true;
-            if (name.endsWith(".heic")) return true;
-            if (name.endsWith(".jxl")) return true;
-            return false;
-        });
+        const images = entries
+            .filter((entry) => {
+                const name = entry.filename;
+                if (name.startsWith("__")) return false;
+                if (name.startsWith(".")) return false;
+                if (name.endsWith(".jpg")) return true;
+                if (name.endsWith(".jpeg")) return true;
+                if (name.endsWith(".png")) return true;
+                if (name.endsWith(".webp")) return true;
+                if (name.endsWith(".avif")) return true;
+                if (name.endsWith(".heic")) return true;
+                if (name.endsWith(".jxl")) return true;
+                return false;
+            })
+            .sort((a, b) => a.filename.localeCompare(b.filename));
         zipReader.close();
         return new FileManager(images);
     };
