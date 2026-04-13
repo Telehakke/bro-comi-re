@@ -27,6 +27,7 @@ export class FileManager {
             if (name.endsWith(".webp")) return true;
             if (name.endsWith(".avif")) return true;
             if (name.endsWith(".heic")) return true;
+            if (name.endsWith(".jxl")) return true;
             return false;
         });
         zipReader.close();
