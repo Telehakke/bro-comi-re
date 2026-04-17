@@ -3,8 +3,8 @@ import type { History } from "./appState";
 export class HistoryManager {
     readonly histories: readonly History[];
 
-    constructor(histories: readonly History[]) {
-        this.histories = histories;
+    constructor(histories?: readonly History[]) {
+        this.histories = histories ?? [];
     }
 
     readonly getIndex = (name: string): number | undefined => {
@@ -16,8 +16,9 @@ export class HistoryManager {
     };
 
     readonly update = (history: History): HistoryManager => {
-        return new HistoryManager(
-            this.histories.map((h) => (h.name === history.name ? history : h)),
+        const result = this.histories.map((h) =>
+            h.name === history.name ? history : h,
         );
+        return new HistoryManager(result);
     };
 }

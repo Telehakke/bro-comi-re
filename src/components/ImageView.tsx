@@ -1,173 +1,185 @@
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { CircleChevronLeft, CircleChevronRight } from "lucide-react";
 import React, {
     useEffect,
     useRef,
-    useState,
     type CSSProperties,
     type JSX,
+    type ReactNode,
 } from "react";
-import { Atom } from "../atoms";
+import { ActionAtom, Atom } from "../atoms";
 import { ScrollManager } from "../models/scrollManager";
 import { ZoomManager } from "../models/zoomManager";
 
+type Viewer = HTMLDivElement | null;
+type Image = HTMLImageElement | null;
+
+const onChevronLeftAtom = atom(false);
+const onChevronRightAtom = atom(false);
+
+const zoomInAtom = atom(null, (get, set) => {
+    const appStore = get(Atom.appStore);
+    const zoomManager = get(Atom.zoomManager).zoomIn(appStore.zoomStep);
+    set(Atom.zoomManager, zoomManager);
+    set(Atom.messageManager, (m) => m.setMessage(`${zoomManager.scale}%`));
+});
+
+const zoomOutAtom = atom(null, (get, set) => {
+    const appStore = get(Atom.appStore);
+    const zoomManager = get(Atom.zoomManager).zoomOut(appStore.zoomStep);
+    set(Atom.zoomManager, zoomManager);
+    set(Atom.messageManager, (m) => m.setMessage(`${zoomManager.scale}%`));
+});
+
+const goToLeftAtom = atom(null, (get, set, viewer: Viewer, image: Image) => {
+    if (viewer == null || image == null) return;
+    const { writingType } = get(Atom.appStore);
+    if (writingType === "vertical") {
+        set(ActionAtom.moveToNextPage);
+        set(ActionAtom.scrollToStart, viewer, image);
+    } else {
+        set(ActionAtom.moveToPreviousPage);
+        set(ActionAtom.scrollToEnd, viewer, image);
+    }
+    set(ActionAtom.updateHistory);
+});
+
+const goToRightAtom = atom(null, (get, set, viewer: Viewer, image: Image) => {
+    if (viewer == null || image == null) return;
+    const { writingType } = get(Atom.appStore);
+    if (writingType === "vertical") {
+        set(ActionAtom.moveToPreviousPage);
+        set(ActionAtom.scrollToEnd, viewer, image);
+    } else {
+        set(ActionAtom.moveToNextPage);
+        set(ActionAtom.scrollToStart, viewer, image);
+    }
+    set(ActionAtom.updateHistory);
+});
+
 export const ImageView = ({
     viewerRef,
-    imgRef,
+    imageRef,
 }: {
     viewerRef: React.RefObject<HTMLDivElement | null>;
-    imgRef: React.RefObject<HTMLImageElement | null>;
+    imageRef: React.RefObject<HTMLImageElement | null>;
+}): JSX.Element => {
+    const setZoomManager = useSetAtom(Atom.zoomManager);
+    const setScrollManager = useSetAtom(Atom.scrollManager);
+    const zoomIn = useSetAtom(zoomInAtom);
+    const zoomOut = useSetAtom(zoomOutAtom);
+    const goToLeft = useSetAtom(goToLeftAtom);
+    const goToRight = useSetAtom(goToRightAtom);
+
+    return (
+        <Viewer
+            viewerRef={viewerRef}
+            imageRef={imageRef}
+            onResize={(width, height) =>
+                setZoomManager((z) => z.setViewerSize({ width, height }))
+            }
+            onScroll={(element) => {
+                const image = imageRef.current;
+                if (image == null) return;
+                setScrollManager(
+                    ScrollManager.createFromElement(element, image),
+                );
+            }}
+            onDoubleClick={zoomIn}
+            onRightClick={zoomOut}
+            onLongPress={zoomOut}
+            onLeftSidePull={() => goToLeft(viewerRef.current, imageRef.current)}
+            onRightSidePull={() =>
+                goToRight(viewerRef.current, imageRef.current)
+            }
+        >
+            <Img viewerRef={viewerRef} imageRef={imageRef} />
+            <ChevronLeft />
+            <ChevronRight />
+        </Viewer>
+    );
+};
+
+/* -------------------------------------------------------------------------- */
+
+const Viewer = ({
+    viewerRef,
+    imageRef,
+    children,
+    onResize,
+    onScroll,
+    onDoubleClick,
+    onRightClick,
+    onLongPress,
+    onLeftSidePull,
+    onRightSidePull,
+}: {
+    viewerRef: React.RefObject<HTMLDivElement | null>;
+    imageRef: React.RefObject<HTMLImageElement | null>;
+    onResize: (width: number, height: number) => void;
+    onScroll: (element: HTMLDivElement) => void;
+    onDoubleClick: () => void;
+    onRightClick: () => void;
+    onLongPress: () => void;
+    onLeftSidePull: () => void;
+    onRightSidePull: () => void;
+    children: ReactNode;
 }): JSX.Element => {
     const timerId = useRef<number | undefined>(undefined);
-    const [zoomManager, setZoomManager] = useAtom(Atom.zoomManager);
-    const [imageBlob, setImageBlob] = useAtom(Atom.imageBlob);
-    const [src, setSrc] = useState<string | undefined>(undefined);
-    const [appStore, setAppStore] = useAtom(Atom.appStore);
-    const setToastMessage = useSetAtom(Atom.toastMessage);
-    const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
     const prevX = useRef(0);
     const scrollCount = useRef(0);
-    const [onChevronLeft, setOnChevronLeft] = useState(false);
-    const [onChevronRight, setOnChevronRight] = useState(false);
-    const setFileManager = useSetAtom(Atom.fileManager);
-    const zipFileName = useAtomValue(Atom.zipFileName);
-    const [historyManager, setHistoryManager] = useAtom(Atom.historyManager);
-
-    useEffect(() => {
-        if (!sharpeningFilter.hasSVG()) {
-            sharpeningFilter.addSVG();
-            const img = imgRef.current;
-            if (img != null) {
-                sharpeningFilter.applyFilter(img);
-            }
-        }
-        if (!appStore.onSharpeningFilter) {
-            sharpeningFilter.clearFilter();
-        } else {
-            sharpeningFilter.reapply();
-            sharpeningFilter.setStrength(appStore.sharpeningFilterStrength);
-        }
-    }, [appStore, imgRef, sharpeningFilter]);
+    const canDoubleClick = useRef(true);
+    const setOnChevronLeft = useSetAtom(onChevronLeftAtom);
+    const setOnChevronRight = useSetAtom(onChevronRightAtom);
 
     useEffect(() => {
         const viewer = viewerRef.current;
         if (viewer == null) return;
 
-        const observer = new ResizeObserver((entries) => {
-            entries.forEach(() => {
-                const width = viewer.clientWidth;
-                const height = viewer.clientHeight;
-                setZoomManager((z) => z.setViewerSize({ width, height }));
-            });
+        const observer = new ResizeObserver(() => {
+            const { clientWidth, clientHeight } = viewer;
+            onResize(clientWidth, clientHeight);
         });
         observer.observe(viewer);
-
         return (): void => {
             observer.disconnect();
         };
-    }, []);
-
-    useEffect(() => {
-        if (imageBlob == null) return;
-
-        const imageURL = URL.createObjectURL(imageBlob);
-        ((): void => {
-            setSrc(imageURL);
-        })();
-        return (): void => {
-            URL.revokeObjectURL(imageURL);
-        };
-    }, [imageBlob, imgRef]);
+    }, [onResize, viewerRef]);
 
     return (
         <div
             className="fixed inset-0 flex h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
             ref={viewerRef}
+            onScroll={(ev) => onScroll(ev.currentTarget)}
             onDoubleClick={() => {
-                setZoomManager((z) => {
-                    const newZoomManager = z.zoomIn(appStore.zoomStep);
-                    setToastMessage({
-                        text: `${newZoomManager.scale}%`,
-                        state: "visible",
-                    });
-                    return newZoomManager;
-                });
-
-                const viewer = viewerRef.current;
-                const img = imgRef.current;
-                if (viewer == null || img == null) return;
-
-                const scrollManager = ScrollManager.create(viewer, img);
-                setTimeout(() => {
-                    new ScrollManager(
-                        scrollManager.horizontalPercentage ?? 50,
-                        scrollManager.verticalPercentage ?? 0,
-                    ).applyScroll(viewer, img);
-                }, 10);
+                if (canDoubleClick.current) {
+                    onDoubleClick();
+                }
             }}
             onContextMenu={(ev) => {
                 ev.preventDefault();
-                setZoomManager((z) => {
-                    const newZoomManager = z.zoomOut(appStore.zoomStep);
-                    setToastMessage({
-                        text: `${newZoomManager.scale}%`,
-                        state: "visible",
-                    });
-                    return newZoomManager;
-                });
-
-                const viewer = viewerRef.current;
-                const img = imgRef.current;
-                if (viewer == null || img == null) return;
-
-                const scrollManager = ScrollManager.create(viewer, img);
-                setTimeout(() => {
-                    new ScrollManager(
-                        scrollManager.horizontalPercentage ?? 50,
-                        scrollManager.verticalPercentage ?? 0,
-                    ).applyScroll(viewer, img);
-                }, 10);
+                onRightClick();
             }}
             onTouchStart={(ev) => {
-                timerId.current = setTimeout(() => {
-                    setZoomManager((z) => {
-                        const newZoomManager = z.zoomOut(appStore.zoomStep);
-                        setToastMessage({
-                            text: `${newZoomManager.scale}%`,
-                            state: "visible",
-                        });
-                        return newZoomManager;
-                    });
-
-                    const viewer = viewerRef.current;
-                    const img = imgRef.current;
-                    if (viewer == null || img == null) return;
-
-                    const scrollManager = ScrollManager.create(viewer, img);
-                    setTimeout(() => {
-                        new ScrollManager(
-                            scrollManager.horizontalPercentage ?? 50,
-                            scrollManager.verticalPercentage ?? 0,
-                        ).applyScroll(viewer, img);
-                    }, 10);
+                timerId.current = window.setTimeout(() => {
+                    onLongPress();
+                    canDoubleClick.current = false;
                 }, 500);
                 prevX.current = ev.targetTouches[0].clientX;
                 scrollCount.current = 0;
+                canDoubleClick.current = true;
             }}
             onTouchMove={(ev) => {
-                clearTimeout(timerId.current);
+                window.clearTimeout(timerId.current);
 
                 const viewer = viewerRef.current;
-                const img = imgRef.current;
-                if (viewer == null || img == null) return;
+                const image = imageRef.current;
+                if (viewer == null || image == null) return;
 
-                const scrollManager = ScrollManager.create(viewer, img);
-                if (
-                    scrollManager.isHorizontalMin() ||
-                    scrollManager.isHorizontalMax()
-                ) {
-                    scrollCount.current +=
-                        prevX.current - ev.targetTouches[0].clientX;
+                const sm = ScrollManager.createFromElement(viewer, image);
+                if (sm.isHorizontalMin() || sm.isHorizontalMax()) {
+                    const x = ev.targetTouches[0].clientX;
+                    scrollCount.current += prevX.current - x;
                     if (scrollCount.current < -100) {
                         setOnChevronLeft(true);
                     } else if (scrollCount.current > 100) {
@@ -176,191 +188,110 @@ export const ImageView = ({
                         setOnChevronLeft(false);
                         setOnChevronRight(false);
                     }
-                    prevX.current = ev.targetTouches[0].clientX;
+                    prevX.current = x;
                 }
             }}
             onTouchEnd={() => {
-                clearTimeout(timerId.current);
+                window.clearTimeout(timerId.current);
                 setOnChevronLeft(false);
                 setOnChevronRight(false);
 
-                const viewer = viewerRef.current;
-                const img = imgRef.current;
-                if (viewer == null || img == null) return;
-
                 if (scrollCount.current < -100) {
-                    if (appStore.writingType === "vertical") {
-                        setFileManager((f) => {
-                            const newFileManager = f.incrementIndex();
-                            newFileManager.getBlob().then((blob) => {
-                                setImageBlob(blob);
-                                const scrollManager = new ScrollManager(0, 100);
-                                scrollManager
-                                    .next(
-                                        appStore.movementDirection,
-                                        appStore.writingType,
-                                        appStore.viewSplitCount,
-                                    )
-                                    .applyScroll(viewer, img);
-                                setToastMessage({
-                                    text: newFileManager.progress() ?? "",
-                                    state: "visible",
-                                });
-                                if (zipFileName != null) {
-                                    const newHistoryManager =
-                                        historyManager.update({
-                                            name: zipFileName,
-                                            index: newFileManager.index,
-                                        });
-                                    setHistoryManager(newHistoryManager);
-                                    setAppStore((a) =>
-                                        a.setHistories(
-                                            newHistoryManager.histories,
-                                        ),
-                                    );
-                                }
-                            });
-                            return newFileManager;
-                        });
-                    } else {
-                        setFileManager((f) => {
-                            const newFileManager = f.decrementIndex();
-                            newFileManager.getBlob().then((blob) => {
-                                setImageBlob(blob);
-                                const scrollManager = new ScrollManager(0, 0);
-                                scrollManager
-                                    .previous(
-                                        appStore.movementDirection,
-                                        appStore.writingType,
-                                        appStore.viewSplitCount,
-                                    )
-                                    .applyScroll(viewer, img);
-                                setToastMessage({
-                                    text: newFileManager.progress() ?? "",
-                                    state: "visible",
-                                });
-                                if (zipFileName != null) {
-                                    const newHistoryManager =
-                                        historyManager.update({
-                                            name: zipFileName,
-                                            index: newFileManager.index,
-                                        });
-                                    setHistoryManager(newHistoryManager);
-                                    setAppStore((a) =>
-                                        a.setHistories(
-                                            newHistoryManager.histories,
-                                        ),
-                                    );
-                                }
-                            });
-                            return newFileManager;
-                        });
-                    }
-                    return;
-                }
-                if (scrollCount.current > 100) {
-                    if (appStore.writingType === "vertical") {
-                        setFileManager((f) => {
-                            const newFileManager = f.decrementIndex();
-                            newFileManager.getBlob().then((blob) => {
-                                setImageBlob(blob);
-                                const scrollManager = new ScrollManager(100, 0);
-                                scrollManager
-                                    .previous(
-                                        appStore.movementDirection,
-                                        appStore.writingType,
-                                        appStore.viewSplitCount,
-                                    )
-                                    .applyScroll(viewer, img);
-                                setToastMessage({
-                                    text: newFileManager.progress() ?? "",
-                                    state: "visible",
-                                });
-                                if (zipFileName != null) {
-                                    const newHistoryManager =
-                                        historyManager.update({
-                                            name: zipFileName,
-                                            index: newFileManager.index,
-                                        });
-                                    setHistoryManager(newHistoryManager);
-                                    setAppStore((a) =>
-                                        a.setHistories(
-                                            newHistoryManager.histories,
-                                        ),
-                                    );
-                                }
-                            });
-                            return newFileManager;
-                        });
-                    } else {
-                        setFileManager((f) => {
-                            const newFileManager = f.incrementIndex();
-                            newFileManager.getBlob().then((blob) => {
-                                setImageBlob(blob);
-                                const scrollManager = new ScrollManager(
-                                    100,
-                                    100,
-                                );
-                                scrollManager
-                                    .next(
-                                        appStore.movementDirection,
-                                        appStore.writingType,
-                                        appStore.viewSplitCount,
-                                    )
-                                    .applyScroll(viewer, img);
-                                setToastMessage({
-                                    text: newFileManager.progress() ?? "",
-                                    state: "visible",
-                                });
-                                if (zipFileName != null) {
-                                    const newHistoryManager =
-                                        historyManager.update({
-                                            name: zipFileName,
-                                            index: newFileManager.index,
-                                        });
-                                    setHistoryManager(newHistoryManager);
-                                    setAppStore((a) =>
-                                        a.setHistories(
-                                            newHistoryManager.histories,
-                                        ),
-                                    );
-                                }
-                            });
-                            return newFileManager;
-                        });
-                    }
-                    return;
+                    onLeftSidePull();
+                } else if (scrollCount.current > 100) {
+                    onRightSidePull();
                 }
             }}
         >
-            <img
-                className="relative m-auto max-w-none"
-                ref={imgRef}
-                style={style(zoomManager)}
-                src={src}
-                onLoad={(ev) => {
-                    const width = ev.currentTarget.naturalWidth;
-                    const height = ev.currentTarget.naturalHeight;
-                    setZoomManager((z) => z.setImageSize({ width, height }));
-                }}
-            />
-            <div className="fixed inset-0" style={style(zoomManager)} />
-
-            {onChevronLeft && (
-                <div className="fixed inset-y-0 left-4 grid place-items-center">
-                    <CircleChevronLeft className="size-15 stroke-blue-500" />
-                </div>
-            )}
-            {onChevronRight && (
-                <div className="fixed inset-y-0 right-4 grid place-items-center">
-                    <CircleChevronRight className="size-15 stroke-blue-500" />
-                </div>
-            )}
+            {children}
         </div>
     );
 };
 
 /* -------------------------------------------------------------------------- */
+
+const Img = ({
+    viewerRef,
+    imageRef,
+}: {
+    viewerRef: React.RefObject<HTMLDivElement | null>;
+    imageRef: React.RefObject<HTMLImageElement | null>;
+}): JSX.Element => {
+    const divRef = useRef<HTMLDivElement | null>(null);
+    const imageBlob = useAtomValue(Atom.imageBlob);
+    const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
+    const appStore = useAtomValue(Atom.appStore);
+    const [zoomManager, setZoomManager] = useAtom(Atom.zoomManager);
+    const scrollManager = useAtomValue(Atom.scrollManager);
+
+    useEffect(() => {
+        const image = imageRef.current;
+        if (image == null || imageBlob == null) return;
+
+        const imageURL = URL.createObjectURL(imageBlob);
+        image.src = imageURL;
+        return (): void => {
+            URL.revokeObjectURL(imageURL);
+        };
+    }, [imageBlob, imageRef]);
+
+    useEffect(() => {
+        const image = imageRef.current;
+        if (image == null) return;
+
+        if (!sharpeningFilter.hasSVG()) {
+            sharpeningFilter.addSVG();
+            sharpeningFilter.setStrength(appStore.sharpeningFilterStrength);
+        }
+        if (appStore.onSharpeningFilter) {
+            sharpeningFilter.applyFilter(image);
+        } else {
+            sharpeningFilter.clearFilter(image);
+        }
+    }, [
+        appStore.onSharpeningFilter,
+        appStore.sharpeningFilterStrength,
+        imageRef,
+        sharpeningFilter,
+    ]);
+
+    useEffect(() => {
+        const viewer = viewerRef.current;
+        const image = imageRef.current;
+        const div = divRef.current;
+        if (viewer == null || image == null || div == null) return;
+
+        const observer = new MutationObserver(() => {
+            scrollManager.applyScroll(viewer, image);
+            div.style.minWidth = `${image.clientWidth}px`;
+            div.style.minHeight = `${image.clientHeight}px`;
+        });
+        observer.observe(image, { attributes: true });
+        return (): void => {
+            observer.disconnect();
+        };
+    }, [imageRef, scrollManager, viewerRef]);
+
+    const handleLoad = (
+        ev: React.SyntheticEvent<HTMLImageElement, Event>,
+    ): void => {
+        const width = ev.currentTarget.naturalWidth;
+        const height = ev.currentTarget.naturalHeight;
+        setZoomManager((z) => z.setImageSize({ width, height }));
+    };
+
+    return (
+        <>
+            <img
+                className="m-auto max-w-none"
+                ref={imageRef}
+                style={style(zoomManager)}
+                onLoad={handleLoad}
+            />
+            <div className="absolute inset-0" ref={divRef} />
+        </>
+    );
+};
 
 const style = (zoomManager: ZoomManager): CSSProperties => {
     const isHorizontalFit = zoomManager.isHorizontalFit();
@@ -368,6 +299,30 @@ const style = (zoomManager: ZoomManager): CSSProperties => {
     return {
         width: isHorizontalFit ? `${scale}%` : "auto",
         height: isHorizontalFit ? "auto" : `${scale}%`,
-        //WebkitTouchCallout: "none",
+        WebkitTouchCallout: "none",
     };
+};
+
+/* -------------------------------------------------------------------------- */
+
+const ChevronLeft = (): JSX.Element => {
+    const onChevronLeft = useAtomValue(onChevronLeftAtom);
+
+    if (!onChevronLeft) return <></>;
+    return (
+        <div className="fixed inset-y-0 left-4 grid place-items-center">
+            <CircleChevronLeft className="size-15 stroke-blue-500" />
+        </div>
+    );
+};
+
+const ChevronRight = (): JSX.Element => {
+    const onChevronRight = useAtomValue(onChevronRightAtom);
+
+    if (!onChevronRight) return <></>;
+    return (
+        <div className="fixed inset-y-0 right-4 grid place-items-center">
+            <CircleChevronRight className="size-15 stroke-blue-500" />
+        </div>
+    );
 };

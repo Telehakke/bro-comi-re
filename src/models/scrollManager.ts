@@ -9,41 +9,58 @@ const CENTER = 50;
 const MAX = 100;
 
 export class ScrollManager {
-    readonly horizontalPercentage: number | undefined;
-    readonly verticalPercentage: number | undefined;
+    readonly horizontalPercentage: number;
+    readonly verticalPercentage: number;
 
     constructor(horizontalPercentage?: number, verticalPercentage?: number) {
-        this.horizontalPercentage =
-            horizontalPercentage == null
-                ? undefined
-                : Math.max(Math.min(horizontalPercentage, MAX), MIN);
-        this.verticalPercentage =
-            verticalPercentage == null
-                ? undefined
-                : Math.max(Math.min(verticalPercentage, MAX), MIN);
+        this.horizontalPercentage = Math.max(
+            Math.min(horizontalPercentage ?? MIN, MAX),
+            MIN,
+        );
+        this.verticalPercentage = Math.max(
+            Math.min(verticalPercentage ?? MIN, MAX),
+            MIN,
+        );
     }
 
-    static readonly create = (
-        viewer: HTMLElement,
+    static readonly createFromWritingType = (
+        writingType: WritingType,
+        end: boolean = false,
+    ): ScrollManager => {
+        if (end) {
+            switch (writingType) {
+                case "vertical":
+                    return new ScrollManager(Leftmost.VALUE, Bottom.VALUE);
+                case "horizontal":
+                    return new ScrollManager(Rightmost.VALUE, Bottom.VALUE);
+            }
+        } else {
+            switch (writingType) {
+                case "vertical":
+                    return new ScrollManager(Rightmost.VALUE, Top.VALUE);
+                case "horizontal":
+                    return new ScrollManager(Leftmost.VALUE, Top.VALUE);
+            }
+        }
+    };
+
+    static readonly createFromElement = (
+        viewer: HTMLDivElement,
         image: HTMLImageElement,
     ): ScrollManager => {
         const diffW = image.clientWidth - viewer.clientWidth;
         const diffH = image.clientHeight - viewer.clientHeight;
         return new ScrollManager(
-            diffW > 0
-                ? (Math.ceil(viewer.scrollLeft) / diffW) * 100
-                : undefined,
-            diffH > 0 ? (Math.ceil(viewer.scrollTop) / diffH) * 100 : undefined,
+            diffW == 0 ? 0 : (Math.ceil(viewer.scrollLeft) / diffW) * 100,
+            diffH == 0 ? 0 : (Math.ceil(viewer.scrollTop) / diffH) * 100,
         );
     };
 
     readonly isHorizontalMin = (): boolean => {
-        if (this.horizontalPercentage == null) return true;
         return this.horizontalPercentage === MIN;
     };
 
     readonly isHorizontalMax = (): boolean => {
-        if (this.horizontalPercentage == null) return true;
         return this.horizontalPercentage === MAX;
     };
 
@@ -114,21 +131,35 @@ export class ScrollManager {
         return new ScrollManager(x, y);
     };
 
-    readonly shouldMoveToNextPage = (writingType: WritingType): boolean => {
-        const vOrigin = this.getVerticalOrigin();
-        const hOrigin = this.getHorizontalOrigin();
-        return vOrigin.isEnd(writingType) && hOrigin.isEnd(writingType);
+    readonly shouldMoveToNextPage = (
+        viewer: HTMLElement,
+        image: HTMLImageElement,
+        writingType: WritingType,
+    ): boolean => {
+        const diffW = image.clientWidth - viewer.clientWidth;
+        const diffH = image.clientHeight - viewer.clientHeight;
+        const result1 =
+            diffW <= 0 ? true : this.getHorizontalOrigin().isEnd(writingType);
+        const result2 =
+            diffH <= 0 ? true : this.getVerticalOrigin().isEnd(writingType);
+        return result1 && result2;
     };
 
-    readonly shouldMoveToPreviousPage = (writingType: WritingType): boolean => {
-        const vOrigin = this.getVerticalOrigin();
-        const hOrigin = this.getHorizontalOrigin();
-        return vOrigin.isStart(writingType) && hOrigin.isStart(writingType);
+    readonly shouldMoveToPreviousPage = (
+        viewer: HTMLElement,
+        image: HTMLImageElement,
+        writingType: WritingType,
+    ): boolean => {
+        const diffW = image.clientWidth - viewer.clientWidth;
+        const diffH = image.clientHeight - viewer.clientHeight;
+        const result1 =
+            diffW == 0 ? true : this.getHorizontalOrigin().isStart(writingType);
+        const result2 =
+            diffH == 0 ? true : this.getVerticalOrigin().isStart(writingType);
+        return result1 && result2;
     };
 
     private readonly getVerticalOrigin = (): Origin => {
-        if (this.verticalPercentage == null) return VFit;
-
         const h = Math.round(this.verticalPercentage);
         if (h === MIN) return Top;
         if (MIN < h && h < CENTER) return Up;
@@ -138,8 +169,6 @@ export class ScrollManager {
     };
 
     private readonly getHorizontalOrigin = (): Origin => {
-        if (this.horizontalPercentage == null) return HFit;
-
         const w = Math.round(this.horizontalPercentage);
         if (w === MIN) return Leftmost;
         if (MIN < w && w < CENTER) return Left;
@@ -255,23 +284,6 @@ const Bottom: Origin = {
     },
 };
 
-const VFit: Origin = {
-    NAME: "vFit",
-    VALUE: undefined,
-    isStart() {
-        return true;
-    },
-    isEnd() {
-        return true;
-    },
-    next() {
-        return this;
-    },
-    previous() {
-        return this;
-    },
-};
-
 /* -------------------------------------------------------------------------- */
 
 // |           |            |
@@ -363,23 +375,6 @@ const Rightmost: Origin = {
     },
     previous(writingType, viewSplitCount) {
         return PreviousMap[this.NAME][writingType][viewSplitCount];
-    },
-};
-
-const HFit: Origin = {
-    NAME: "hFit",
-    VALUE: undefined,
-    isStart() {
-        return true;
-    },
-    isEnd() {
-        return true;
-    },
-    next() {
-        return this;
-    },
-    previous() {
-        return this;
     },
 };
 

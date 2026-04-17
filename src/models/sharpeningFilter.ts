@@ -1,5 +1,4 @@
 const ID = "sharpen";
-const TARGET_CLASS_NAME = "sharpen-target";
 
 export class SharpeningFilter {
     private readonly filter: SVGFilterElement;
@@ -23,33 +22,16 @@ export class SharpeningFilter {
         document.head.appendChild(this.svg);
     };
 
-    readonly removeSVG = (): void => {
-        document.querySelector(`svg.${ID}`)?.remove();
-    };
-
     readonly hasSVG = (): boolean => {
         return document.querySelector(`svg.${ID}`) != null;
     };
 
     readonly applyFilter = (element: HTMLElement): void => {
-        element.classList.add(TARGET_CLASS_NAME);
         element.style.filter = `url(#${ID})`;
     };
 
-    readonly clearFilter = (): void => {
-        document
-            .querySelectorAll<HTMLElement>(`.${TARGET_CLASS_NAME}`)
-            .forEach((e) => {
-                e.style.filter = "unset";
-            });
-    };
-
-    readonly reapply = (): void => {
-        document
-            .querySelectorAll<HTMLElement>(`.${TARGET_CLASS_NAME}`)
-            .forEach((e) => {
-                e.style.filter = `url(#${ID})`;
-            });
+    readonly clearFilter = (element: HTMLElement): void => {
+        element.style.filter = "unset";
     };
 
     readonly setStrength = (strength: number): void => {

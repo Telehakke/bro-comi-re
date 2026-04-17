@@ -1,1 +1,1 @@
-export type Visibility = "visible" | "hidden";
+export type Visibility = "visible" | "hidden" | "none";

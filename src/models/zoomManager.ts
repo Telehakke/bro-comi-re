@@ -17,27 +17,27 @@ export class ZoomManager {
         this.imageSize = imageSize;
     }
 
-    setViewerSize = (size: Size): ZoomManager => {
+    readonly setViewerSize = (size: Size): ZoomManager => {
         return this.copyWith({ viewerSize: size });
     };
 
-    setImageSize = (size: Size): ZoomManager => {
+    readonly setImageSize = (size: Size): ZoomManager => {
         return this.copyWith({ imageSize: size });
     };
 
-    zoomOut = (step: number): ZoomManager => {
+    readonly zoomOut = (step: number): ZoomManager => {
         return this.copyWith({ scale: Math.max(this.scale - step, MIN) });
     };
 
-    zoomIn = (step: number): ZoomManager => {
+    readonly zoomIn = (step: number): ZoomManager => {
         return this.copyWith({ scale: Math.min(this.scale + step, MAX) });
     };
 
-    reset = (): ZoomManager => {
+    readonly reset = (): ZoomManager => {
         return this.copyWith({ scale: MIN });
     };
 
-    isHorizontalFit = (): boolean => {
+    readonly isHorizontalFit = (): boolean => {
         if (this.viewerSize == null || this.imageSize == null) return true;
 
         const viewerRatio = this.viewerSize.width / this.viewerSize.height;
@@ -45,7 +45,7 @@ export class ZoomManager {
         return viewerRatio <= imageRatio;
     };
 
-    private copyWith = ({
+    private readonly copyWith = ({
         scale,
         viewerSize,
         imageSize,

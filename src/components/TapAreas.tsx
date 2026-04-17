@@ -1,40 +1,143 @@
-import { useEffect, useRef, useState, type JSX } from "react";
+import { atom, useSetAtom } from "jotai";
+import React, { useEffect, useRef, useState, type JSX } from "react";
+import { ActionAtom, Atom } from "../atoms";
 
-export const TapAreas = (props: {
-    onBottomClick: () => void;
-    onLeftClick: () => void;
-    onRightClick: () => void;
-    onHorizontalScroll: (deltaX: number) => void;
-    onVerticalScroll: (deltaY: number) => void;
+type Viewer = HTMLDivElement | null;
+type Image = HTMLImageElement | null;
+
+const viewerBottomClickAtom = atom(
+    null,
+    (get, set, viewer: Viewer, image: Image) => {
+        if (viewer == null || image == null) return;
+
+        const { shouldAdvance } = get(Atom.appStore);
+        if (shouldAdvance) {
+            set(ActionAtom.goToPrevious, viewer, image);
+        }
+    },
+);
+
+const viewerLeftClickAtom = atom(
+    null,
+    (get, set, viewer: Viewer, image: Image) => {
+        if (viewer == null || image == null) return;
+
+        const { shouldAdvance, writingType } = get(Atom.appStore);
+        if (shouldAdvance) {
+            set(ActionAtom.goToNext, viewer, image);
+            return;
+        }
+        if (writingType === "vertical") {
+            set(ActionAtom.goToNext, viewer, image);
+            return;
+        }
+        if (writingType === "horizontal") {
+            set(ActionAtom.goToPrevious, viewer, image);
+            return;
+        }
+    },
+);
+
+const viewerRightClickAtom = atom(
+    null,
+    (get, set, viewer: Viewer, image: Image) => {
+        if (viewer == null || image == null) return;
+
+        const { shouldAdvance, writingType } = get(Atom.appStore);
+        if (shouldAdvance) {
+            set(ActionAtom.goToNext, viewer, image);
+            return;
+        }
+        if (writingType === "vertical") {
+            set(ActionAtom.goToPrevious, viewer, image);
+            return;
+        }
+        if (writingType === "horizontal") {
+            set(ActionAtom.goToNext, viewer, image);
+            return;
+        }
+    },
+);
+
+const horizontalScrollAtom = atom(
+    null,
+    (get, _, deltaX: number, viewer: Viewer) => {
+        if (viewer == null) return;
+
+        const { scrollSpeed } = get(Atom.appStore);
+        const x = scrollSpeed * deltaX + viewer.scrollLeft;
+        const y = viewer.scrollTop;
+        viewer.scroll(x, y);
+    },
+);
+
+const verticalScrollAtom = atom(
+    null,
+    (get, _, deltaY: number, viewer: Viewer) => {
+        if (viewer == null) return;
+
+        const { scrollSpeed } = get(Atom.appStore);
+        const x = viewer.scrollLeft;
+        const y = scrollSpeed * deltaY + viewer.scrollTop;
+        viewer.scroll(x, y);
+    },
+);
+
+/* -------------------------------------------------------------------------- */
+
+export const TapAreas = ({
+    viewerRef,
+    imageRef,
+}: {
+    viewerRef: React.RefObject<HTMLDivElement | null>;
+    imageRef: React.RefObject<HTMLImageElement | null>;
 }): JSX.Element => {
+    const viewerBottomClick = useSetAtom(viewerBottomClickAtom);
+    const viewerLeftClick = useSetAtom(viewerLeftClickAtom);
+    const viewerRightClick = useSetAtom(viewerRightClickAtom);
+    const verticalScroll = useSetAtom(verticalScrollAtom);
+    const horizontalScroll = useSetAtom(horizontalScrollAtom);
+
     return (
         <>
             <TapArea
-                className="inset-x-0 bottom-0 h-20"
-                onClick={props.onBottomClick}
-                onScroll={(deltaX) => props.onHorizontalScroll(deltaX)}
+                className="inset-x-0 bottom-0 h-18"
+                onClick={() =>
+                    viewerBottomClick(viewerRef.current, imageRef.current)
+                }
+                onScroll={(deltaX) =>
+                    horizontalScroll(deltaX, viewerRef.current)
+                }
             />
             <TapArea
-                className="inset-y-0 left-0 w-20"
-                onClick={props.onLeftClick}
-                onScroll={(_, deltaY) => props.onVerticalScroll(deltaY)}
+                className="inset-y-0 left-0 w-18"
+                onClick={() =>
+                    viewerLeftClick(viewerRef.current, imageRef.current)
+                }
+                onScroll={(_, deltaY) =>
+                    verticalScroll(deltaY, viewerRef.current)
+                }
             />
             <TapArea
-                className="inset-y-0 right-0 w-20"
-                onClick={props.onRightClick}
-                onScroll={(_, deltaY) => props.onVerticalScroll(deltaY)}
+                className="inset-y-0 right-0 w-18"
+                onClick={() =>
+                    viewerRightClick(viewerRef.current, imageRef.current)
+                }
+                onScroll={(_, deltaY) =>
+                    verticalScroll(deltaY, viewerRef.current)
+                }
             />
         </>
     );
 };
 
 const TapArea = (props: {
+    className: string;
     onClick: () => void;
     onScroll: (deltaX: number, deltaY: number) => void;
-    className: string;
 }): JSX.Element => {
     const divRef = useRef<HTMLDivElement | null>(null);
-    const timerId = useRef<number | undefined>(undefined);
+    const timerRef = useRef<number | undefined>(undefined);
     const prevClient = useRef({ x: 0, y: 0 });
     const [isActive, setIsActive] = useState(false);
 
@@ -42,7 +145,7 @@ const TapArea = (props: {
         const div = divRef.current;
         if (div == null) return;
 
-        const handleTouchMove = (ev: TouchEvent): void => {
+        const handleTouchmove = (ev: TouchEvent): void => {
             ev.preventDefault();
             const x = ev.changedTouches[0].clientX;
             const y = ev.changedTouches[0].clientY;
@@ -53,35 +156,36 @@ const TapArea = (props: {
         const handleWheel = (ev: WheelEvent): void => {
             ev.preventDefault();
             setIsActive(true);
-            clearTimeout(timerId.current);
-            timerId.current = setTimeout(() => {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
                 setIsActive(false);
             }, 200);
             props.onScroll(ev.deltaX, ev.deltaY);
         };
 
-        div.addEventListener("touchmove", handleTouchMove, {
-            passive: false,
-        });
-        div.addEventListener("wheel", handleWheel, { passive: false });
+        const option: AddEventListenerOptions = { passive: false };
+        div.addEventListener("touchmove", handleTouchmove, option);
+        div.addEventListener("wheel", handleWheel, option);
         return (): void => {
-            div.removeEventListener("touchmove", handleTouchMove);
-            div.removeEventListener("wheel", handleWheel);
+            div.removeEventListener("touchmove", handleTouchmove, option);
+            div.removeEventListener("wheel", handleWheel, option);
         };
     }, [props]);
 
-    const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = (
-        ev,
-    ): void => {
-        const x = ev.changedTouches[0].clientX;
-        const y = ev.changedTouches[0].clientY;
-        prevClient.current = { x, y };
+    const handleTouchStart = (ev: React.TouchEvent<HTMLDivElement>): void => {
+        const { clientX, clientY } = ev.changedTouches[0];
+        prevClient.current = { x: clientX, y: clientY };
+        setIsActive(true);
+    };
+
+    const handleTouchEnd = (): void => {
+        setIsActive(false);
     };
 
     const className = {
-        _: "fixed transition select-none",
-        activeBg: "active:bg-blue-500/25",
-        activeBg2: isActive && "bg-blue-500/25",
+        _: "fixed transition select-none ",
+        activeBg: "active:bg-blue-500/15",
+        activeBg2: isActive && "bg-blue-500/15",
         props: props.className,
     };
 
@@ -91,6 +195,7 @@ const TapArea = (props: {
             ref={divRef}
             onClick={props.onClick}
             onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
         />
     );
 };

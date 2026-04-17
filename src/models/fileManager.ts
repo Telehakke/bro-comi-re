@@ -9,17 +9,18 @@ export class FileManager {
         this.index = index ?? 0;
     }
 
-    static fromFiles = (files: File[]): FileManager => {
+    static readonly fromFiles = (files: readonly File[]): FileManager => {
         const sorted = [...files].sort((a, b) => a.name.localeCompare(b.name));
         return new FileManager(sorted);
     };
 
-    static fromZip = async (zip: File): Promise<FileManager> => {
+    static readonly fromZip = async (zip: File): Promise<FileManager> => {
         const zipReader = new ZipReader(new BlobReader(zip));
         const entries = await zipReader.getEntries();
+        zipReader.close();
         const images = entries
             .filter((entry) => {
-                const name = entry.filename;
+                const name = entry.filename.toLowerCase();
                 if (name.startsWith("__")) return false;
                 if (name.startsWith(".")) return false;
                 if (name.endsWith(".jpg")) return true;
@@ -32,15 +33,14 @@ export class FileManager {
                 return false;
             })
             .sort((a, b) => a.filename.localeCompare(b.filename));
-        zipReader.close();
         return new FileManager(images);
     };
 
-    hasFiles = (): boolean => {
+    readonly hasFiles = (): boolean => {
         return this.files.length > 0;
     };
 
-    getBlob = async (index?: number): Promise<Blob | undefined> => {
+    readonly getBlob = async (index?: number): Promise<Blob | undefined> => {
         const i = index ?? this.index;
         if (i < 0) return undefined;
 
@@ -48,33 +48,33 @@ export class FileManager {
         if (file == null) return undefined;
         if (file instanceof File) return file;
 
-        // @ts-expect-error 型定義なし
+        // @ts-expect-error getData()が型定義されていないため警告を無視
         const asyncBlob = file.getData(new BlobWriter()) as Promise<Blob>;
         return await asyncBlob;
     };
 
-    progress = (): string | undefined => {
+    readonly progress = (): string | undefined => {
         if (!this.hasFiles()) return undefined;
         return `${this.index + 1} / ${this.files.length}`;
     };
 
-    decrementIndex = (): FileManager => {
+    readonly decrementIndex = (): FileManager => {
         return this.copyWith({ index: Math.max(this.index - 1, 0) });
     };
 
-    incrementIndex = (): FileManager => {
+    readonly incrementIndex = (): FileManager => {
         return this.copyWith({
             index: Math.min(this.index + 1, this.files.length - 1),
         });
     };
 
-    setIndex = (index: number): FileManager => {
+    readonly setIndex = (index: number): FileManager => {
         return this.copyWith({
             index: Math.max(Math.min(index, this.files.length - 1), 0),
         });
     };
 
-    private copyWith = ({
+    private readonly copyWith = ({
         files,
         index,
     }: Partial<{

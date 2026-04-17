@@ -1,10 +1,11 @@
 import { isBoolean, isNotNull } from "./typeGuards";
-import { FilterStrength, ZoomStep } from "./validator";
+import { FilterStrength, ScrollSpeed, ZoomStep } from "./validator";
 
 export type AppState = Readonly<{
     histories: readonly History[];
     movementDirection: MovementDirection;
     onSharpeningFilter: boolean;
+    scrollSpeed: number;
     sharpeningFilterStrength: number;
     shouldAdvance: boolean;
     viewSplitCount: ViewSplitCount;
@@ -16,6 +17,7 @@ export const defaultAppState: AppState = {
     histories: [],
     movementDirection: "vertical",
     onSharpeningFilter: false,
+    scrollSpeed: 2,
     sharpeningFilterStrength: 3,
     shouldAdvance: false,
     viewSplitCount: "four",
@@ -29,7 +31,7 @@ export const createAppState = (value: unknown): AppState => {
     if (!isNotNull(value)) return defaultAppState;
 
     const v = value as AppState;
-    return {
+    const obj: AppState = {
         histories: ensureHistories(v.histories, defaultAppState.histories),
         movementDirection: ensureMovementDirection(
             v.movementDirection,
@@ -38,6 +40,10 @@ export const createAppState = (value: unknown): AppState => {
         onSharpeningFilter: ensureBoolean(
             v.onSharpeningFilter,
             defaultAppState.onSharpeningFilter,
+        ),
+        scrollSpeed: ScrollSpeed.ensure(
+            v.scrollSpeed,
+            defaultAppState.scrollSpeed,
         ),
         sharpeningFilterStrength: FilterStrength.ensure(
             v.sharpeningFilterStrength,
@@ -57,6 +63,7 @@ export const createAppState = (value: unknown): AppState => {
         ),
         zoomStep: ZoomStep.ensure(v.zoomStep, defaultAppState.zoomStep),
     };
+    return obj;
 };
 
 const ensureBoolean = (value: unknown, defaultValue: boolean): boolean => {
