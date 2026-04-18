@@ -81,9 +81,7 @@ export const ImageView = ({
             onScroll={(element) => {
                 const image = imageRef.current;
                 if (image == null) return;
-                setScrollManager(
-                    ScrollManager.createFromElement(element, image),
-                );
+                setScrollManager((s) => s.update(element, image));
             }}
             onDoubleClick={zoomIn}
             onRightClick={zoomOut}
@@ -129,6 +127,7 @@ const Viewer = ({
     const prevX = useRef(0);
     const scrollCount = useRef(0);
     const canDoubleClick = useRef(true);
+    const touchMoveCount = useRef(0);
     const setOnChevronLeft = useSetAtom(onChevronLeftAtom);
     const setOnChevronRight = useSetAtom(onChevronRightAtom);
 
@@ -168,9 +167,13 @@ const Viewer = ({
                 prevX.current = ev.targetTouches[0].clientX;
                 scrollCount.current = 0;
                 canDoubleClick.current = true;
+                touchMoveCount.current = 0;
             }}
             onTouchMove={(ev) => {
-                window.clearTimeout(timerId.current);
+                if (touchMoveCount.current > 5) {
+                    window.clearTimeout(timerId.current);
+                }
+                touchMoveCount.current += 1;
 
                 const viewer = viewerRef.current;
                 const image = imageRef.current;

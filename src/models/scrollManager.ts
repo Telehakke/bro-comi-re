@@ -56,6 +56,22 @@ export class ScrollManager {
         );
     };
 
+    readonly update = (
+        viewer: HTMLDivElement,
+        image: HTMLImageElement,
+    ): ScrollManager => {
+        const diffW = image.clientWidth - viewer.clientWidth;
+        const diffH = image.clientHeight - viewer.clientHeight;
+        return new ScrollManager(
+            diffW > 0
+                ? (Math.ceil(viewer.scrollLeft) / diffW) * 100
+                : this.horizontalPercentage,
+            diffH > 0
+                ? (Math.ceil(viewer.scrollTop) / diffH) * 100
+                : this.verticalPercentage,
+        );
+    };
+
     readonly isHorizontalMin = (): boolean => {
         return this.horizontalPercentage === MIN;
     };
