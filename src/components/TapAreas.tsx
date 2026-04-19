@@ -10,6 +10,7 @@ const viewerBottomClickAtom = atom(
     (get, set, viewer: Viewer, image: Image) => {
         if (viewer == null || image == null) return;
 
+        set(Atom.scrollManager, (s) => s.update(viewer, image));
         const { shouldAdvance } = get(Atom.appStore);
         if (shouldAdvance) {
             set(ActionAtom.goToPrevious, viewer, image);
@@ -22,6 +23,7 @@ const viewerLeftClickAtom = atom(
     (get, set, viewer: Viewer, image: Image) => {
         if (viewer == null || image == null) return;
 
+        set(Atom.scrollManager, (s) => s.update(viewer, image));
         const { shouldAdvance, writingType } = get(Atom.appStore);
         if (shouldAdvance) {
             set(ActionAtom.goToNext, viewer, image);
@@ -43,6 +45,7 @@ const viewerRightClickAtom = atom(
     (get, set, viewer: Viewer, image: Image) => {
         if (viewer == null || image == null) return;
 
+        set(Atom.scrollManager, (s) => s.update(viewer, image));
         const { shouldAdvance, writingType } = get(Atom.appStore);
         if (shouldAdvance) {
             set(ActionAtom.goToNext, viewer, image);

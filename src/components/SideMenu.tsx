@@ -73,29 +73,65 @@ export const SideMenu = (props: {
 
 /* -------------------------------------------------------------------------- */
 
+// export const MenuButton = (): JSX.Element => {
+//     const setIsOpenSideMenu = useSetAtom(Atom.isOpenSideMenu);
+
+//     const className = {
+//         _: "size-10 rounded-full transition select-none",
+//         position: "fixed top-4 left-4",
+//         grid: "grid place-items-center",
+//         bg: "bg-neutral-500/25",
+//         hoverBg: "hover:bg-neutral-600/25",
+//         activeBg: "active:bg-neutral-700/25",
+//         border: "border border-neutral-200/25 focus-visible:border-transparent",
+//         outline:
+//             "-outline-offset-2 outline-blue-500/75 focus-visible:outline-2",
+//         stroke: "stroke-white/50",
+//     };
+
+//     return (
+//         <button
+//             className={Object.values(className).join(" ")}
+//             onClick={() => setIsOpenSideMenu(true)}
+//         >
+//             <EllipsisVertical className="stroke-inherit" />
+//         </button>
+//     );
+// };
+
 export const MenuButton = (): JSX.Element => {
     const setIsOpenSideMenu = useSetAtom(Atom.isOpenSideMenu);
+    const shouldShowInfo = useAtomValue(Atom.shouldShowInfo);
 
     const className = {
-        _: "size-10 rounded-full transition select-none",
+        _: "group rounded-full transition select-none",
         position: "fixed top-4 left-4",
-        grid: "grid place-items-center",
-        bg: "bg-neutral-500/25",
-        hoverBg: "hover:bg-neutral-600/25",
-        activeBg: "active:bg-neutral-700/25",
-        border: "border border-neutral-200/25 focus-visible:border-transparent",
-        outline:
-            "-outline-offset-2 outline-blue-500/75 focus-visible:outline-2",
-        stroke: "stroke-neutral-100/75",
+        outline: "outline-blue-500/75 focus-visible:outline-2",
+    };
+
+    const className2 = {
+        _: "size-10 p-2 rounded-full opacity-50 transition",
+        bg: "bg-neutral-500",
+        hoverBg: "group-hover:bg-neutral-600",
+        activeBg: " group-active:bg-neutral-700",
+        border: "border border-neutral-200",
+        stroke: "stroke-white",
     };
 
     return (
-        <button
-            className={Object.values(className).join(" ")}
-            onClick={() => setIsOpenSideMenu(true)}
+        <div
+            className="data-[visible=true]:animate-fade-in data-[visible=false]:animate-fade-out data-[visible=false]:opacity-0"
+            data-visible={shouldShowInfo}
         >
-            <EllipsisVertical className="stroke-inherit" />
-        </button>
+            <button
+                className={Object.values(className).join(" ")}
+                onClick={() => setIsOpenSideMenu(true)}
+            >
+                <EllipsisVertical
+                    className={Object.values(className2).join(" ")}
+                />
+            </button>
+        </div>
     );
 };
 

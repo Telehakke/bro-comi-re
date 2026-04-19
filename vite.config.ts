@@ -12,6 +12,19 @@ export default defineConfig({
     ],
     build: {
         outDir: "docs",
+        rolldownOptions: {
+            output: {
+                codeSplitting: {
+                    minSize: 20000,
+                    groups: [
+                        {
+                            name: "vendor",
+                            test: /node_modules/,
+                        },
+                    ],
+                },
+            },
+        },
     },
     server: {
         host: true,

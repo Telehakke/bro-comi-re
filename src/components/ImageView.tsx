@@ -86,7 +86,9 @@ export const ImageView = ({
     viewerRef: React.RefObject<HTMLDivElement | null>;
     imageRef: React.RefObject<HTMLImageElement | null>;
 }): JSX.Element => {
+    const timerRef = useRef<number | undefined>(undefined);
     const setZoomManager = useSetAtom(Atom.zoomManager);
+    const setShouldShowInfo = useSetAtom(Atom.shouldShowInfo);
     const zoomIn = useSetAtom(zoomInAtom);
     const zoomOut = useSetAtom(zoomOutAtom);
     const goToLeft = useSetAtom(goToLeftAtom);
@@ -99,9 +101,20 @@ export const ImageView = ({
             onResize={(width, height) =>
                 setZoomManager((z) => z.setViewerSize({ width, height }))
             }
-            onDoubleClick={() => zoomIn(viewerRef.current, imageRef.current)}
+            onClick={() => {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    setShouldShowInfo((v) => !v);
+                }, 300);
+            }}
+            onDoubleClick={() => {
+                window.clearTimeout(timerRef.current);
+                zoomIn(viewerRef.current, imageRef.current);
+            }}
             onRightClick={() => zoomOut(viewerRef.current, imageRef.current)}
-            onLongPress={() => zoomOut(viewerRef.current, imageRef.current)}
+            onLongPress={() => {
+                zoomOut(viewerRef.current, imageRef.current);
+            }}
             onLeftSidePull={() => goToLeft(viewerRef.current, imageRef.current)}
             onRightSidePull={() =>
                 goToRight(viewerRef.current, imageRef.current)
@@ -121,7 +134,7 @@ const Viewer = ({
     imageRef,
     children,
     onResize,
-
+    onClick,
     onDoubleClick,
     onRightClick,
     onLongPress,
@@ -131,6 +144,7 @@ const Viewer = ({
     viewerRef: React.RefObject<HTMLDivElement | null>;
     imageRef: React.RefObject<HTMLImageElement | null>;
     onResize: (width: number, height: number) => void;
+    onClick: () => void;
     onDoubleClick: () => void;
     onRightClick: () => void;
     onLongPress: () => void;
@@ -141,6 +155,7 @@ const Viewer = ({
     const timerId = useRef<number | undefined>(undefined);
     const prevX = useRef(0);
     const scrollCount = useRef(0);
+    const canClick = useRef(true);
     const canDoubleClick = useRef(true);
     const touchMoveCount = useRef(0);
     const setOnChevronLeft = useSetAtom(onChevronLeftAtom);
@@ -164,6 +179,11 @@ const Viewer = ({
         <div
             className="fixed inset-0 flex h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
             ref={viewerRef}
+            onClick={() => {
+                if (canClick.current) {
+                    onClick();
+                }
+            }}
             onDoubleClick={() => {
                 if (canDoubleClick.current) {
                     onDoubleClick();
@@ -176,10 +196,12 @@ const Viewer = ({
             onTouchStart={(ev) => {
                 timerId.current = window.setTimeout(() => {
                     onLongPress();
+                    canClick.current = false;
                     canDoubleClick.current = false;
                 }, 500);
                 prevX.current = ev.targetTouches[0].clientX;
                 scrollCount.current = 0;
+                canClick.current = true;
                 canDoubleClick.current = true;
                 touchMoveCount.current = 0;
             }}
@@ -341,7 +363,7 @@ const ChevronLeft = (): JSX.Element => {
     if (!onChevronLeft) return <></>;
     return (
         <div className="fixed inset-y-0 left-4 grid place-items-center">
-            <CircleChevronLeft className="size-15 stroke-blue-500" />
+            <CircleChevronLeft className="size-15 stroke-green-500" />
         </div>
     );
 };
@@ -352,7 +374,7 @@ const ChevronRight = (): JSX.Element => {
     if (!onChevronRight) return <></>;
     return (
         <div className="fixed inset-y-0 right-4 grid place-items-center">
-            <CircleChevronRight className="size-15 stroke-blue-500" />
+            <CircleChevronRight className="size-15 stroke-green-500" />
         </div>
     );
 };

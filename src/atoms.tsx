@@ -15,6 +15,7 @@ export const Atom = {
     messageManager: atom(messageManager),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
+    shouldShowInfo: atom(true),
     zipFileName: atom<string | undefined>(undefined),
     zoomManager: atom(new ZoomManager()),
     prevImageBlob: atom<Blob | undefined>(undefined),
