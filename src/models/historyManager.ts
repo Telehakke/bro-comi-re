@@ -11,8 +11,13 @@ export class HistoryManager {
         return this.histories.find((h) => h.name === name)?.index;
     };
 
-    readonly addHistory = (history: History): HistoryManager => {
-        return new HistoryManager([...this.histories, history]);
+    readonly add = (name: string): HistoryManager => {
+        const history: History = { name, index: 0 };
+        const newHistories = [history, ...this.histories];
+        if (newHistories.length > 100) {
+            return new HistoryManager(newHistories.slice(0, 99));
+        }
+        return new HistoryManager(newHistories);
     };
 
     readonly update = (history: History): HistoryManager => {
@@ -20,5 +25,15 @@ export class HistoryManager {
             h.name === history.name ? history : h,
         );
         return new HistoryManager(result);
+    };
+
+    readonly moveToHead = (name: string): HistoryManager => {
+        const index = this.histories.findIndex((h) => h.name === name);
+        if (index <= 0) return this;
+
+        const array = [...this.histories];
+        const [element] = array.splice(index, 1);
+        array.unshift(element);
+        return new HistoryManager(array);
     };
 }

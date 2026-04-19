@@ -63,14 +63,12 @@ const openZipFileAtom = atom(null, async (get, set, file: File) => {
     let historyManager = new HistoryManager(appStore.histories);
     const index = historyManager.getIndex(file.name);
     if (index == null) {
-        historyManager = historyManager.addHistory({
-            name: file.name,
-            index: 0,
-        });
-        set(Atom.appStore, (a) => a.setHistories(historyManager.histories));
+        historyManager = historyManager.add(file.name);
     } else {
+        historyManager = historyManager.moveToHead(file.name);
         fileManager = fileManager.setIndex(index);
     }
+    set(Atom.appStore, (a) => a.setHistories(historyManager.histories));
     set(Atom.historyManager, historyManager);
     set(Atom.fileManager, fileManager);
     set(Atom.imageBlob, await fileManager.getBlob());

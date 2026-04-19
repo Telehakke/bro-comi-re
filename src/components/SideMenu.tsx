@@ -77,7 +77,7 @@ export const MenuButton = (): JSX.Element => {
     const setIsOpenSideMenu = useSetAtom(Atom.isOpenSideMenu);
 
     const className = {
-        _: "size-10 rounded-full transition",
+        _: "size-10 rounded-full transition select-none",
         position: "fixed top-4 left-4",
         grid: "grid place-items-center",
         bg: "bg-neutral-500/25",
@@ -86,7 +86,7 @@ export const MenuButton = (): JSX.Element => {
         border: "border border-neutral-200/25 focus-visible:border-transparent",
         outline:
             "-outline-offset-2 outline-blue-500/75 focus-visible:outline-2",
-        stroke: "stroke-neutral-100/50",
+        stroke: "stroke-neutral-100/75",
     };
 
     return (

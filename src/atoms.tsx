@@ -11,13 +11,15 @@ export const Atom = {
     appStore: atom(appStore),
     fileManager: atom(new FileManager()),
     historyManager: atom(new HistoryManager()),
-    imageBlob: atom<Blob | undefined>(undefined),
     isOpenSideMenu: atom(false),
     messageManager: atom(messageManager),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
     zipFileName: atom<string | undefined>(undefined),
     zoomManager: atom(new ZoomManager()),
+    prevImageBlob: atom<Blob | undefined>(undefined),
+    imageBlob: atom<Blob | undefined>(undefined),
+    nextImageBlob: atom<Blob | undefined>(undefined),
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -29,9 +31,15 @@ export const ActionAtom = {
             const { writingType } = get(Atom.appStore);
             const sm = get(Atom.scrollManager);
             if (sm.shouldMoveToNextPage(viewer, image, writingType)) {
-                set(ActionAtom.moveToNextPage);
-                set(ActionAtom.scrollToStart, viewer, image);
-                set(ActionAtom.updateHistory);
+                if (get(Atom.fileManager).hasNextFile()) {
+                    set(ActionAtom.moveToNextPage);
+                    set(ActionAtom.scrollToStart, viewer, image);
+                    set(ActionAtom.updateHistory);
+                } else {
+                    set(Atom.messageManager, (m) =>
+                        m.setMessage("最後のファイルです"),
+                    );
+                }
             } else {
                 set(ActionAtom.scrollToNext, viewer, image);
             }
@@ -43,9 +51,15 @@ export const ActionAtom = {
             const { writingType } = get(Atom.appStore);
             const sm = get(Atom.scrollManager);
             if (sm.shouldMoveToPreviousPage(viewer, image, writingType)) {
-                set(ActionAtom.moveToPreviousPage);
-                set(ActionAtom.scrollToEnd, viewer, image);
-                set(ActionAtom.updateHistory);
+                if (get(Atom.fileManager).hasPreviousFile()) {
+                    set(ActionAtom.moveToPreviousPage);
+                    set(ActionAtom.scrollToEnd, viewer, image);
+                    set(ActionAtom.updateHistory);
+                } else {
+                    set(Atom.messageManager, (m) =>
+                        m.setMessage("最初のファイルです"),
+                    );
+                }
             } else {
                 set(ActionAtom.scrollToPrevious, viewer, image);
             }
@@ -55,19 +69,39 @@ export const ActionAtom = {
         const fm = get(Atom.fileManager).incrementIndex();
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
-        set(Atom.imageBlob, await fm.getBlob());
+
+        set(Atom.prevImageBlob, get(Atom.imageBlob));
+
+        const current = get(Atom.nextImageBlob);
+        set(Atom.imageBlob, current != null ? current : await fm.getBlob());
+
+        fm.getBlob(fm.index + 1).then((blob) => {
+            set(Atom.nextImageBlob, blob);
+        });
     }),
     moveToPreviousPage: atom(null, async (get, set) => {
         const fm = get(Atom.fileManager).decrementIndex();
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
-        set(Atom.imageBlob, await fm.getBlob());
+
+        set(Atom.nextImageBlob, get(Atom.imageBlob));
+
+        const current = get(Atom.prevImageBlob);
+        set(Atom.imageBlob, current != null ? current : await fm.getBlob());
+
+        fm.getBlob(fm.index - 1).then((blob) => {
+            set(Atom.prevImageBlob, blob);
+        });
     }),
     moveToIndexPage: atom(null, async (get, set, index: number) => {
         const fm = get(Atom.fileManager).setIndex(index);
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
+
         set(Atom.imageBlob, await fm.getBlob());
+        fm.getBlob(fm.index + 1).then((blob) => {
+            set(Atom.nextImageBlob, blob);
+        });
     }),
     scrollToStart: atom(
         null,

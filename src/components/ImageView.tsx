@@ -35,11 +35,19 @@ const goToLeftAtom = atom(null, (get, set, viewer: Viewer, image: Image) => {
     if (viewer == null || image == null) return;
     const { writingType } = get(Atom.appStore);
     if (writingType === "vertical") {
-        set(ActionAtom.moveToNextPage);
-        set(ActionAtom.scrollToStart, viewer, image);
+        if (get(Atom.fileManager).hasNextFile()) {
+            set(ActionAtom.moveToNextPage);
+            set(ActionAtom.scrollToStart, viewer, image);
+        } else {
+            set(Atom.messageManager, (m) => m.setMessage("最後のファイルです"));
+        }
     } else {
-        set(ActionAtom.moveToPreviousPage);
-        set(ActionAtom.scrollToEnd, viewer, image);
+        if (get(Atom.fileManager).hasPreviousFile()) {
+            set(ActionAtom.moveToPreviousPage);
+            set(ActionAtom.scrollToEnd, viewer, image);
+        } else {
+            set(Atom.messageManager, (m) => m.setMessage("最初のファイルです"));
+        }
     }
     set(ActionAtom.updateHistory);
 });
@@ -48,11 +56,19 @@ const goToRightAtom = atom(null, (get, set, viewer: Viewer, image: Image) => {
     if (viewer == null || image == null) return;
     const { writingType } = get(Atom.appStore);
     if (writingType === "vertical") {
-        set(ActionAtom.moveToPreviousPage);
-        set(ActionAtom.scrollToEnd, viewer, image);
+        if (get(Atom.fileManager).hasPreviousFile()) {
+            set(ActionAtom.moveToPreviousPage);
+            set(ActionAtom.scrollToEnd, viewer, image);
+        } else {
+            set(Atom.messageManager, (m) => m.setMessage("最初のファイルです"));
+        }
     } else {
-        set(ActionAtom.moveToNextPage);
-        set(ActionAtom.scrollToStart, viewer, image);
+        if (get(Atom.fileManager).hasNextFile()) {
+            set(ActionAtom.moveToNextPage);
+            set(ActionAtom.scrollToStart, viewer, image);
+        } else {
+            set(Atom.messageManager, (m) => m.setMessage("最後のファイルです"));
+        }
     }
     set(ActionAtom.updateHistory);
 });
@@ -278,13 +294,19 @@ const Img = ({
     const handleLoad = (
         ev: React.SyntheticEvent<HTMLImageElement, Event>,
     ): void => {
+        const viewer = viewerRef.current;
+        const image = imageRef.current;
+        const div = divRef.current;
+        if (viewer == null || image == null || div == null) return;
+
+        scrollManager.applyScroll(viewer, image);
         const width = ev.currentTarget.naturalWidth;
         const height = ev.currentTarget.naturalHeight;
         setZoomManager((z) => z.setImageSize({ width, height }));
     };
 
     return (
-        <>
+        <div className="relative contents">
             <img
                 className="m-auto max-w-none"
                 ref={imageRef}
@@ -292,7 +314,7 @@ const Img = ({
                 onLoad={handleLoad}
             />
             <div className="absolute inset-0" ref={divRef} />
-        </>
+        </div>
     );
 };
 

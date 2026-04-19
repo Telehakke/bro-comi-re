@@ -58,6 +58,14 @@ export class FileManager {
         return `${this.index + 1} / ${this.files.length}`;
     };
 
+    readonly hasPreviousFile = (): boolean => {
+        return this.index > 0;
+    };
+
+    readonly hasNextFile = (): boolean => {
+        return this.index < this.files.length - 1;
+    };
+
     readonly decrementIndex = (): FileManager => {
         return this.copyWith({ index: Math.max(this.index - 1, 0) });
     };
