@@ -169,9 +169,9 @@ export class ScrollManager {
         const diffW = image.clientWidth - viewer.clientWidth;
         const diffH = image.clientHeight - viewer.clientHeight;
         const result1 =
-            diffW == 0 ? true : this.getHorizontalOrigin().isStart(writingType);
+            diffW <= 0 ? true : this.getHorizontalOrigin().isStart(writingType);
         const result2 =
-            diffH == 0 ? true : this.getVerticalOrigin().isStart(writingType);
+            diffH <= 0 ? true : this.getVerticalOrigin().isStart(writingType);
         return result1 && result2;
     };
 

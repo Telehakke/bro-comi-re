@@ -104,6 +104,7 @@ const closeViewerAtom = atom(null, (_, set) => {
     set(Atom.isOpenSideMenu, false);
     set(Atom.zipFileName, undefined);
     set(Atom.zoomManager, (z) => z.reset());
+    set(Atom.imageBlob, undefined);
 });
 
 const CloseButton = (): JSX.Element => {

@@ -1,5 +1,5 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { CircleChevronLeft, CircleChevronRight } from "lucide-react";
+import { CircleChevronLeft, CircleChevronRight, Image } from "lucide-react";
 import React, {
     useEffect,
     useRef,
@@ -17,14 +17,20 @@ type Image = HTMLImageElement | null;
 const onChevronLeftAtom = atom(false);
 const onChevronRightAtom = atom(false);
 
-const zoomInAtom = atom(null, (get, set) => {
+const zoomInAtom = atom(null, (get, set, viewer: Viewer, image: Image) => {
+    if (viewer == null || image == null) return;
+    set(Atom.scrollManager, (s) => s.update(viewer, image));
+
     const appStore = get(Atom.appStore);
     const zoomManager = get(Atom.zoomManager).zoomIn(appStore.zoomStep);
     set(Atom.zoomManager, zoomManager);
     set(Atom.messageManager, (m) => m.setMessage(`${zoomManager.scale}%`));
 });
 
-const zoomOutAtom = atom(null, (get, set) => {
+const zoomOutAtom = atom(null, (get, set, viewer: Viewer, image: Image) => {
+    if (viewer == null || image == null) return;
+    set(Atom.scrollManager, (s) => s.update(viewer, image));
+
     const appStore = get(Atom.appStore);
     const zoomManager = get(Atom.zoomManager).zoomOut(appStore.zoomStep);
     set(Atom.zoomManager, zoomManager);
@@ -81,7 +87,6 @@ export const ImageView = ({
     imageRef: React.RefObject<HTMLImageElement | null>;
 }): JSX.Element => {
     const setZoomManager = useSetAtom(Atom.zoomManager);
-    const setScrollManager = useSetAtom(Atom.scrollManager);
     const zoomIn = useSetAtom(zoomInAtom);
     const zoomOut = useSetAtom(zoomOutAtom);
     const goToLeft = useSetAtom(goToLeftAtom);
@@ -94,14 +99,9 @@ export const ImageView = ({
             onResize={(width, height) =>
                 setZoomManager((z) => z.setViewerSize({ width, height }))
             }
-            onScroll={(element) => {
-                const image = imageRef.current;
-                if (image == null) return;
-                setScrollManager((s) => s.update(element, image));
-            }}
-            onDoubleClick={zoomIn}
-            onRightClick={zoomOut}
-            onLongPress={zoomOut}
+            onDoubleClick={() => zoomIn(viewerRef.current, imageRef.current)}
+            onRightClick={() => zoomOut(viewerRef.current, imageRef.current)}
+            onLongPress={() => zoomOut(viewerRef.current, imageRef.current)}
             onLeftSidePull={() => goToLeft(viewerRef.current, imageRef.current)}
             onRightSidePull={() =>
                 goToRight(viewerRef.current, imageRef.current)
@@ -121,7 +121,7 @@ const Viewer = ({
     imageRef,
     children,
     onResize,
-    onScroll,
+
     onDoubleClick,
     onRightClick,
     onLongPress,
@@ -131,7 +131,6 @@ const Viewer = ({
     viewerRef: React.RefObject<HTMLDivElement | null>;
     imageRef: React.RefObject<HTMLImageElement | null>;
     onResize: (width: number, height: number) => void;
-    onScroll: (element: HTMLDivElement) => void;
     onDoubleClick: () => void;
     onRightClick: () => void;
     onLongPress: () => void;
@@ -165,7 +164,6 @@ const Viewer = ({
         <div
             className="fixed inset-0 flex h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
             ref={viewerRef}
-            onScroll={(ev) => onScroll(ev.currentTarget)}
             onDoubleClick={() => {
                 if (canDoubleClick.current) {
                     onDoubleClick();
@@ -229,6 +227,11 @@ const Viewer = ({
 
 /* -------------------------------------------------------------------------- */
 
+const applyScrollAtom = atom(null, (get, _, viewer: Viewer, image: Image) => {
+    if (viewer == null || image == null) return;
+    get(Atom.scrollManager).applyScroll(viewer, image);
+});
+
 const Img = ({
     viewerRef,
     imageRef,
@@ -242,6 +245,7 @@ const Img = ({
     const appStore = useAtomValue(Atom.appStore);
     const [zoomManager, setZoomManager] = useAtom(Atom.zoomManager);
     const scrollManager = useAtomValue(Atom.scrollManager);
+    const applyScroll = useSetAtom(applyScrollAtom);
 
     useEffect(() => {
         const image = imageRef.current;
@@ -275,21 +279,20 @@ const Img = ({
     ]);
 
     useEffect(() => {
-        const viewer = viewerRef.current;
         const image = imageRef.current;
         const div = divRef.current;
-        if (viewer == null || image == null || div == null) return;
+        if (image == null || div == null) return;
 
         const observer = new MutationObserver(() => {
-            scrollManager.applyScroll(viewer, image);
+            applyScroll(viewerRef.current, imageRef.current);
             div.style.minWidth = `${image.clientWidth}px`;
             div.style.minHeight = `${image.clientHeight}px`;
         });
-        observer.observe(image, { attributes: true });
+        observer.observe(image, { attributes: true, childList: true });
         return (): void => {
             observer.disconnect();
         };
-    }, [imageRef, scrollManager, viewerRef]);
+    }, [applyScroll, imageRef, viewerRef]);
 
     const handleLoad = (
         ev: React.SyntheticEvent<HTMLImageElement, Event>,
@@ -303,6 +306,8 @@ const Img = ({
         const width = ev.currentTarget.naturalWidth;
         const height = ev.currentTarget.naturalHeight;
         setZoomManager((z) => z.setImageSize({ width, height }));
+        div.style.minWidth = `${image.clientWidth}px`;
+        div.style.minHeight = `${image.clientHeight}px`;
     };
 
     return (
