@@ -12,6 +12,7 @@ export const Atom = {
     fileManager: atom(new FileManager()),
     historyManager: atom(new HistoryManager()),
     isOpenSideMenu: atom(false),
+    isUserScrolled: atom(false),
     messageManager: atom(messageManager),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
@@ -99,6 +100,7 @@ export const ActionAtom = {
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
 
+        set(Atom.prevImageBlob, undefined);
         set(Atom.imageBlob, await fm.getBlob());
         fm.getBlob(fm.index + 1).then((blob) => {
             set(Atom.nextImageBlob, blob);

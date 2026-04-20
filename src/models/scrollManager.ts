@@ -178,19 +178,19 @@ export class ScrollManager {
     private readonly getVerticalOrigin = (): Origin => {
         const h = Math.round(this.verticalPercentage);
         if (h === MIN) return Top;
-        if (MIN < h && h < CENTER - 5) return Up;
-        if (CENTER + 5 < h && h < MAX) return Down;
-        if (h === MAX) return Bottom;
-        return VCenter;
+        if (MIN < h && h < CENTER) return Up;
+        if (h === CENTER) return VCenter;
+        if (CENTER < h && h < MAX) return Down;
+        return Bottom;
     };
 
     private readonly getHorizontalOrigin = (): Origin => {
         const w = Math.round(this.horizontalPercentage);
         if (w === MIN) return Leftmost;
-        if (MIN < w && w < CENTER - 5) return Left;
-        if (CENTER + 5 < w && w < MAX) return Right;
-        if (w === MAX) return Rightmost;
-        return HCenter;
+        if (MIN < w && w < CENTER) return Left;
+        if (w === CENTER) return HCenter;
+        if (CENTER < w && w < MAX) return Right;
+        return Rightmost;
     };
 }
 

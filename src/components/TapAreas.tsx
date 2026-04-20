@@ -10,7 +10,10 @@ const viewerBottomClickAtom = atom(
     (get, set, viewer: Viewer, image: Image) => {
         if (viewer == null || image == null) return;
 
-        set(Atom.scrollManager, (s) => s.update(viewer, image));
+        if (get(Atom.isUserScrolled)) {
+            set(Atom.scrollManager, (s) => s.update(viewer, image));
+            set(Atom.isUserScrolled, false);
+        }
         const { shouldAdvance } = get(Atom.appStore);
         if (shouldAdvance) {
             set(ActionAtom.goToPrevious, viewer, image);
@@ -23,7 +26,10 @@ const viewerLeftClickAtom = atom(
     (get, set, viewer: Viewer, image: Image) => {
         if (viewer == null || image == null) return;
 
-        set(Atom.scrollManager, (s) => s.update(viewer, image));
+        if (get(Atom.isUserScrolled)) {
+            set(Atom.scrollManager, (s) => s.update(viewer, image));
+            set(Atom.isUserScrolled, false);
+        }
         const { shouldAdvance, writingType } = get(Atom.appStore);
         if (shouldAdvance) {
             set(ActionAtom.goToNext, viewer, image);
@@ -45,7 +51,10 @@ const viewerRightClickAtom = atom(
     (get, set, viewer: Viewer, image: Image) => {
         if (viewer == null || image == null) return;
 
-        set(Atom.scrollManager, (s) => s.update(viewer, image));
+        if (get(Atom.isUserScrolled)) {
+            set(Atom.scrollManager, (s) => s.update(viewer, image));
+            set(Atom.isUserScrolled, false);
+        }
         const { shouldAdvance, writingType } = get(Atom.appStore);
         if (shouldAdvance) {
             set(ActionAtom.goToNext, viewer, image);
@@ -64,25 +73,27 @@ const viewerRightClickAtom = atom(
 
 const horizontalScrollAtom = atom(
     null,
-    (get, _, deltaX: number, viewer: Viewer) => {
+    (get, set, deltaX: number, viewer: Viewer) => {
         if (viewer == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
         const x = scrollSpeed * deltaX + viewer.scrollLeft;
         const y = viewer.scrollTop;
         viewer.scroll(x, y);
+        set(Atom.isUserScrolled, true);
     },
 );
 
 const verticalScrollAtom = atom(
     null,
-    (get, _, deltaY: number, viewer: Viewer) => {
+    (get, set, deltaY: number, viewer: Viewer) => {
         if (viewer == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
         const x = viewer.scrollLeft;
         const y = scrollSpeed * deltaY + viewer.scrollTop;
         viewer.scroll(x, y);
+        set(Atom.isUserScrolled, true);
     },
 );
 

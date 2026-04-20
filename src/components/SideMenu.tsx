@@ -73,32 +73,6 @@ export const SideMenu = (props: {
 
 /* -------------------------------------------------------------------------- */
 
-// export const MenuButton = (): JSX.Element => {
-//     const setIsOpenSideMenu = useSetAtom(Atom.isOpenSideMenu);
-
-//     const className = {
-//         _: "size-10 rounded-full transition select-none",
-//         position: "fixed top-4 left-4",
-//         grid: "grid place-items-center",
-//         bg: "bg-neutral-500/25",
-//         hoverBg: "hover:bg-neutral-600/25",
-//         activeBg: "active:bg-neutral-700/25",
-//         border: "border border-neutral-200/25 focus-visible:border-transparent",
-//         outline:
-//             "-outline-offset-2 outline-blue-500/75 focus-visible:outline-2",
-//         stroke: "stroke-white/50",
-//     };
-
-//     return (
-//         <button
-//             className={Object.values(className).join(" ")}
-//             onClick={() => setIsOpenSideMenu(true)}
-//         >
-//             <EllipsisVertical className="stroke-inherit" />
-//         </button>
-//     );
-// };
-
 export const MenuButton = (): JSX.Element => {
     const setIsOpenSideMenu = useSetAtom(Atom.isOpenSideMenu);
     const shouldShowInfo = useAtomValue(Atom.shouldShowInfo);
@@ -140,7 +114,9 @@ const closeViewerAtom = atom(null, (_, set) => {
     set(Atom.isOpenSideMenu, false);
     set(Atom.zipFileName, undefined);
     set(Atom.zoomManager, (z) => z.reset());
+    set(Atom.prevImageBlob, undefined);
     set(Atom.imageBlob, undefined);
+    set(Atom.nextImageBlob, undefined);
 });
 
 const CloseButton = (): JSX.Element => {

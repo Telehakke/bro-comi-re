@@ -160,6 +160,7 @@ const Viewer = ({
     const touchMoveCount = useRef(0);
     const setOnChevronLeft = useSetAtom(onChevronLeftAtom);
     const setOnChevronRight = useSetAtom(onChevronRightAtom);
+    const setIsUserScrolled = useSetAtom(Atom.isUserScrolled);
 
     useEffect(() => {
         const viewer = viewerRef.current;
@@ -206,6 +207,7 @@ const Viewer = ({
                 touchMoveCount.current = 0;
             }}
             onTouchMove={(ev) => {
+                setIsUserScrolled(true);
                 if (touchMoveCount.current > 5) {
                     window.clearTimeout(timerId.current);
                 }
@@ -240,6 +242,9 @@ const Viewer = ({
                 } else if (scrollCount.current > 100) {
                     onRightSidePull();
                 }
+            }}
+            onWheel={() => {
+                setIsUserScrolled(true);
             }}
         >
             {children}
