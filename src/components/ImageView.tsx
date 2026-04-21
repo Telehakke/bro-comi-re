@@ -98,9 +98,13 @@ export const ImageView = ({
         <Viewer
             viewerRef={viewerRef}
             imageRef={imageRef}
-            onResize={(width, height) =>
-                setZoomManager((z) => z.setViewerSize({ width, height }))
-            }
+            onResize={(width, height) => {
+                setZoomManager((z) => {
+                    const newState = z.setViewerSize({ width, height });
+                    console.log(newState.viewerRatio(), newState.imageRatio());
+                    return newState;
+                });
+            }}
             onClick={() => {
                 window.clearTimeout(timerRef.current);
                 timerRef.current = window.setTimeout(() => {
@@ -266,7 +270,6 @@ const Img = ({
     viewerRef: React.RefObject<HTMLDivElement | null>;
     imageRef: React.RefObject<HTMLImageElement | null>;
 }): JSX.Element => {
-    const divRef = useRef<HTMLDivElement | null>(null);
     const imageBlob = useAtomValue(Atom.imageBlob);
     const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
     const appStore = useAtomValue(Atom.appStore);
@@ -307,13 +310,10 @@ const Img = ({
 
     useEffect(() => {
         const image = imageRef.current;
-        const div = divRef.current;
-        if (image == null || div == null) return;
+        if (image == null) return;
 
         const observer = new MutationObserver(() => {
             applyScroll(viewerRef.current, imageRef.current);
-            div.style.minWidth = `${image.clientWidth}px`;
-            div.style.minHeight = `${image.clientHeight}px`;
         });
         observer.observe(image, { attributes: true, childList: true });
         return (): void => {
@@ -326,21 +326,24 @@ const Img = ({
     ): void => {
         const viewer = viewerRef.current;
         const image = imageRef.current;
-        const div = divRef.current;
-        if (viewer == null || image == null || div == null) return;
+        if (viewer == null || image == null) return;
 
         scrollManager.applyScroll(viewer, image);
         const width = ev.currentTarget.naturalWidth;
         const height = ev.currentTarget.naturalHeight;
+        console.log(width, height);
         setZoomManager((z) => z.setImageSize({ width, height }));
-        div.style.minWidth = `${image.clientWidth}px`;
-        div.style.minHeight = `${image.clientHeight}px`;
     };
 
     return (
         <div className="m-auto">
             <div className="relative grid" style={style(zoomManager)}>
-                <img ref={imageRef} onLoad={handleLoad} />
+                <img
+                    className="max-w-none"
+                    style={style(zoomManager)}
+                    ref={imageRef}
+                    onLoad={handleLoad}
+                />
                 <div className="absolute inset-0" />
             </div>
         </div>
@@ -352,7 +355,7 @@ const style = (zoomManager: ZoomManager): CSSProperties => {
     const scale = zoomManager.scale;
     return {
         width: isHorizontalFit ? `${scale}%` : "auto",
-        height: isHorizontalFit ? "auto" : `${scale}%`,
+        height: isHorizontalFit ? "auto" : `${scale}dvh`,
         WebkitTouchCallout: "none",
     };
 };

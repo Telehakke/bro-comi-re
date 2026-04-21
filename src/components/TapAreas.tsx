@@ -71,27 +71,18 @@ const viewerRightClickAtom = atom(
     },
 );
 
-const xArray: number[] = [];
-
 const horizontalScrollAtom = atom(
     null,
     (get, set, deltaX: number, viewer: Viewer) => {
         if (viewer == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
-        let x = scrollSpeed * deltaX + viewer.scrollLeft;
-        if (xArray.length > 3) {
-            xArray.shift();
-        }
-        xArray.push(x);
-        x = xArray.reduce((acc, v) => acc + v, 0) / xArray.length;
+        const x = scrollSpeed * deltaX + viewer.scrollLeft;
         const y = viewer.scrollTop;
         viewer.scroll(x, y);
         set(Atom.isUserScrolled, true);
     },
 );
-
-const yArray: number[] = [];
 
 const verticalScrollAtom = atom(
     null,
@@ -100,12 +91,7 @@ const verticalScrollAtom = atom(
 
         const { scrollSpeed } = get(Atom.appStore);
         const x = viewer.scrollLeft;
-        let y = scrollSpeed * deltaY + viewer.scrollTop;
-        if (yArray.length > 3) {
-            yArray.shift();
-        }
-        yArray.push(y);
-        y = yArray.reduce((acc, v) => acc + v, 0) / yArray.length;
+        const y = scrollSpeed * deltaY + viewer.scrollTop;
         viewer.scroll(x, y);
         set(Atom.isUserScrolled, true);
     },
@@ -168,6 +154,8 @@ const TapArea = (props: {
     const timerRef = useRef<number | undefined>(undefined);
     const prevClient = useRef({ x: 0, y: 0 });
     const [isActive, setIsActive] = useState(false);
+    const xArray = useRef<number[]>([]);
+    const yArray = useRef<number[]>([]);
 
     useEffect(() => {
         const div = divRef.current;
@@ -175,8 +163,22 @@ const TapArea = (props: {
 
         const handleTouchmove = (ev: TouchEvent): void => {
             ev.preventDefault();
-            const x = ev.changedTouches[0].clientX;
-            const y = ev.changedTouches[0].clientY;
+            let x = ev.changedTouches[0].clientX;
+            if (xArray.current.length > 5) {
+                xArray.current.shift();
+            }
+            xArray.current.push(x);
+            x =
+                xArray.current.reduce((acc, v) => acc + v, 0) /
+                xArray.current.length;
+            let y = ev.changedTouches[0].clientY;
+            if (yArray.current.length > 5) {
+                yArray.current.shift();
+            }
+            yArray.current.push(y);
+            y =
+                yArray.current.reduce((acc, v) => acc + v, 0) /
+                yArray.current.length;
             props.onScroll(prevClient.current.x - x, prevClient.current.y - y);
             prevClient.current = { x, y };
         };
@@ -204,6 +206,8 @@ const TapArea = (props: {
         const { clientX, clientY } = ev.changedTouches[0];
         prevClient.current = { x: clientX, y: clientY };
         setIsActive(true);
+        xArray.current = [];
+        yArray.current = [];
     };
 
     const handleTouchEnd = (): void => {

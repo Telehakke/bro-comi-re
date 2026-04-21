@@ -42,7 +42,18 @@ export class ZoomManager {
 
         const viewerRatio = this.viewerSize.width / this.viewerSize.height;
         const imageRatio = this.imageSize.width / this.imageSize.height;
+        console.log(viewerRatio, imageRatio);
         return viewerRatio <= imageRatio;
+    };
+
+    viewerRatio = (): number => {
+        if (this.viewerSize == null) return -1;
+        return this.viewerSize.width / this.viewerSize.height;
+    };
+
+    imageRatio = (): number => {
+        if (this.imageSize == null) return -1;
+        return this.imageSize.width / this.imageSize.height;
     };
 
     private readonly copyWith = ({
