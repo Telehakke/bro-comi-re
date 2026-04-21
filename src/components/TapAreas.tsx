@@ -115,15 +115,6 @@ export const TapAreas = ({
     return (
         <>
             <TapArea
-                className="inset-x-0 bottom-0 h-18"
-                onClick={() =>
-                    viewerBottomClick(viewerRef.current, imageRef.current)
-                }
-                onScroll={(deltaX) =>
-                    horizontalScroll(deltaX, viewerRef.current)
-                }
-            />
-            <TapArea
                 className="inset-y-0 left-0 w-18"
                 onClick={() =>
                     viewerLeftClick(viewerRef.current, imageRef.current)
@@ -139,6 +130,15 @@ export const TapAreas = ({
                 }
                 onScroll={(_, deltaY) =>
                     verticalScroll(deltaY, viewerRef.current)
+                }
+            />
+            <TapArea
+                className="inset-x-0 bottom-0 h-18"
+                onClick={() =>
+                    viewerBottomClick(viewerRef.current, imageRef.current)
+                }
+                onScroll={(deltaX) =>
+                    horizontalScroll(deltaX, viewerRef.current)
                 }
             />
         </>

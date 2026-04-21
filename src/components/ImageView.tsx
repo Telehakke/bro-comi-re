@@ -338,14 +338,11 @@ const Img = ({
     };
 
     return (
-        <div className="relative contents">
-            <img
-                className="m-auto max-w-none"
-                ref={imageRef}
-                style={style(zoomManager)}
-                onLoad={handleLoad}
-            />
-            <div className="absolute inset-0" ref={divRef} />
+        <div className="m-auto">
+            <div className="relative grid" style={style(zoomManager)}>
+                <img ref={imageRef} onLoad={handleLoad} />
+                <div className="absolute inset-0" />
+            </div>
         </div>
     );
 };
