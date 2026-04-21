@@ -1,6 +1,7 @@
 import { atom, useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, Atom } from "../atoms";
+import { SmoothScroll } from "../models/smoothScroll";
 
 type Viewer = HTMLDivElement | null;
 type Image = HTMLImageElement | null;
@@ -154,8 +155,7 @@ const TapArea = (props: {
     const timerRef = useRef<number | undefined>(undefined);
     const prevClient = useRef({ x: 0, y: 0 });
     const [isActive, setIsActive] = useState(false);
-    const xArray = useRef<number[]>([]);
-    const yArray = useRef<number[]>([]);
+    const smoothScroll = useRef(SmoothScroll);
 
     useEffect(() => {
         const div = divRef.current;
@@ -163,24 +163,15 @@ const TapArea = (props: {
 
         const handleTouchmove = (ev: TouchEvent): void => {
             ev.preventDefault();
-            let x = ev.changedTouches[0].clientX;
-            if (xArray.current.length > 5) {
-                xArray.current.shift();
-            }
-            xArray.current.push(x);
-            x =
-                xArray.current.reduce((acc, v) => acc + v, 0) /
-                xArray.current.length;
-            let y = ev.changedTouches[0].clientY;
-            if (yArray.current.length > 5) {
-                yArray.current.shift();
-            }
-            yArray.current.push(y);
-            y =
-                yArray.current.reduce((acc, v) => acc + v, 0) /
-                yArray.current.length;
-            props.onScroll(prevClient.current.x - x, prevClient.current.y - y);
-            prevClient.current = { x, y };
+            const { clientX, clientY } = ev.changedTouches[0];
+            const diffX = prevClient.current.x - clientX;
+            const diffY = prevClient.current.y - clientY;
+            smoothScroll.current.add(diffX, diffY);
+            props.onScroll(
+                smoothScroll.current.averageX(),
+                smoothScroll.current.averageY(),
+            );
+            prevClient.current = { x: clientX, y: clientY };
         };
 
         const handleWheel = (ev: WheelEvent): void => {
@@ -206,8 +197,7 @@ const TapArea = (props: {
         const { clientX, clientY } = ev.changedTouches[0];
         prevClient.current = { x: clientX, y: clientY };
         setIsActive(true);
-        xArray.current = [];
-        yArray.current = [];
+        smoothScroll.current = SmoothScroll;
     };
 
     const handleTouchEnd = (): void => {
