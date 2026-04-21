@@ -71,18 +71,27 @@ const viewerRightClickAtom = atom(
     },
 );
 
+const xArray: number[] = [];
+
 const horizontalScrollAtom = atom(
     null,
     (get, set, deltaX: number, viewer: Viewer) => {
         if (viewer == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
-        const x = scrollSpeed * deltaX + viewer.scrollLeft;
+        let x = scrollSpeed * deltaX + viewer.scrollLeft;
+        if (xArray.length > 3) {
+            xArray.shift();
+        }
+        xArray.push(x);
+        x = xArray.reduce((acc, v) => acc + v, 0) / xArray.length;
         const y = viewer.scrollTop;
         viewer.scroll(x, y);
         set(Atom.isUserScrolled, true);
     },
 );
+
+const yArray: number[] = [];
 
 const verticalScrollAtom = atom(
     null,
@@ -91,7 +100,12 @@ const verticalScrollAtom = atom(
 
         const { scrollSpeed } = get(Atom.appStore);
         const x = viewer.scrollLeft;
-        const y = scrollSpeed * deltaY + viewer.scrollTop;
+        let y = scrollSpeed * deltaY + viewer.scrollTop;
+        if (yArray.length > 3) {
+            yArray.shift();
+        }
+        yArray.push(y);
+        y = yArray.reduce((acc, v) => acc + v, 0) / yArray.length;
         viewer.scroll(x, y);
         set(Atom.isUserScrolled, true);
     },
