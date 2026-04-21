@@ -354,7 +354,7 @@ const style = (zoomManager: ZoomManager): CSSProperties => {
     const isHorizontalFit = zoomManager.isHorizontalFit();
     const scale = zoomManager.scale;
     return {
-        width: isHorizontalFit ? `${scale}%` : "auto",
+        width: isHorizontalFit ? `${scale}dvw` : "auto",
         height: isHorizontalFit ? "auto" : `${scale}dvh`,
         WebkitTouchCallout: "none",
     };
