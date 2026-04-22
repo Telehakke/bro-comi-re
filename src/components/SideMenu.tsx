@@ -20,7 +20,7 @@ import { Switch } from "./common/Switch";
 
 export const SideMenu = (props: {
     viewerRef: React.RefObject<HTMLDivElement | null>;
-    imageRef: React.RefObject<HTMLImageElement | null>;
+    contentRef: React.RefObject<HTMLDivElement | null>;
 }): JSX.Element => {
     const [isOpenSideMenu, setIsOpenSideMenu] = useAtom(Atom.isOpenSideMenu);
     const appStore = useAtomValue(Atom.appStore);
@@ -136,7 +136,7 @@ const CloseButton = (): JSX.Element => {
 
 const SelectPageSlider = (props: {
     viewerRef: React.RefObject<HTMLDivElement | null>;
-    imageRef: React.RefObject<HTMLImageElement | null>;
+    contentRef: React.RefObject<HTMLDivElement | null>;
 }): JSX.Element => {
     const appStore = useAtomValue(Atom.appStore);
     const fileManager = useAtomValue(Atom.fileManager);
@@ -183,9 +183,9 @@ const SelectPageSlider = (props: {
 // prettier-ignore
 const moveToIndexPageAtom = atom(
     null,
-    (_, set, index: number, viewer: HTMLDivElement, image: HTMLImageElement) => {
+    (_, set, index: number, viewer: HTMLDivElement, content: HTMLDivElement) => {
         set(ActionAtom.moveToIndexPage, index);
-        set(ActionAtom.scrollToStart, viewer, image);
+        set(ActionAtom.scrollToStart, viewer, content);
         set(ActionAtom.updateHistory);
         set(Atom.zoomManager, (z) => z.reset());
         set(Atom.isOpenSideMenu, false)
@@ -196,7 +196,7 @@ const Thumbnail = (props: {
     blob?: Blob;
     index: number;
     viewerRef: React.RefObject<HTMLDivElement | null>;
-    imageRef: React.RefObject<HTMLImageElement | null>;
+    contentRef: React.RefObject<HTMLDivElement | null>;
 }): JSX.Element => {
     const imgRef = useRef<HTMLImageElement | null>(null);
     const moveToIndexPage = useSetAtom(moveToIndexPageAtom);
@@ -219,7 +219,7 @@ const Thumbnail = (props: {
             ref={imgRef}
             onClick={() => {
                 const viewer = props.viewerRef.current;
-                const image = props.imageRef.current;
+                const image = props.contentRef.current;
                 if (viewer == null || image == null) return;
                 moveToIndexPage(props.index, viewer, image);
             }}

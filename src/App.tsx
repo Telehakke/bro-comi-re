@@ -11,7 +11,7 @@ import { Time } from "./components/Time";
 
 export const App = (): JSX.Element => {
     const viewerRef = useRef<HTMLDivElement | null>(null);
-    const imageRef = useRef<HTMLImageElement | null>(null);
+    const content = useRef<HTMLDivElement | null>(null);
     const fileManager = useAtomValue(Atom.fileManager);
 
     return (
@@ -19,13 +19,13 @@ export const App = (): JSX.Element => {
             {!fileManager.hasFiles() && <Home />}
             {fileManager.hasFiles() && (
                 <div className="h-[150dvh]">
-                    <ImageView viewerRef={viewerRef} imageRef={imageRef} />
-                    <TapAreas viewerRef={viewerRef} imageRef={imageRef} />
+                    <ImageView viewerRef={viewerRef} contentRef={content} />
+                    <TapAreas viewerRef={viewerRef} contentRef={content} />
                     <MenuButton />
                     <Time />
                     <Progress />
                     <Notification />
-                    <SideMenu viewerRef={viewerRef} imageRef={imageRef} />
+                    <SideMenu viewerRef={viewerRef} contentRef={content} />
                 </div>
             )}
         </>

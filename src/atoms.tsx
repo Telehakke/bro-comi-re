@@ -29,13 +29,13 @@ export const Atom = {
 export const ActionAtom = {
     goToNext: atom(
         null,
-        (get, set, viewer: HTMLDivElement, image: HTMLImageElement) => {
+        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
             const { writingType } = get(Atom.appStore);
             const sm = get(Atom.scrollManager);
-            if (sm.shouldMoveToNextPage(viewer, image, writingType)) {
+            if (sm.shouldMoveToNextPage(viewer, content, writingType)) {
                 if (get(Atom.fileManager).hasNextFile()) {
                     set(ActionAtom.moveToNextPage);
-                    set(ActionAtom.scrollToStart, viewer, image);
+                    set(ActionAtom.scrollToStart, viewer, content);
                     set(ActionAtom.updateHistory);
                 } else {
                     set(Atom.messageManager, (m) =>
@@ -43,19 +43,19 @@ export const ActionAtom = {
                     );
                 }
             } else {
-                set(ActionAtom.scrollToNext, viewer, image);
+                set(ActionAtom.scrollToNext, viewer, content);
             }
         },
     ),
     goToPrevious: atom(
         null,
-        (get, set, viewer: HTMLDivElement, image: HTMLImageElement) => {
+        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
             const { writingType } = get(Atom.appStore);
             const sm = get(Atom.scrollManager);
-            if (sm.shouldMoveToPreviousPage(viewer, image, writingType)) {
+            if (sm.shouldMoveToPreviousPage(viewer, content, writingType)) {
                 if (get(Atom.fileManager).hasPreviousFile()) {
                     set(ActionAtom.moveToPreviousPage);
-                    set(ActionAtom.scrollToEnd, viewer, image);
+                    set(ActionAtom.scrollToEnd, viewer, content);
                     set(ActionAtom.updateHistory);
                 } else {
                     set(Atom.messageManager, (m) =>
@@ -63,7 +63,7 @@ export const ActionAtom = {
                     );
                 }
             } else {
-                set(ActionAtom.scrollToPrevious, viewer, image);
+                set(ActionAtom.scrollToPrevious, viewer, content);
             }
         },
     ),
@@ -108,46 +108,55 @@ export const ActionAtom = {
     }),
     scrollToStart: atom(
         null,
-        (get, set, viewer: HTMLDivElement, image: HTMLImageElement) => {
+        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
             const { writingType } = get(Atom.appStore);
             const sm = ScrollManager.createFromWritingType(writingType);
             set(Atom.scrollManager, sm);
-            sm.applyScroll(viewer, image);
+            sm.applyScroll(viewer, content);
         },
     ),
     scrollToEnd: atom(
         null,
-        (get, set, viewer: HTMLDivElement, image: HTMLImageElement) => {
+        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
             const { writingType } = get(Atom.appStore);
             const sm = ScrollManager.createFromWritingType(writingType, true);
             set(Atom.scrollManager, sm);
-            sm.applyScroll(viewer, image);
+            sm.applyScroll(viewer, content);
         },
     ),
     scrollToNext: atom(
         null,
-        (get, set, viewer: HTMLDivElement, image: HTMLImageElement) => {
+        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
             const appStore = get(Atom.appStore);
             const sm = get(Atom.scrollManager).next(
                 appStore.movementDirection,
                 appStore.writingType,
                 appStore.viewSplitCount,
+                viewer,
+                content,
+            );
+            set(Atom.messageManager, (m) =>
+                m.setMessage(
+                    `${sm.horizontalPercentage}, ${sm.verticalPercentage}`,
+                ),
             );
             set(Atom.scrollManager, sm);
-            sm.applyScroll(viewer, image);
+            sm.applyScroll(viewer, content);
         },
     ),
     scrollToPrevious: atom(
         null,
-        (get, set, viewer: HTMLDivElement, image: HTMLImageElement) => {
+        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
             const appStore = get(Atom.appStore);
             const sm = get(Atom.scrollManager).previous(
                 appStore.movementDirection,
                 appStore.writingType,
                 appStore.viewSplitCount,
+                viewer,
+                content,
             );
             set(Atom.scrollManager, sm);
-            sm.applyScroll(viewer, image);
+            sm.applyScroll(viewer, content);
         },
     ),
     updateHistory: atom(null, (get, set) => {

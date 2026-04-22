@@ -46,10 +46,10 @@ export class ScrollManager {
 
     static readonly createFromElement = (
         viewer: HTMLDivElement,
-        image: HTMLImageElement,
+        content: HTMLDivElement,
     ): ScrollManager => {
-        const diffW = image.clientWidth - viewer.clientWidth;
-        const diffH = image.clientHeight - viewer.clientHeight;
+        const diffW = content.clientWidth - viewer.clientWidth;
+        const diffH = content.clientHeight - viewer.clientHeight;
         return new ScrollManager(
             diffW == 0 ? 0 : (Math.ceil(viewer.scrollLeft) / diffW) * 100,
             diffH == 0 ? 0 : (Math.ceil(viewer.scrollTop) / diffH) * 100,
@@ -58,10 +58,10 @@ export class ScrollManager {
 
     readonly update = (
         viewer: HTMLDivElement,
-        image: HTMLImageElement,
+        content: HTMLDivElement,
     ): ScrollManager => {
-        const diffW = image.clientWidth - viewer.clientWidth;
-        const diffH = image.clientHeight - viewer.clientHeight;
+        const diffW = content.clientWidth - viewer.clientWidth;
+        const diffH = content.clientHeight - viewer.clientHeight;
         return new ScrollManager(
             diffW > 0
                 ? (Math.ceil(viewer.scrollLeft) / diffW) * 100
@@ -82,14 +82,14 @@ export class ScrollManager {
 
     readonly applyScroll = (
         viewer: HTMLElement,
-        image: HTMLImageElement,
+        content: HTMLDivElement,
     ): void => {
         const x =
-            ((image.clientWidth - viewer.clientWidth) *
+            ((content.clientWidth - viewer.clientWidth) *
                 (this.horizontalPercentage ?? 0)) /
             100;
         const y =
-            ((image.clientHeight - viewer.clientHeight) *
+            ((content.clientHeight - viewer.clientHeight) *
                 (this.verticalPercentage ?? 0)) /
             100;
         viewer.scroll(x, y);
@@ -99,61 +99,91 @@ export class ScrollManager {
         movementDirection: MovementDirection,
         writingType: WritingType,
         viewSplitCount: ViewSplitCount,
+        viewer: HTMLDivElement,
+        content: HTMLDivElement,
     ): ScrollManager => {
+        const diffW = content.clientWidth - viewer.clientWidth;
+        const diffH = content.clientHeight - viewer.clientHeight;
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
-        let x: number | undefined = this.horizontalPercentage;
-        let y: number | undefined = this.verticalPercentage;
+        let x: number | undefined = undefined;
+        let y: number | undefined = undefined;
         switch (movementDirection) {
             case "vertical":
-                y = vOrigin.next(writingType, viewSplitCount).VALUE;
-                if (vOrigin.isEnd(writingType)) {
+                if (diffH <= 0) {
                     x = hOrigin.next(writingType, viewSplitCount).VALUE;
+                } else {
+                    y = vOrigin.next(writingType, viewSplitCount).VALUE;
+                    if (vOrigin.isEnd(writingType)) {
+                        x = hOrigin.next(writingType, viewSplitCount).VALUE;
+                    }
                 }
                 break;
             case "horizontal":
-                x = hOrigin.next(writingType, viewSplitCount).VALUE;
-                if (hOrigin.isEnd(writingType)) {
+                if (diffW <= 0) {
                     y = vOrigin.next(writingType, viewSplitCount).VALUE;
+                } else {
+                    x = hOrigin.next(writingType, viewSplitCount).VALUE;
+                    if (hOrigin.isEnd(writingType)) {
+                        y = vOrigin.next(writingType, viewSplitCount).VALUE;
+                    }
                 }
                 break;
         }
-        return new ScrollManager(x, y);
+        return new ScrollManager(
+            x ?? this.horizontalPercentage,
+            y ?? this.verticalPercentage,
+        );
     };
 
     readonly previous = (
         movementDirection: MovementDirection,
         writingType: WritingType,
         viewSplitCount: ViewSplitCount,
+        viewer: HTMLDivElement,
+        content: HTMLDivElement,
     ): ScrollManager => {
+        const diffW = content.clientWidth - viewer.clientWidth;
+        const diffH = content.clientHeight - viewer.clientHeight;
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
-        let x: number | undefined = this.horizontalPercentage;
-        let y: number | undefined = this.verticalPercentage;
+        let x: number | undefined = undefined;
+        let y: number | undefined = undefined;
         switch (movementDirection) {
             case "vertical":
-                y = vOrigin.previous(writingType, viewSplitCount).VALUE;
-                if (vOrigin.isStart(writingType)) {
+                if (diffH <= 0) {
                     x = hOrigin.previous(writingType, viewSplitCount).VALUE;
+                } else {
+                    y = vOrigin.previous(writingType, viewSplitCount).VALUE;
+                    if (vOrigin.isStart(writingType)) {
+                        x = hOrigin.previous(writingType, viewSplitCount).VALUE;
+                    }
                 }
                 break;
             case "horizontal":
-                x = hOrigin.previous(writingType, viewSplitCount).VALUE;
-                if (hOrigin.isStart(writingType)) {
+                if (diffW <= 0) {
                     y = vOrigin.previous(writingType, viewSplitCount).VALUE;
+                } else {
+                    x = hOrigin.previous(writingType, viewSplitCount).VALUE;
+                    if (hOrigin.isStart(writingType)) {
+                        y = vOrigin.previous(writingType, viewSplitCount).VALUE;
+                    }
                 }
                 break;
         }
-        return new ScrollManager(x, y);
+        return new ScrollManager(
+            x ?? this.horizontalPercentage,
+            y ?? this.verticalPercentage,
+        );
     };
 
     readonly shouldMoveToNextPage = (
         viewer: HTMLElement,
-        image: HTMLImageElement,
+        content: HTMLDivElement,
         writingType: WritingType,
     ): boolean => {
-        const diffW = image.clientWidth - viewer.clientWidth;
-        const diffH = image.clientHeight - viewer.clientHeight;
+        const diffW = content.clientWidth - viewer.clientWidth;
+        const diffH = content.clientHeight - viewer.clientHeight;
         const result1 =
             diffW <= 0 ? true : this.getHorizontalOrigin().isEnd(writingType);
         const result2 =
@@ -163,11 +193,11 @@ export class ScrollManager {
 
     readonly shouldMoveToPreviousPage = (
         viewer: HTMLElement,
-        image: HTMLImageElement,
+        content: HTMLDivElement,
         writingType: WritingType,
     ): boolean => {
-        const diffW = image.clientWidth - viewer.clientWidth;
-        const diffH = image.clientHeight - viewer.clientHeight;
+        const diffW = content.clientWidth - viewer.clientWidth;
+        const diffH = content.clientHeight - viewer.clientHeight;
         const result1 =
             diffW <= 0 ? true : this.getHorizontalOrigin().isStart(writingType);
         const result2 =

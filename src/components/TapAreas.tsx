@@ -4,44 +4,44 @@ import { ActionAtom, Atom } from "../atoms";
 import { SmoothScroll } from "../models/smoothScroll";
 
 type Viewer = HTMLDivElement | null;
-type Image = HTMLImageElement | null;
+type Content = HTMLDivElement | null;
 
 const viewerBottomClickAtom = atom(
     null,
-    (get, set, viewer: Viewer, image: Image) => {
-        if (viewer == null || image == null) return;
+    (get, set, viewer: Viewer, content: Content) => {
+        if (viewer == null || content == null) return;
 
         if (get(Atom.isUserScrolled)) {
-            set(Atom.scrollManager, (s) => s.update(viewer, image));
+            set(Atom.scrollManager, (s) => s.update(viewer, content));
             set(Atom.isUserScrolled, false);
         }
         const { shouldAdvance } = get(Atom.appStore);
         if (shouldAdvance) {
-            set(ActionAtom.goToPrevious, viewer, image);
+            set(ActionAtom.goToPrevious, viewer, content);
         }
     },
 );
 
 const viewerLeftClickAtom = atom(
     null,
-    (get, set, viewer: Viewer, image: Image) => {
-        if (viewer == null || image == null) return;
+    (get, set, viewer: Viewer, content: Content) => {
+        if (viewer == null || content == null) return;
 
         if (get(Atom.isUserScrolled)) {
-            set(Atom.scrollManager, (s) => s.update(viewer, image));
+            set(Atom.scrollManager, (s) => s.update(viewer, content));
             set(Atom.isUserScrolled, false);
         }
         const { shouldAdvance, writingType } = get(Atom.appStore);
         if (shouldAdvance) {
-            set(ActionAtom.goToNext, viewer, image);
+            set(ActionAtom.goToNext, viewer, content);
             return;
         }
         if (writingType === "vertical") {
-            set(ActionAtom.goToNext, viewer, image);
+            set(ActionAtom.goToNext, viewer, content);
             return;
         }
         if (writingType === "horizontal") {
-            set(ActionAtom.goToPrevious, viewer, image);
+            set(ActionAtom.goToPrevious, viewer, content);
             return;
         }
     },
@@ -49,24 +49,24 @@ const viewerLeftClickAtom = atom(
 
 const viewerRightClickAtom = atom(
     null,
-    (get, set, viewer: Viewer, image: Image) => {
-        if (viewer == null || image == null) return;
+    (get, set, viewer: Viewer, content: Content) => {
+        if (viewer == null || content == null) return;
 
         if (get(Atom.isUserScrolled)) {
-            set(Atom.scrollManager, (s) => s.update(viewer, image));
+            set(Atom.scrollManager, (s) => s.update(viewer, content));
             set(Atom.isUserScrolled, false);
         }
         const { shouldAdvance, writingType } = get(Atom.appStore);
         if (shouldAdvance) {
-            set(ActionAtom.goToNext, viewer, image);
+            set(ActionAtom.goToNext, viewer, content);
             return;
         }
         if (writingType === "vertical") {
-            set(ActionAtom.goToPrevious, viewer, image);
+            set(ActionAtom.goToPrevious, viewer, content);
             return;
         }
         if (writingType === "horizontal") {
-            set(ActionAtom.goToNext, viewer, image);
+            set(ActionAtom.goToNext, viewer, content);
             return;
         }
     },
@@ -74,26 +74,26 @@ const viewerRightClickAtom = atom(
 
 const horizontalScrollAtom = atom(
     null,
-    (get, set, deltaX: number, viewer: Viewer) => {
-        if (viewer == null) return;
+    (get, set, deltaX: number, content: Viewer) => {
+        if (content == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
-        const x = scrollSpeed * deltaX + viewer.scrollLeft;
-        const y = viewer.scrollTop;
-        viewer.scroll(x, y);
+        const x = scrollSpeed * deltaX + content.scrollLeft;
+        const y = content.scrollTop;
+        content.scroll(x, y);
         set(Atom.isUserScrolled, true);
     },
 );
 
 const verticalScrollAtom = atom(
     null,
-    (get, set, deltaY: number, viewer: Viewer) => {
-        if (viewer == null) return;
+    (get, set, deltaY: number, content: Viewer) => {
+        if (content == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
-        const x = viewer.scrollLeft;
-        const y = scrollSpeed * deltaY + viewer.scrollTop;
-        viewer.scroll(x, y);
+        const x = content.scrollLeft;
+        const y = scrollSpeed * deltaY + content.scrollTop;
+        content.scroll(x, y);
         set(Atom.isUserScrolled, true);
     },
 );
@@ -102,10 +102,10 @@ const verticalScrollAtom = atom(
 
 export const TapAreas = ({
     viewerRef,
-    imageRef,
+    contentRef,
 }: {
     viewerRef: React.RefObject<HTMLDivElement | null>;
-    imageRef: React.RefObject<HTMLImageElement | null>;
+    contentRef: React.RefObject<HTMLDivElement | null>;
 }): JSX.Element => {
     const viewerBottomClick = useSetAtom(viewerBottomClickAtom);
     const viewerLeftClick = useSetAtom(viewerLeftClickAtom);
@@ -118,7 +118,7 @@ export const TapAreas = ({
             <TapArea
                 className="inset-y-0 left-0 w-18"
                 onClick={() =>
-                    viewerLeftClick(viewerRef.current, imageRef.current)
+                    viewerLeftClick(viewerRef.current, contentRef.current)
                 }
                 onScroll={(_, deltaY) =>
                     verticalScroll(deltaY, viewerRef.current)
@@ -127,7 +127,7 @@ export const TapAreas = ({
             <TapArea
                 className="inset-y-0 right-0 w-18"
                 onClick={() =>
-                    viewerRightClick(viewerRef.current, imageRef.current)
+                    viewerRightClick(viewerRef.current, contentRef.current)
                 }
                 onScroll={(_, deltaY) =>
                     verticalScroll(deltaY, viewerRef.current)
@@ -136,7 +136,7 @@ export const TapAreas = ({
             <TapArea
                 className="inset-x-0 bottom-0 h-18"
                 onClick={() =>
-                    viewerBottomClick(viewerRef.current, imageRef.current)
+                    viewerBottomClick(viewerRef.current, contentRef.current)
                 }
                 onScroll={(deltaX) =>
                     horizontalScroll(deltaX, viewerRef.current)
