@@ -3,9 +3,11 @@ import { EllipsisVertical } from "lucide-react";
 import React, { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, Atom } from "../atoms";
 import {
+    DisplayModeEnum,
     MovementDirectionEnum,
     ViewSplitCountEnum,
     WritingTypeEnum,
+    type DisplayMode,
     type MovementDirection,
     type ViewSplitCount,
     type WritingType,
@@ -37,6 +39,11 @@ export const SideMenu = (props: {
                 <Card>
                     <WritingTypeSegmentGroup />
                     <MovementDirectionSegmentGroup />
+                </Card>
+                <Card
+                    footer={`1：1枚の画像を表示\n1・2：表紙だけ1枚、以降は2枚\n2：2枚の画像を並べて表示`}
+                >
+                    <DisplayModeSegmentGroup />
                 </Card>
                 <Card footer="拡大時に次、または前のページに移動するのに必要な最大タップ数">
                     <ViewSplitCountSegmentGroup />
@@ -114,9 +121,12 @@ const closeViewerAtom = atom(null, (_, set) => {
     set(Atom.isOpenSideMenu, false);
     set(Atom.zipFileName, undefined);
     set(Atom.zoomManager, (z) => z.reset());
-    set(Atom.prevImageBlob, undefined);
-    set(Atom.imageBlob, undefined);
-    set(Atom.nextImageBlob, undefined);
+    set(Atom.prevLeftImageBlob, undefined);
+    set(Atom.prevRightImageBlob, undefined);
+    set(Atom.currentLeftImageBlob, undefined);
+    set(Atom.currentRightImageBlob, undefined);
+    set(Atom.nextLeftImageBlob, undefined);
+    set(Atom.nextRightImageBlob, undefined);
 });
 
 const CloseButton = (): JSX.Element => {
@@ -258,6 +268,30 @@ const MovementDirectionSegmentGroup = (): JSX.Element => {
             label="スライド方向"
             items={Object.values(MovementDirectionEnum)}
             value={appStore.movementDirection}
+            onValueChange={handleChange}
+        />
+    );
+};
+
+const reloadAtom = atom(null, (get, set, value: DisplayMode) => {
+    set(Atom.appStore, (a) => a.setDisplayMode(value));
+    const index = get(Atom.fileManager).index;
+    set(ActionAtom.moveToIndexPage, index);
+});
+
+const DisplayModeSegmentGroup = (): JSX.Element => {
+    const appStore = useAtomValue(Atom.appStore);
+    const reload = useSetAtom(reloadAtom);
+
+    const handleChange = (value: string | null): void => {
+        reload(value as DisplayMode);
+    };
+
+    return (
+        <SegmentGroup
+            label="画像の表示枚数"
+            items={Object.values(DisplayModeEnum)}
+            value={appStore.displayMode}
             onValueChange={handleChange}
         />
     );

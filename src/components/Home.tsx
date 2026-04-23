@@ -1,6 +1,6 @@
 import { atom, useSetAtom } from "jotai";
 import { useRef, type JSX } from "react";
-import { Atom } from "../atoms";
+import { ActionAtom, Atom } from "../atoms";
 import { FileManager } from "../models/fileManager";
 import { HistoryManager } from "../models/historyManager";
 import { ScrollManager } from "../models/scrollManager";
@@ -18,9 +18,8 @@ export const Home = (): JSX.Element => {
 
 const openImageFilesAtom = atom(null, async (get, set, files: FileList) => {
     const fileManager = FileManager.fromFiles(Array.from(files));
-    set(Atom.imageBlob, await fileManager.getBlob());
     set(Atom.fileManager, fileManager);
-    set(Atom.messageManager, (m) => m.setMessage(fileManager.progress()));
+    set(ActionAtom.moveToIndexPage, 0);
     const { writingType } = get(Atom.appStore);
     set(Atom.scrollManager, ScrollManager.createFromWritingType(writingType));
 });
@@ -59,20 +58,18 @@ const OpenImageFilesButton = (): JSX.Element => {
 
 const openZipFileAtom = atom(null, async (get, set, file: File) => {
     const appStore = get(Atom.appStore);
-    let fileManager = await FileManager.fromZip(file);
+    const fileManager = await FileManager.fromZip(file);
+    set(Atom.fileManager, fileManager);
     let historyManager = new HistoryManager(appStore.histories);
     const index = historyManager.getIndex(file.name);
     if (index == null) {
         historyManager = historyManager.add(file.name);
     } else {
         historyManager = historyManager.moveToHead(file.name);
-        fileManager = fileManager.setIndex(index);
     }
     set(Atom.appStore, (a) => a.setHistories(historyManager.histories));
     set(Atom.historyManager, historyManager);
-    set(Atom.fileManager, fileManager);
-    set(Atom.imageBlob, await fileManager.getBlob());
-    set(Atom.messageManager, (m) => m.setMessage(fileManager.progress()));
+    set(ActionAtom.moveToIndexPage, index ?? 0);
     set(
         Atom.scrollManager,
         ScrollManager.createFromWritingType(appStore.writingType),

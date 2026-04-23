@@ -1,6 +1,7 @@
 import {
     defaultAppState,
     type AppState,
+    type DisplayMode,
     type History,
     type MovementDirection,
     type ViewSplitCount,
@@ -11,6 +12,7 @@ import { localStorage } from "./localStorage";
 type AppStore = AppState &
     Readonly<{
         setAppState: (value: AppState) => AppStore;
+        setDisplayMode: (value: DisplayMode) => AppStore;
         setHistories: (value: readonly History[]) => AppStore;
         setMovementDirection: (value: MovementDirection) => AppStore;
         setOnSharpeningFilter: (value: boolean) => AppStore;
@@ -26,6 +28,11 @@ export const appStore: AppStore = {
     ...defaultAppState,
     setAppState(value) {
         const obj: AppStore = { ...this, ...value };
+        localStorage.setAppState(obj);
+        return obj;
+    },
+    setDisplayMode(value) {
+        const obj: AppStore = { ...this, displayMode: value };
         localStorage.setAppState(obj);
         return obj;
     },

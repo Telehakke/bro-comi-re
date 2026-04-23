@@ -42,7 +42,6 @@ export class ZoomManager {
 
         const viewerRatio = this.viewerSize.width / this.viewerSize.height;
         const imageRatio = this.imageSize.width / this.imageSize.height;
-        console.log(viewerRatio, imageRatio);
         return viewerRatio <= imageRatio;
     };
 

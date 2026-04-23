@@ -19,9 +19,12 @@ export const Atom = {
     shouldShowInfo: atom(true),
     zipFileName: atom<string | undefined>(undefined),
     zoomManager: atom(new ZoomManager()),
-    prevImageBlob: atom<Blob | undefined>(undefined),
-    imageBlob: atom<Blob | undefined>(undefined),
-    nextImageBlob: atom<Blob | undefined>(undefined),
+    prevLeftImageBlob: atom<Blob | undefined>(undefined),
+    currentLeftImageBlob: atom<Blob | undefined>(undefined),
+    nextLeftImageBlob: atom<Blob | undefined>(undefined),
+    prevRightImageBlob: atom<Blob | undefined>(undefined),
+    currentRightImageBlob: atom<Blob | undefined>(undefined),
+    nextRightImageBlob: atom<Blob | undefined>(undefined),
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -68,42 +71,119 @@ export const ActionAtom = {
         },
     ),
     moveToNextPage: atom(null, async (get, set) => {
-        const fm = get(Atom.fileManager).incrementIndex();
+        const { displayMode, writingType } = get(Atom.appStore);
+        let fm: FileManager;
+        if (displayMode === "single") {
+            fm = get(Atom.fileManager).incrementIndex();
+        } else {
+            fm = get(Atom.fileManager).incrementIndex().incrementIndex();
+        }
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
 
-        set(Atom.prevImageBlob, get(Atom.imageBlob));
+        set(Atom.prevLeftImageBlob, get(Atom.currentLeftImageBlob));
+        set(Atom.prevRightImageBlob, get(Atom.currentRightImageBlob));
 
-        const current = get(Atom.nextImageBlob);
-        set(Atom.imageBlob, current != null ? current : await fm.getBlob());
+        const currentLeft = get(Atom.nextLeftImageBlob);
+        set(
+            Atom.currentLeftImageBlob,
+            currentLeft != null
+                ? currentLeft
+                : await fm.getLeftBlob(displayMode, writingType),
+        );
+        const currentRight = get(Atom.nextRightImageBlob);
+        set(
+            Atom.currentRightImageBlob,
+            currentRight != null
+                ? currentRight
+                : await fm.getRightBlob(displayMode, writingType),
+        );
 
-        fm.getBlob(fm.index + 1).then((blob) => {
-            set(Atom.nextImageBlob, blob);
+        let nextFm: FileManager;
+        if (displayMode === "single") {
+            nextFm = fm.incrementIndex();
+        } else {
+            nextFm = fm.incrementIndex().incrementIndex();
+        }
+        nextFm.getLeftBlob(displayMode, writingType).then((blob) => {
+            set(Atom.nextLeftImageBlob, blob);
+        });
+        nextFm.getRightBlob(displayMode, writingType).then((blob) => {
+            set(Atom.nextRightImageBlob, blob);
         });
     }),
     moveToPreviousPage: atom(null, async (get, set) => {
-        const fm = get(Atom.fileManager).decrementIndex();
+        const { displayMode, writingType } = get(Atom.appStore);
+        let fm: FileManager;
+        if (displayMode === "single") {
+            fm = get(Atom.fileManager).decrementIndex();
+        } else {
+            fm = get(Atom.fileManager).decrementIndex().decrementIndex();
+        }
+
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
 
-        set(Atom.nextImageBlob, get(Atom.imageBlob));
+        set(Atom.nextLeftImageBlob, get(Atom.currentLeftImageBlob));
+        set(Atom.nextRightImageBlob, get(Atom.currentRightImageBlob));
 
-        const current = get(Atom.prevImageBlob);
-        set(Atom.imageBlob, current != null ? current : await fm.getBlob());
+        const currentLeft = get(Atom.prevLeftImageBlob);
+        set(
+            Atom.currentLeftImageBlob,
+            currentLeft != null
+                ? currentLeft
+                : await fm.getLeftBlob(displayMode, writingType),
+        );
+        const currentRight = get(Atom.prevRightImageBlob);
+        set(
+            Atom.currentRightImageBlob,
+            currentRight != null
+                ? currentRight
+                : await fm.getRightBlob(displayMode, writingType),
+        );
 
-        fm.getBlob(fm.index - 1).then((blob) => {
-            set(Atom.prevImageBlob, blob);
+        let prevFm: FileManager;
+        if (displayMode == "single") {
+            prevFm = fm.decrementIndex();
+        } else {
+            prevFm = fm.decrementIndex().decrementIndex();
+        }
+        prevFm.getLeftBlob(displayMode, writingType).then((blob) => {
+            set(Atom.prevLeftImageBlob, blob);
+        });
+        prevFm.getRightBlob(displayMode, writingType).then((blob) => {
+            set(Atom.prevRightImageBlob, blob);
         });
     }),
     moveToIndexPage: atom(null, async (get, set, index: number) => {
+        const { displayMode, writingType } = get(Atom.appStore);
         const fm = get(Atom.fileManager).setIndex(index);
         set(Atom.fileManager, fm);
         set(Atom.messageManager, (m) => m.setMessage(fm.progress()));
 
-        set(Atom.prevImageBlob, undefined);
-        set(Atom.imageBlob, await fm.getBlob());
-        fm.getBlob(fm.index + 1).then((blob) => {
-            set(Atom.nextImageBlob, blob);
+        set(Atom.prevLeftImageBlob, undefined);
+        set(Atom.prevRightImageBlob, undefined);
+
+        set(
+            Atom.currentLeftImageBlob,
+            await fm.getLeftBlob(displayMode, writingType),
+        );
+        set(
+            Atom.currentRightImageBlob,
+            await fm.getRightBlob(displayMode, writingType),
+        );
+
+        let nextFm: FileManager;
+        if (displayMode === "single") {
+            nextFm = fm.incrementIndex();
+        } else {
+            nextFm = fm.incrementIndex().incrementIndex();
+        }
+        nextFm.getLeftBlob(displayMode, writingType).then((blob) => {
+            set(Atom.nextLeftImageBlob, blob);
+        });
+        nextFm.getRightBlob(displayMode, writingType).then((blob) => {
+            set(Atom.prevRightImageBlob, blob);
         });
     }),
     scrollToStart: atom(

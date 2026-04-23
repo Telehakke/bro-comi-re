@@ -2,6 +2,7 @@ import { isBoolean, isNotNull } from "./typeGuards";
 import { FilterStrength, ScrollSpeed, ZoomStep } from "./validator";
 
 export type AppState = Readonly<{
+    displayMode: DisplayMode;
     histories: readonly History[];
     movementDirection: MovementDirection;
     onSharpeningFilter: boolean;
@@ -14,10 +15,11 @@ export type AppState = Readonly<{
 }>;
 
 export const defaultAppState: AppState = {
+    displayMode: "single",
     histories: [],
     movementDirection: "vertical",
     onSharpeningFilter: false,
-    scrollSpeed: 2,
+    scrollSpeed: 4,
     sharpeningFilterStrength: 3,
     shouldAdvance: false,
     viewSplitCount: "four",
@@ -32,6 +34,10 @@ export const createAppState = (value: unknown): AppState => {
 
     const v = value as AppState;
     const obj: AppState = {
+        displayMode: ensureDisplayMode(
+            v.displayMode,
+            defaultAppState.displayMode,
+        ),
         histories: ensureHistories(v.histories, defaultAppState.histories),
         movementDirection: ensureMovementDirection(
             v.movementDirection,
@@ -68,6 +74,27 @@ export const createAppState = (value: unknown): AppState => {
 
 const ensureBoolean = (value: unknown, defaultValue: boolean): boolean => {
     return isBoolean(value) ? value : defaultValue;
+};
+
+/* -------------------------------------------------------------------------- */
+
+export const DisplayModeEnum = {
+    single: { value: "single", label: "1" },
+    book: { value: "book", label: "1・2" },
+    double: { value: "double", label: "2" },
+};
+
+export type DisplayMode = keyof typeof DisplayModeEnum;
+
+export const isDisplayMode = (value: unknown): value is DisplayMode => {
+    return Object.keys(DisplayModeEnum).some((v) => v === value);
+};
+
+const ensureDisplayMode = (
+    value: unknown,
+    defaultValue: DisplayMode,
+): DisplayMode => {
+    return isDisplayMode(value) ? value : defaultValue;
 };
 
 /* -------------------------------------------------------------------------- */

@@ -18,7 +18,7 @@ export const Card = (props: {
 
 const Header = (props: { header?: string }): JSX.Element => {
     const className = {
-        _: "mx-2 text-xs whitespace-pre-line",
+        _: "mx-2 text-xs whitespace-pre-wrap",
         text: "text-neutral-500 dark:text-neutral-400",
     };
 
@@ -42,7 +42,7 @@ const Content = (props: { children: ReactNode }): JSX.Element => {
 
 const Footer = (props: { footer?: string }): JSX.Element => {
     const className = {
-        _: "mx-2 text-xs whitespace-pre-line",
+        _: "mx-2 text-xs whitespace-pre-wrap",
         text: "text-neutral-500 dark:text-neutral-400",
     };
 

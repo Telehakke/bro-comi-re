@@ -87,7 +87,7 @@ const Indicator = (): JSX.Element => {
 
 const Items = (props: { items?: SegmentGroupItem[] }): JSX.Element => {
     const className = {
-        _: "h-8 w-30 rounded-full",
+        _: "h-8 w-32 rounded-full",
         grid: "grid auto-cols-fr grid-flow-col",
         bg: "bg-white dark:bg-neutral-900",
         border: "border border-neutral-300 dark:border-neutral-600",

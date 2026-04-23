@@ -119,7 +119,6 @@ export const ImageView = ({
             onResize={(width, height) => {
                 setZoomManager((z) => {
                     const newState = z.setViewerSize({ width, height });
-                    console.log(newState.viewerRatio(), newState.imageRatio());
                     return newState;
                 });
             }}
@@ -290,8 +289,10 @@ const Img = ({
     viewerRef: React.RefObject<HTMLDivElement | null>;
     contentRef: React.RefObject<HTMLDivElement | null>;
 }): JSX.Element => {
-    const imgRef = useRef<HTMLImageElement | null>(null);
-    const imageBlob = useAtomValue(Atom.imageBlob);
+    const leftImgRef = useRef<HTMLImageElement | null>(null);
+    const rightImgRef = useRef<HTMLImageElement | null>(null);
+    const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
+    const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
     const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
     const appStore = useAtomValue(Atom.appStore);
     const [zoomManager, setZoomManager] = useAtom(Atom.zoomManager);
@@ -299,15 +300,26 @@ const Img = ({
     const applyScroll = useSetAtom(applyScrollAtom);
 
     useEffect(() => {
-        const image = imgRef.current;
-        if (image == null || imageBlob == null) return;
+        const image = leftImgRef.current;
+        if (image == null || leftImageBlob == null) return;
 
-        const imageURL = URL.createObjectURL(imageBlob);
+        const imageURL = URL.createObjectURL(leftImageBlob);
         image.src = imageURL;
         return (): void => {
             URL.revokeObjectURL(imageURL);
         };
-    }, [imageBlob, contentRef]);
+    }, [leftImageBlob]);
+
+    useEffect(() => {
+        const image = rightImgRef.current;
+        if (image == null || rightImageBlob == null) return;
+
+        const imageURL = URL.createObjectURL(rightImageBlob);
+        image.src = imageURL;
+        return (): void => {
+            URL.revokeObjectURL(imageURL);
+        };
+    }, [rightImageBlob]);
 
     useEffect(() => {
         const content = contentRef.current;
@@ -336,51 +348,86 @@ const Img = ({
         const observer = new MutationObserver(() => {
             applyScroll(viewerRef.current, contentRef.current);
         });
-        observer.observe(content, { attributes: true, childList: true });
+        observer.observe(content, { attributes: true, subtree: true });
         return (): void => {
             observer.disconnect();
         };
     }, [applyScroll, contentRef, viewerRef]);
 
-    const handleLoad = (
-        ev: React.SyntheticEvent<HTMLImageElement, Event>,
-    ): void => {
+    const handleLeftImgLoad = (): void => {
         const viewer = viewerRef.current;
-        const image = contentRef.current;
-        if (viewer == null || image == null) return;
+        const content = contentRef.current;
+        if (viewer == null || content == null) return;
 
-        scrollManager.applyScroll(viewer, image);
-        const width = ev.currentTarget.naturalWidth;
-        const height = ev.currentTarget.naturalHeight;
-        console.log(width, height);
+        scrollManager.applyScroll(viewer, content);
+        const width = content.clientWidth;
+        const height = content.clientHeight;
+        setZoomManager((z) => z.setImageSize({ width, height }));
+    };
+
+    const handleRightImgLoad = (): void => {
+        const viewer = viewerRef.current;
+        const content = contentRef.current;
+        if (viewer == null || content == null) return;
+
+        scrollManager.applyScroll(viewer, content);
+        const width = content.clientWidth;
+        const height = content.clientHeight;
         setZoomManager((z) => z.setImageSize({ width, height }));
     };
 
     return (
         <div className="m-auto">
             <div
-                className="relative grid"
-                style={style(zoomManager)}
+                className={`relative grid size-max items-start ${leftImageBlob != null && rightImageBlob != null && "grid-cols-2"}`}
                 ref={contentRef}
             >
-                <img
-                    className="max-w-none"
-                    style={style(zoomManager)}
-                    ref={imgRef}
-                    onLoad={handleLoad}
-                />
+                {leftImageBlob != null && (
+                    <img
+                        className="size-full max-w-none justify-self-end object-contain"
+                        style={leftImgStyle(zoomManager, rightImageBlob)}
+                        ref={leftImgRef}
+                        onLoad={handleLeftImgLoad}
+                    />
+                )}
+                {rightImageBlob != null && (
+                    <img
+                        className="size-full max-w-none object-contain"
+                        style={rightImgStyle(zoomManager, leftImageBlob)}
+                        ref={rightImgRef}
+                        onLoad={handleRightImgLoad}
+                    />
+                )}
                 <div className="absolute inset-0" />
             </div>
         </div>
     );
 };
 
-const style = (zoomManager: ZoomManager): CSSProperties => {
-    const isHorizontalFit = zoomManager.isHorizontalFit();
+const leftImgStyle = (
+    zoomManager: ZoomManager,
+    rightImageBlob?: Blob,
+): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        width: isHorizontalFit ? `${scale}dvw` : "auto",
-        height: isHorizontalFit ? "auto" : `${scale}dvh`,
+        width: "auto",
+        height: "auto",
+        maxWidth: rightImageBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
+        maxHeight: `${scale}dvh`,
+        WebkitTouchCallout: "none",
+    };
+};
+
+const rightImgStyle = (
+    zoomManager: ZoomManager,
+    leftImageBlob?: Blob,
+): CSSProperties => {
+    const scale = zoomManager.scale;
+    return {
+        width: "auto",
+        height: "auto",
+        maxWidth: leftImageBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
+        maxHeight: `${scale}dvh`,
         WebkitTouchCallout: "none",
     };
 };
