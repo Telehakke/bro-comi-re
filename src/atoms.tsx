@@ -215,11 +215,6 @@ export const ActionAtom = {
                 viewer,
                 content,
             );
-            set(Atom.messageManager, (m) =>
-                m.setMessage(
-                    `${sm.horizontalPercentage}, ${sm.verticalPercentage}`,
-                ),
-            );
             set(Atom.scrollManager, sm);
             sm.applyScroll(viewer, content);
         },
