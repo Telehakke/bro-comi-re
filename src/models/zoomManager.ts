@@ -37,24 +37,6 @@ export class ZoomManager {
         return this.copyWith({ scale: MIN });
     };
 
-    readonly isHorizontalFit = (): boolean => {
-        if (this.viewerSize == null || this.imageSize == null) return true;
-
-        const viewerRatio = this.viewerSize.width / this.viewerSize.height;
-        const imageRatio = this.imageSize.width / this.imageSize.height;
-        return viewerRatio <= imageRatio;
-    };
-
-    viewerRatio = (): number => {
-        if (this.viewerSize == null) return -1;
-        return this.viewerSize.width / this.viewerSize.height;
-    };
-
-    imageRatio = (): number => {
-        if (this.imageSize == null) return -1;
-        return this.imageSize.width / this.imageSize.height;
-    };
-
     private readonly copyWith = ({
         scale,
         viewerSize,

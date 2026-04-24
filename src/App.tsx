@@ -1,41 +1,34 @@
-import { getDefaultStore, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { useRef, type JSX } from "react";
-import { ActionAtom, Atom } from "./atoms";
-import { Home } from "./components/Home";
+import { Atom } from "./atoms";
 import { ImageView } from "./components/ImageView";
 import { Notification } from "./components/Notification";
 import { Progress } from "./components/Progress";
-import { MenuButton, SideMenu } from "./components/SideMenu";
 import { TapAreas } from "./components/TapAreas";
 import { Time } from "./components/Time";
-
-const defaultStore = getDefaultStore();
-
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-        defaultStore.set(ActionAtom.updateHistory);
-    }
-});
+import { Home } from "./components/home/Home";
+import { SideMenu } from "./components/sideMenu/SideMenu";
+import { MenuButton } from "./components/sideMenu/sub/MenuButton";
+import type { Content, Viewer } from "./models/types";
 
 export const App = (): JSX.Element => {
-    const viewerRef = useRef<HTMLDivElement | null>(null);
-    const content = useRef<HTMLDivElement | null>(null);
-    const fileManager = useAtomValue(Atom.fileManager);
+    const viewerRef = useRef<Viewer>(null);
+    const contentRef = useRef<Content>(null);
+    const shouldShowViewer = useAtomValue(Atom.shouldShowViewer);
 
-    return (
-        <>
-            {!fileManager.hasFiles() && <Home />}
-            {fileManager.hasFiles() && (
-                <div className="h-[150dvh]">
-                    <ImageView viewerRef={viewerRef} contentRef={content} />
-                    <TapAreas viewerRef={viewerRef} contentRef={content} />
-                    <MenuButton />
-                    <Time />
-                    <Progress />
-                    <Notification />
-                    <SideMenu viewerRef={viewerRef} contentRef={content} />
-                </div>
-            )}
-        </>
-    );
+    if (shouldShowViewer) {
+        return (
+            <div className="h-[150dvh]">
+                <ImageView viewerRef={viewerRef} contentRef={contentRef} />
+                <TapAreas viewerRef={viewerRef} contentRef={contentRef} />
+                <MenuButton />
+                <Time />
+                <Progress />
+                <Notification />
+                <SideMenu viewerRef={viewerRef} contentRef={contentRef} />
+            </div>
+        );
+    } else {
+        return <Home />;
+    }
 };

@@ -45,27 +45,11 @@ const Root = (
 /* -------------------------------------------------------------------------- */
 
 const Track = (): JSX.Element => {
-    const className = {
-        _: "h-1",
-        indeterminate: "data-[state=indeterminate]:animate-pulse",
-        bg: "bg-neutral-500 ",
-    };
-
     return (
-        <ArkProgress.Track className={Object.values(className).join(" ")}>
-            <Range />
+        <ArkProgress.Track className="h-1 bg-neutral-500">
+            <ArkProgress.Range className="h-1 bg-green-500" />
         </ArkProgress.Track>
     );
-};
-
-const Range = (): JSX.Element => {
-    const className = {
-        _: "h-1 transition-all ease-linear",
-        indeterminate: "data-[state=indeterminate]:hidden",
-        bg: "bg-green-500",
-    };
-
-    return <ArkProgress.Range className={Object.values(className).join(" ")} />;
 };
 
 /* -------------------------------------------------------------------------- */

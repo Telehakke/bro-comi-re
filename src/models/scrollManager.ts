@@ -1,29 +1,19 @@
-import type {
-    MovementDirection,
-    ViewSplitCount,
-    WritingType,
-} from "./appState";
+import type { ViewSplitCount, WritingType } from "./appState";
 
 const MIN = 0;
 const CENTER = 50;
 const MAX = 100;
 
 export class ScrollManager {
-    readonly horizontalPercentage: number;
-    readonly verticalPercentage: number;
+    readonly x: number;
+    readonly y: number;
 
     constructor(horizontalPercentage?: number, verticalPercentage?: number) {
-        this.horizontalPercentage = Math.max(
-            Math.min(horizontalPercentage ?? MIN, MAX),
-            MIN,
-        );
-        this.verticalPercentage = Math.max(
-            Math.min(verticalPercentage ?? MIN, MAX),
-            MIN,
-        );
+        this.x = Math.max(Math.min(horizontalPercentage ?? MIN, MAX), MIN);
+        this.y = Math.max(Math.min(verticalPercentage ?? MIN, MAX), MIN);
     }
 
-    static readonly createFromWritingType = (
+    static readonly fromWritingType = (
         writingType: WritingType,
         end: boolean = false,
     ): ScrollManager => {
@@ -44,7 +34,7 @@ export class ScrollManager {
         }
     };
 
-    static readonly createFromElement = (
+    static readonly fromElement = (
         viewer: HTMLDivElement,
         content: HTMLDivElement,
     ): ScrollManager => {
@@ -63,21 +53,17 @@ export class ScrollManager {
         const diffW = content.clientWidth - viewer.clientWidth;
         const diffH = content.clientHeight - viewer.clientHeight;
         return new ScrollManager(
-            diffW > 0
-                ? (Math.ceil(viewer.scrollLeft) / diffW) * 100
-                : this.horizontalPercentage,
-            diffH > 0
-                ? (Math.ceil(viewer.scrollTop) / diffH) * 100
-                : this.verticalPercentage,
+            diffW > 0 ? (Math.ceil(viewer.scrollLeft) / diffW) * 100 : this.x,
+            diffH > 0 ? (Math.ceil(viewer.scrollTop) / diffH) * 100 : this.y,
         );
     };
 
     readonly isHorizontalMin = (): boolean => {
-        return this.horizontalPercentage === MIN;
+        return this.x === MIN;
     };
 
     readonly isHorizontalMax = (): boolean => {
-        return this.horizontalPercentage === MAX;
+        return this.x === MAX;
     };
 
     readonly applyScroll = (
@@ -85,96 +71,55 @@ export class ScrollManager {
         content: HTMLDivElement,
     ): void => {
         const x =
-            ((content.clientWidth - viewer.clientWidth) *
-                (this.horizontalPercentage ?? 0)) /
-            100;
+            ((content.clientWidth - viewer.clientWidth) * (this.x ?? 0)) / 100;
         const y =
-            ((content.clientHeight - viewer.clientHeight) *
-                (this.verticalPercentage ?? 0)) /
+            ((content.clientHeight - viewer.clientHeight) * (this.y ?? 0)) /
             100;
         viewer.scroll(x, y);
     };
 
     readonly next = (
-        movementDirection: MovementDirection,
         writingType: WritingType,
         viewSplitCount: ViewSplitCount,
         viewer: HTMLDivElement,
         content: HTMLDivElement,
     ): ScrollManager => {
-        const diffW = content.clientWidth - viewer.clientWidth;
         const diffH = content.clientHeight - viewer.clientHeight;
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
         let x: number | undefined = undefined;
         let y: number | undefined = undefined;
-        switch (movementDirection) {
-            case "vertical":
-                if (diffH <= 0) {
-                    x = hOrigin.next(writingType, viewSplitCount).VALUE;
-                } else {
-                    y = vOrigin.next(writingType, viewSplitCount).VALUE;
-                    if (vOrigin.isEnd(writingType)) {
-                        x = hOrigin.next(writingType, viewSplitCount).VALUE;
-                    }
-                }
-                break;
-            case "horizontal":
-                if (diffW <= 0) {
-                    y = vOrigin.next(writingType, viewSplitCount).VALUE;
-                } else {
-                    x = hOrigin.next(writingType, viewSplitCount).VALUE;
-                    if (hOrigin.isEnd(writingType)) {
-                        y = vOrigin.next(writingType, viewSplitCount).VALUE;
-                    }
-                }
-                break;
+        if (diffH <= 0) {
+            x = hOrigin.next(writingType, viewSplitCount).VALUE;
+        } else {
+            y = vOrigin.next(writingType, viewSplitCount).VALUE;
+            if (vOrigin.isEnd(writingType)) {
+                x = hOrigin.next(writingType, viewSplitCount).VALUE;
+            }
         }
-        return new ScrollManager(
-            x ?? this.horizontalPercentage,
-            y ?? this.verticalPercentage,
-        );
+        return new ScrollManager(x ?? this.x, y ?? this.y);
     };
 
     readonly previous = (
-        movementDirection: MovementDirection,
         writingType: WritingType,
         viewSplitCount: ViewSplitCount,
         viewer: HTMLDivElement,
         content: HTMLDivElement,
     ): ScrollManager => {
-        const diffW = content.clientWidth - viewer.clientWidth;
         const diffH = content.clientHeight - viewer.clientHeight;
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
         let x: number | undefined = undefined;
         let y: number | undefined = undefined;
-        switch (movementDirection) {
-            case "vertical":
-                if (diffH <= 0) {
-                    x = hOrigin.previous(writingType, viewSplitCount).VALUE;
-                } else {
-                    y = vOrigin.previous(writingType, viewSplitCount).VALUE;
-                    if (vOrigin.isStart(writingType)) {
-                        x = hOrigin.previous(writingType, viewSplitCount).VALUE;
-                    }
-                }
-                break;
-            case "horizontal":
-                if (diffW <= 0) {
-                    y = vOrigin.previous(writingType, viewSplitCount).VALUE;
-                } else {
-                    x = hOrigin.previous(writingType, viewSplitCount).VALUE;
-                    if (hOrigin.isStart(writingType)) {
-                        y = vOrigin.previous(writingType, viewSplitCount).VALUE;
-                    }
-                }
-                break;
+        if (diffH <= 0) {
+            x = hOrigin.previous(writingType, viewSplitCount).VALUE;
+        } else {
+            y = vOrigin.previous(writingType, viewSplitCount).VALUE;
+            if (vOrigin.isStart(writingType)) {
+                x = hOrigin.previous(writingType, viewSplitCount).VALUE;
+            }
         }
-        return new ScrollManager(
-            x ?? this.horizontalPercentage,
-            y ?? this.verticalPercentage,
-        );
+        return new ScrollManager(x ?? this.x, y ?? this.y);
     };
 
     readonly shouldMoveToNextPage = (
@@ -206,7 +151,7 @@ export class ScrollManager {
     };
 
     private readonly getVerticalOrigin = (): Origin => {
-        const h = Math.round(this.verticalPercentage);
+        const h = Math.round(this.y);
         if (h === MIN) return Top;
         if (MIN < h && h < CENTER) return Up;
         if (h === CENTER) return VCenter;
@@ -215,7 +160,7 @@ export class ScrollManager {
     };
 
     private readonly getHorizontalOrigin = (): Origin => {
-        const w = Math.round(this.horizontalPercentage);
+        const w = Math.round(this.x);
         if (w === MIN) return Leftmost;
         if (MIN < w && w < CENTER) return Left;
         if (w === CENTER) return HCenter;
@@ -457,44 +402,44 @@ const NextMap: Record<
     Record<WritingType, Record<ViewSplitCount, Origin>>
 > = {
     [Top.NAME]: {
-        vertical: { four: Bottom, six: VCenter, nine: VCenter },
-        horizontal: { four: Bottom, six: VCenter, nine: VCenter },
+        vertical: { four: Bottom, six: VCenter },
+        horizontal: { four: Bottom, six: VCenter },
     },
     [Up.NAME]: {
-        vertical: { four: Bottom, six: VCenter, nine: VCenter },
-        horizontal: { four: Bottom, six: VCenter, nine: VCenter },
+        vertical: { four: Bottom, six: VCenter },
+        horizontal: { four: Bottom, six: VCenter },
     },
     [VCenter.NAME]: {
-        vertical: { four: Bottom, six: Bottom, nine: Bottom },
-        horizontal: { four: Bottom, six: Bottom, nine: Bottom },
+        vertical: { four: Bottom, six: Bottom },
+        horizontal: { four: Bottom, six: Bottom },
     },
     [Down.NAME]: {
-        vertical: { four: Bottom, six: Bottom, nine: Bottom },
-        horizontal: { four: Bottom, six: Bottom, nine: Bottom },
+        vertical: { four: Bottom, six: Bottom },
+        horizontal: { four: Bottom, six: Bottom },
     },
     [Bottom.NAME]: {
-        vertical: { four: Top, six: Top, nine: Top },
-        horizontal: { four: Top, six: Top, nine: Top },
+        vertical: { four: Top, six: Top },
+        horizontal: { four: Top, six: Top },
     },
     [Leftmost.NAME]: {
-        vertical: { four: Rightmost, six: Rightmost, nine: Rightmost },
-        horizontal: { four: Rightmost, six: Rightmost, nine: HCenter },
+        vertical: { four: Rightmost, six: Rightmost },
+        horizontal: { four: Rightmost, six: Rightmost },
     },
     [Left.NAME]: {
-        vertical: { four: Leftmost, six: Leftmost, nine: Leftmost },
-        horizontal: { four: Rightmost, six: Rightmost, nine: HCenter },
+        vertical: { four: Leftmost, six: Leftmost },
+        horizontal: { four: Rightmost, six: Rightmost },
     },
     [HCenter.NAME]: {
-        vertical: { four: Leftmost, six: Leftmost, nine: Leftmost },
-        horizontal: { four: Rightmost, six: Rightmost, nine: Rightmost },
+        vertical: { four: Leftmost, six: Leftmost },
+        horizontal: { four: Rightmost, six: Rightmost },
     },
     [Right.NAME]: {
-        vertical: { four: Leftmost, six: Leftmost, nine: HCenter },
-        horizontal: { four: Rightmost, six: Rightmost, nine: Rightmost },
+        vertical: { four: Leftmost, six: Leftmost },
+        horizontal: { four: Rightmost, six: Rightmost },
     },
     [Rightmost.NAME]: {
-        vertical: { four: Leftmost, six: Leftmost, nine: HCenter },
-        horizontal: { four: Leftmost, six: Leftmost, nine: Leftmost },
+        vertical: { four: Leftmost, six: Leftmost },
+        horizontal: { four: Leftmost, six: Leftmost },
     },
 } as const;
 
@@ -503,43 +448,43 @@ const PreviousMap: Record<
     Record<WritingType, Record<ViewSplitCount, Origin>>
 > = {
     [Top.NAME]: {
-        vertical: { four: Bottom, six: Bottom, nine: Bottom },
-        horizontal: { four: Bottom, six: Bottom, nine: Bottom },
+        vertical: { four: Bottom, six: Bottom },
+        horizontal: { four: Bottom, six: Bottom },
     },
     [Up.NAME]: {
-        vertical: { four: Top, six: Top, nine: Top },
-        horizontal: { four: Top, six: Top, nine: Top },
+        vertical: { four: Top, six: Top },
+        horizontal: { four: Top, six: Top },
     },
     [VCenter.NAME]: {
-        vertical: { four: Top, six: Top, nine: Top },
-        horizontal: { four: Top, six: Top, nine: Top },
+        vertical: { four: Top, six: Top },
+        horizontal: { four: Top, six: Top },
     },
     [Down.NAME]: {
-        vertical: { four: Top, six: VCenter, nine: VCenter },
-        horizontal: { four: Top, six: VCenter, nine: VCenter },
+        vertical: { four: Top, six: VCenter },
+        horizontal: { four: Top, six: VCenter },
     },
     [Bottom.NAME]: {
-        vertical: { four: Top, six: VCenter, nine: VCenter },
-        horizontal: { four: Top, six: VCenter, nine: VCenter },
+        vertical: { four: Top, six: VCenter },
+        horizontal: { four: Top, six: VCenter },
     },
     [Leftmost.NAME]: {
-        vertical: { four: Rightmost, six: Rightmost, nine: HCenter },
-        horizontal: { four: Rightmost, six: Rightmost, nine: Rightmost },
+        vertical: { four: Rightmost, six: Rightmost },
+        horizontal: { four: Rightmost, six: Rightmost },
     },
     [Left.NAME]: {
-        vertical: { four: Rightmost, six: Rightmost, nine: HCenter },
-        horizontal: { four: Leftmost, six: Leftmost, nine: Leftmost },
+        vertical: { four: Rightmost, six: Rightmost },
+        horizontal: { four: Leftmost, six: Leftmost },
     },
     [HCenter.NAME]: {
-        vertical: { four: Rightmost, six: Rightmost, nine: Rightmost },
-        horizontal: { four: Leftmost, six: Leftmost, nine: Leftmost },
+        vertical: { four: Rightmost, six: Rightmost },
+        horizontal: { four: Leftmost, six: Leftmost },
     },
     [Right.NAME]: {
-        vertical: { four: Rightmost, six: Rightmost, nine: Rightmost },
-        horizontal: { four: Leftmost, six: Leftmost, nine: HCenter },
+        vertical: { four: Rightmost, six: Rightmost },
+        horizontal: { four: Leftmost, six: Leftmost },
     },
     [Rightmost.NAME]: {
-        vertical: { four: Leftmost, six: Leftmost, nine: Leftmost },
-        horizontal: { four: Leftmost, six: Leftmost, nine: HCenter },
+        vertical: { four: Leftmost, six: Leftmost },
+        horizontal: { four: Leftmost, six: Leftmost },
     },
 } as const;

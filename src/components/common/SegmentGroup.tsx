@@ -2,24 +2,15 @@ import { SegmentGroup as ArkSegmentGroup } from "@ark-ui/react/segment-group";
 import { type JSX, type ReactNode } from "react";
 
 export type SegmentGroupItem = {
-    /** ユニークな値 */
     value: string;
-    /** ラベル */
     label: ReactNode;
 };
 
 type SegmentGroupProps = Partial<{
-    /** クラス名 */
     className: string;
-    /** ラベル */
     label: string;
-    /** 項目 */
     items: SegmentGroupItem[];
-    /** 初期値（非制御） */
-    defaultValue: string | null;
-    /** 値 */
     value: string | null;
-    /** 値が変化するたびに呼び出される関数 */
     onValueChange: (value: string | null) => void;
 }>;
 
@@ -40,7 +31,6 @@ export const SegmentGroup = (props: SegmentGroupProps): JSX.Element => {
 const Root = (
     props: Partial<{
         className: string;
-        defaultValue: string | null;
         value: string | null;
         onValueChange: (value: string | null) => void;
         children: ReactNode;
@@ -49,7 +39,6 @@ const Root = (
     return (
         <ArkSegmentGroup.Root
             className={`block p-2 ${props.className}`}
-            defaultValue={props.defaultValue}
             value={props.value}
             onValueChange={(v) => props.onValueChange?.(v.value)}
         >

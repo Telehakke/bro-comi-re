@@ -4,7 +4,6 @@ import { FilterStrength, ScrollSpeed, ZoomStep } from "./validator";
 export type AppState = Readonly<{
     displayMode: DisplayMode;
     histories: readonly History[];
-    movementDirection: MovementDirection;
     onSharpeningFilter: boolean;
     scrollSpeed: number;
     sharpeningFilterStrength: number;
@@ -17,7 +16,6 @@ export type AppState = Readonly<{
 export const defaultAppState: AppState = {
     displayMode: "single",
     histories: [],
-    movementDirection: "vertical",
     onSharpeningFilter: false,
     scrollSpeed: 4,
     sharpeningFilterStrength: 3,
@@ -39,10 +37,6 @@ export const createAppState = (value: unknown): AppState => {
             defaultAppState.displayMode,
         ),
         histories: ensureHistories(v.histories, defaultAppState.histories),
-        movementDirection: ensureMovementDirection(
-            v.movementDirection,
-            defaultAppState.movementDirection,
-        ),
         onSharpeningFilter: ensureBoolean(
             v.onSharpeningFilter,
             defaultAppState.onSharpeningFilter,
@@ -125,32 +119,9 @@ const ensureHistories = (
 
 /* -------------------------------------------------------------------------- */
 
-export const MovementDirectionEnum = {
-    vertical: { value: "vertical", label: "垂直" },
-    horizontal: { value: "horizontal", label: "水平" },
-} as const;
-
-export type MovementDirection = keyof typeof MovementDirectionEnum;
-
-export const isMovementDirection = (
-    value: unknown,
-): value is MovementDirection => {
-    return Object.keys(MovementDirectionEnum).some((v) => v === value);
-};
-
-const ensureMovementDirection = (
-    value: unknown,
-    defaultValue: MovementDirection,
-): MovementDirection => {
-    return isMovementDirection(value) ? value : defaultValue;
-};
-
-/* -------------------------------------------------------------------------- */
-
 export const ViewSplitCountEnum = {
     four: { value: "four", label: "4" },
     six: { value: "six", label: "6" },
-    nine: { value: "nine", label: "9" },
 } as const;
 
 export type ViewSplitCount = keyof typeof ViewSplitCountEnum;

@@ -37,15 +37,18 @@ export class FileManager {
         return new FileManager(images);
     };
 
+    get length(): number {
+        return this.files.length;
+    }
+
     readonly hasFiles = (): boolean => {
         return this.files.length > 0;
     };
 
-    readonly getBlob = async (index?: number): Promise<Blob | undefined> => {
-        const i = index ?? this.index;
-        if (i < 0) return undefined;
+    readonly getBlob = async (index: number): Promise<Blob | undefined> => {
+        if (index < 0) return undefined;
 
-        const file = this.files.at(i);
+        const file = this.files.at(index);
         if (file == null) return undefined;
         if (file instanceof File) return file;
 
@@ -59,49 +62,24 @@ export class FileManager {
         writingType: WritingType,
     ): Promise<Blob | undefined> => {
         let i = this.index;
-
         const isOdd = this.index % 2 === 1;
         switch (displayMode) {
             case "book":
-                if (writingType === "vertical") {
-                    if (isOdd) {
-                        i = this.index + 1;
-                    } else {
-                        i = this.index;
-                    }
-                } else {
-                    if (isOdd) {
-                        i = this.index;
-                    } else {
-                        i = this.index - 1;
-                    }
+                if (writingType === "vertical" && isOdd) {
+                    i = this.index + 1;
+                } else if (writingType === "horizontal" && !isOdd) {
+                    i = this.index - 1;
                 }
                 break;
             case "double":
-                if (writingType === "vertical") {
-                    if (isOdd) {
-                        i = this.index;
-                    } else {
-                        i = this.index + 1;
-                    }
-                } else {
-                    if (isOdd) {
-                        i = this.index - 1;
-                    } else {
-                        i = this.index;
-                    }
+                if (writingType === "vertical" && !isOdd) {
+                    i = this.index + 1;
+                } else if (writingType === "horizontal" && isOdd) {
+                    i = this.index - 1;
                 }
                 break;
         }
-
-        if (i < 0) return undefined;
-        const file = this.files.at(i);
-        if (file == null) return undefined;
-        if (file instanceof File) return file;
-
-        // @ts-expect-error getData()が型定義されていないため警告を無視
-        const asyncBlob = file.getData(new BlobWriter()) as Promise<Blob>;
-        return await asyncBlob;
+        return this.getBlob(i);
     };
 
     readonly getRightBlob = async (
@@ -109,51 +87,26 @@ export class FileManager {
         writingType: WritingType,
     ): Promise<Blob | undefined> => {
         let i = this.index;
-
         const isOdd = this.index % 2 === 1;
         switch (displayMode) {
             case "single":
                 return undefined;
             case "book":
-                if (writingType === "vertical") {
-                    if (isOdd) {
-                        i = this.index;
-                    } else {
-                        i = this.index - 1;
-                    }
-                } else {
-                    if (isOdd) {
-                        i = this.index + 1;
-                    } else {
-                        i = this.index;
-                    }
+                if (writingType === "vertical" && !isOdd) {
+                    i = this.index - 1;
+                } else if (writingType === "horizontal" && isOdd) {
+                    i = this.index + 1;
                 }
                 break;
             case "double":
-                if (writingType === "vertical") {
-                    if (isOdd) {
-                        i = this.index - 1;
-                    } else {
-                        i = this.index;
-                    }
-                } else {
-                    if (isOdd) {
-                        i = this.index;
-                    } else {
-                        i = this.index + 1;
-                    }
+                if (writingType === "vertical" && isOdd) {
+                    i = this.index - 1;
+                } else if (writingType === "horizontal" && !isOdd) {
+                    i = this.index + 1;
                 }
                 break;
         }
-
-        if (i < 0) return undefined;
-        const file = this.files.at(i);
-        if (file == null) return undefined;
-        if (file instanceof File) return file;
-
-        // @ts-expect-error getData()が型定義されていないため警告を無視
-        const asyncBlob = file.getData(new BlobWriter()) as Promise<Blob>;
-        return await asyncBlob;
+        this.getBlob(i);
     };
 
     readonly progress = (): string | undefined => {

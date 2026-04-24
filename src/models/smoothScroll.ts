@@ -1,26 +1,25 @@
-type SmoothScroll = Readonly<{
-    values: { x: number[]; y: number[] };
-    add: (x: number, y: number) => void;
-    averageX: () => number;
-    averageY: () => number;
-}>;
+const LENGTH = 10;
+const INIT_VALUE = [...Array(LENGTH)].map(() => 0);
 
-export const SmoothScroll: SmoothScroll = {
-    values: { x: [...Array(5)].map(() => 0), y: [...Array(5)].map(() => 0) },
-    add(x, y) {
-        this.values.x.shift();
-        this.values.x.push(x);
-        this.values.y.shift();
-        this.values.y.push(y);
-    },
-    averageX() {
-        return (
-            this.values.x.reduce((acc, v) => acc + v, 0) / this.values.x.length
-        );
-    },
-    averageY() {
-        return (
-            this.values.y.reduce((acc, v) => acc + v, 0) / this.values.y.length
-        );
-    },
-};
+export class SmoothScroll {
+    private value: { x: number[]; y: number[] };
+
+    constructor() {
+        this.value = { x: [...INIT_VALUE], y: [...INIT_VALUE] };
+    }
+
+    readonly add = (x: number, y: number): void => {
+        this.value.x.shift();
+        this.value.x.push(x);
+        this.value.y.shift();
+        this.value.y.push(y);
+    };
+
+    readonly averageX = (): number => {
+        return this.value.x.reduce((acc, v) => acc + v, 0) / LENGTH;
+    };
+
+    readonly averageY = (): number => {
+        return this.value.y.reduce((acc, v) => acc + v, 0) / LENGTH;
+    };
+}

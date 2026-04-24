@@ -1,9 +1,5 @@
-import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import {
-    CircleChevronLeft,
-    CircleChevronRight,
-    Image as Content,
-} from "lucide-react";
+import { atom, useAtomValue, useSetAtom } from "jotai";
+import { CircleChevronLeft, CircleChevronRight } from "lucide-react";
 import React, {
     useEffect,
     useRef,
@@ -13,59 +9,49 @@ import React, {
 } from "react";
 import { ActionAtom, Atom } from "../atoms";
 import { ScrollManager } from "../models/scrollManager";
+import type { Content, Viewer } from "../models/types";
 import { ZoomManager } from "../models/zoomManager";
-
-type Viewer = HTMLDivElement | null;
-type Content = HTMLDivElement | null;
 
 const onChevronLeftAtom = atom(false);
 const onChevronRightAtom = atom(false);
 
 const zoomInAtom = atom(null, (get, set, viewer: Viewer, content: Content) => {
     if (viewer == null || content == null) return;
-    set(Atom.scrollManager, (s) => s.update(viewer, content));
 
-    const appStore = get(Atom.appStore);
-    const zoomManager = get(Atom.zoomManager).zoomIn(appStore.zoomStep);
-    set(Atom.zoomManager, zoomManager);
-    set(Atom.messageManager, (m) => m.setMessage(`${zoomManager.scale}%`));
+    set(Atom.scrollManager, (s) => s.update(viewer, content));
+    const { zoomStep } = get(Atom.appStore);
+    const zoom = get(Atom.zoomManager).zoomIn(zoomStep);
+    set(Atom.zoomManager, zoom);
+    set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
 const zoomOutAtom = atom(null, (get, set, viewer: Viewer, content: Content) => {
     if (viewer == null || content == null) return;
-    set(Atom.scrollManager, (s) => s.update(viewer, content));
 
-    const appStore = get(Atom.appStore);
-    const zoomManager = get(Atom.zoomManager).zoomOut(appStore.zoomStep);
-    set(Atom.zoomManager, zoomManager);
-    set(Atom.messageManager, (m) => m.setMessage(`${zoomManager.scale}%`));
+    set(Atom.scrollManager, (s) => s.update(viewer, content));
+    const { zoomStep } = get(Atom.appStore);
+    const zoom = get(Atom.zoomManager).zoomOut(zoomStep);
+    set(Atom.zoomManager, zoom);
+    set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
 const goToLeftAtom = atom(
     null,
     (get, set, viewer: Viewer, content: Content) => {
         if (viewer == null || content == null) return;
+
         const { writingType } = get(Atom.appStore);
         if (writingType === "vertical") {
             if (get(Atom.fileManager).hasNextFile()) {
                 set(ActionAtom.moveToNextPage);
                 set(ActionAtom.scrollToStart, viewer, content);
-            } else {
-                set(Atom.messageManager, (m) =>
-                    m.setMessage("最後のファイルです"),
-                );
             }
         } else {
             if (get(Atom.fileManager).hasPreviousFile()) {
                 set(ActionAtom.moveToPreviousPage);
                 set(ActionAtom.scrollToEnd, viewer, content);
-            } else {
-                set(Atom.messageManager, (m) =>
-                    m.setMessage("最初のファイルです"),
-                );
             }
         }
-        //set(ActionAtom.updateHistory);
     },
 );
 
@@ -73,27 +59,19 @@ const goToRightAtom = atom(
     null,
     (get, set, viewer: Viewer, content: Content) => {
         if (viewer == null || content == null) return;
+
         const { writingType } = get(Atom.appStore);
         if (writingType === "vertical") {
             if (get(Atom.fileManager).hasPreviousFile()) {
                 set(ActionAtom.moveToPreviousPage);
                 set(ActionAtom.scrollToEnd, viewer, content);
-            } else {
-                set(Atom.messageManager, (m) =>
-                    m.setMessage("最初のファイルです"),
-                );
             }
         } else {
             if (get(Atom.fileManager).hasNextFile()) {
                 set(ActionAtom.moveToNextPage);
                 set(ActionAtom.scrollToStart, viewer, content);
-            } else {
-                set(Atom.messageManager, (m) =>
-                    m.setMessage("最後のファイルです"),
-                );
             }
         }
-        //set(ActionAtom.updateHistory);
     },
 );
 
@@ -101,8 +79,8 @@ export const ImageView = ({
     viewerRef,
     contentRef,
 }: {
-    viewerRef: React.RefObject<HTMLDivElement | null>;
-    contentRef: React.RefObject<HTMLDivElement | null>;
+    viewerRef: React.RefObject<Viewer>;
+    contentRef: React.RefObject<Content>;
 }): JSX.Element => {
     const timerRef = useRef<number | undefined>(undefined);
     const setZoomManager = useSetAtom(Atom.zoomManager);
@@ -117,10 +95,7 @@ export const ImageView = ({
             viewerRef={viewerRef}
             contentRef={contentRef}
             onResize={(width, height) => {
-                setZoomManager((z) => {
-                    const newState = z.setViewerSize({ width, height });
-                    return newState;
-                });
+                setZoomManager((z) => z.setViewerSize({ width, height }));
             }}
             onClick={() => {
                 window.clearTimeout(timerRef.current);
@@ -240,8 +215,8 @@ const Viewer = ({
                 const image = contentRef.current;
                 if (viewer == null || image == null) return;
 
-                const sm = ScrollManager.createFromElement(viewer, image);
-                if (sm.isHorizontalMin() || sm.isHorizontalMax()) {
+                const scroll = ScrollManager.fromElement(viewer, image);
+                if (scroll.isHorizontalMin() || scroll.isHorizontalMax()) {
                     const x = ev.targetTouches[0].clientX;
                     scrollCount.current += prevX.current - x;
                     if (scrollCount.current < -100) {
@@ -277,49 +252,28 @@ const Viewer = ({
 
 /* -------------------------------------------------------------------------- */
 
-const applyScrollAtom = atom(null, (get, _, viewer: Viewer, image: Content) => {
-    if (viewer == null || image == null) return;
-    get(Atom.scrollManager).applyScroll(viewer, image);
-});
+const applyScrollAtom = atom(
+    null,
+    (get, _, viewer: Viewer, content: Content) => {
+        if (viewer == null || content == null) return;
+        get(Atom.scrollManager).applyScroll(viewer, content);
+    },
+);
 
 const Img = ({
     viewerRef,
-    contentRef: contentRef,
+    contentRef,
 }: {
-    viewerRef: React.RefObject<HTMLDivElement | null>;
-    contentRef: React.RefObject<HTMLDivElement | null>;
+    viewerRef: React.RefObject<Viewer>;
+    contentRef: React.RefObject<Content>;
 }): JSX.Element => {
-    const leftImgRef = useRef<HTMLImageElement | null>(null);
-    const rightImgRef = useRef<HTMLImageElement | null>(null);
     const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
     const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
     const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
-    const appStore = useAtomValue(Atom.appStore);
-    const [zoomManager, setZoomManager] = useAtom(Atom.zoomManager);
-    const scrollManager = useAtomValue(Atom.scrollManager);
+    const { sharpeningFilterStrength, onSharpeningFilter } = useAtomValue(
+        Atom.appStore,
+    );
     const applyScroll = useSetAtom(applyScrollAtom);
-
-    useEffect(() => {
-        const image = leftImgRef.current;
-        if (image == null || leftImageBlob == null) return;
-
-        const imageURL = URL.createObjectURL(leftImageBlob);
-        image.src = imageURL;
-        return (): void => {
-            URL.revokeObjectURL(imageURL);
-        };
-    }, [leftImageBlob]);
-
-    useEffect(() => {
-        const image = rightImgRef.current;
-        if (image == null || rightImageBlob == null) return;
-
-        const imageURL = URL.createObjectURL(rightImageBlob);
-        image.src = imageURL;
-        return (): void => {
-            URL.revokeObjectURL(imageURL);
-        };
-    }, [rightImageBlob]);
 
     useEffect(() => {
         const content = contentRef.current;
@@ -327,18 +281,18 @@ const Img = ({
 
         if (!sharpeningFilter.hasSVG()) {
             sharpeningFilter.addSVG();
-            sharpeningFilter.setStrength(appStore.sharpeningFilterStrength);
+            sharpeningFilter.setStrength(sharpeningFilterStrength);
         }
-        if (appStore.onSharpeningFilter) {
+        if (onSharpeningFilter) {
             sharpeningFilter.applyFilter(content);
         } else {
             sharpeningFilter.clearFilter(content);
         }
     }, [
-        appStore.onSharpeningFilter,
-        appStore.sharpeningFilterStrength,
         contentRef,
+        onSharpeningFilter,
         sharpeningFilter,
+        sharpeningFilterStrength,
     ]);
 
     useEffect(() => {
@@ -346,35 +300,11 @@ const Img = ({
         if (content == null) return;
 
         const observer = new MutationObserver(() => {
-            applyScroll(viewerRef.current, contentRef.current);
+            applyScroll(viewerRef.current, content);
         });
         observer.observe(content, { attributes: true, subtree: true });
-        return (): void => {
-            observer.disconnect();
-        };
+        return (): void => observer.disconnect();
     }, [applyScroll, contentRef, viewerRef]);
-
-    const handleLeftImgLoad = (): void => {
-        const viewer = viewerRef.current;
-        const content = contentRef.current;
-        if (viewer == null || content == null) return;
-
-        scrollManager.applyScroll(viewer, content);
-        const width = content.clientWidth;
-        const height = content.clientHeight;
-        setZoomManager((z) => z.setImageSize({ width, height }));
-    };
-
-    const handleRightImgLoad = (): void => {
-        const viewer = viewerRef.current;
-        const content = contentRef.current;
-        if (viewer == null || content == null) return;
-
-        scrollManager.applyScroll(viewer, content);
-        const width = content.clientWidth;
-        const height = content.clientHeight;
-        setZoomManager((z) => z.setImageSize({ width, height }));
-    };
 
     return (
         <div className="m-auto">
@@ -382,25 +312,56 @@ const Img = ({
                 className={`relative grid size-max items-start ${leftImageBlob != null && rightImageBlob != null && "grid-cols-2"}`}
                 ref={contentRef}
             >
-                {leftImageBlob != null && (
-                    <img
-                        className="size-full max-w-none justify-self-end object-contain"
-                        style={leftImgStyle(zoomManager, rightImageBlob)}
-                        ref={leftImgRef}
-                        onLoad={handleLeftImgLoad}
-                    />
-                )}
-                {rightImageBlob != null && (
-                    <img
-                        className="size-full max-w-none object-contain"
-                        style={rightImgStyle(zoomManager, leftImageBlob)}
-                        ref={rightImgRef}
-                        onLoad={handleRightImgLoad}
-                    />
-                )}
+                <LeftImage viewerRef={viewerRef} contentRef={contentRef} />
+                <RightImage viewerRef={viewerRef} contentRef={contentRef} />
                 <div className="absolute inset-0" />
             </div>
         </div>
+    );
+};
+
+/* -------------------------------------------------------------------------- */
+
+const setupAtom = atom(null, (get, set, viewer: Viewer, content: Content) => {
+    if (viewer == null || content == null) return;
+
+    const scroll = get(Atom.scrollManager);
+    scroll.applyScroll(viewer, content);
+    const width = content.clientWidth;
+    const height = content.clientHeight;
+    set(Atom.zoomManager, (z) => z.setImageSize({ width, height }));
+});
+
+const LeftImage = ({
+    viewerRef,
+    contentRef,
+}: {
+    viewerRef: React.RefObject<Viewer>;
+    contentRef: React.RefObject<Content>;
+}): JSX.Element => {
+    const imageRef = useRef<HTMLImageElement | null>(null);
+    const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
+    const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
+    const zoomManager = useAtomValue(Atom.zoomManager);
+    const setup = useSetAtom(setupAtom);
+
+    useEffect(() => {
+        const image = imageRef.current;
+        if (image == null || leftImageBlob == null) return;
+
+        const imageURL = URL.createObjectURL(leftImageBlob);
+        image.src = imageURL;
+        return (): void => URL.revokeObjectURL(imageURL);
+    }, [leftImageBlob]);
+
+    if (leftImageBlob == null) return <></>;
+    return (
+        <img
+            className="size-auto justify-self-end object-contain"
+            style={leftImgStyle(zoomManager, rightImageBlob)}
+            ref={imageRef}
+            onLoad={() => setup(viewerRef.current, contentRef.current)}
+        />
     );
 };
 
@@ -410,12 +371,45 @@ const leftImgStyle = (
 ): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        width: "auto",
-        height: "auto",
         maxWidth: rightImageBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
         maxHeight: `${scale}dvh`,
         WebkitTouchCallout: "none",
     };
+};
+
+/* -------------------------------------------------------------------------- */
+
+const RightImage = ({
+    viewerRef,
+    contentRef,
+}: {
+    viewerRef: React.RefObject<Viewer>;
+    contentRef: React.RefObject<Content>;
+}): JSX.Element => {
+    const imageRef = useRef<HTMLImageElement | null>(null);
+    const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
+    const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
+    const zoomManager = useAtomValue(Atom.zoomManager);
+    const setup = useSetAtom(setupAtom);
+
+    useEffect(() => {
+        const image = imageRef.current;
+        if (image == null || rightImageBlob == null) return;
+
+        const imageURL = URL.createObjectURL(rightImageBlob);
+        image.src = imageURL;
+        return (): void => URL.revokeObjectURL(imageURL);
+    }, [rightImageBlob]);
+
+    if (rightImageBlob == null) return <></>;
+    return (
+        <img
+            className="size-auto object-contain"
+            style={rightImgStyle(zoomManager, leftImageBlob)}
+            ref={imageRef}
+            onLoad={() => setup(viewerRef.current, contentRef.current)}
+        />
+    );
 };
 
 const rightImgStyle = (
@@ -424,8 +418,6 @@ const rightImgStyle = (
 ): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        width: "auto",
-        height: "auto",
         maxWidth: leftImageBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
         maxHeight: `${scale}dvh`,
         WebkitTouchCallout: "none",

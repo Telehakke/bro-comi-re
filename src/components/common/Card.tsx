@@ -1,13 +1,11 @@
 import type { JSX, ReactNode } from "react";
 
 export const Card = (props: {
-    header?: string;
-    footer?: string;
-    children?: ReactNode;
+    footer?: ReactNode;
+    children: ReactNode;
 }): JSX.Element => {
     return (
         <div className="space-y-1">
-            <Header {...props} />
             <Content>{props.children}</Content>
             <Footer {...props} />
         </div>
@@ -15,16 +13,6 @@ export const Card = (props: {
 };
 
 /* -------------------------------------------------------------------------- */
-
-const Header = (props: { header?: string }): JSX.Element => {
-    const className = {
-        _: "mx-2 text-xs whitespace-pre-wrap",
-        text: "text-neutral-500 dark:text-neutral-400",
-    };
-
-    if (props.header == null) return <></>;
-    return <p className={Object.values(className).join(" ")}>{props.header}</p>;
-};
 
 const Content = (props: { children: ReactNode }): JSX.Element => {
     const className = {
@@ -40,7 +28,7 @@ const Content = (props: { children: ReactNode }): JSX.Element => {
     );
 };
 
-const Footer = (props: { footer?: string }): JSX.Element => {
+const Footer = (props: { footer?: ReactNode }): JSX.Element => {
     const className = {
         _: "mx-2 text-xs whitespace-pre-wrap",
         text: "text-neutral-500 dark:text-neutral-400",

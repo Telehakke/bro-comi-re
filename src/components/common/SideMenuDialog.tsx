@@ -4,15 +4,11 @@ import { X } from "lucide-react";
 import type { JSX, ReactNode } from "react";
 
 type SideMenuDialogProps = Partial<{
-    /** 外側をクリックでダイアログを閉じるかどうか */
     closeOnInteractOutside: boolean;
-    /** 初期展開状態（非制御） */
-    defaultOpen: boolean;
-    /** 展開状態 */
+    unmountOnExit: boolean;
+    lazyMount: boolean;
     open: boolean;
-    /** 開閉するたびに呼び出される関数 */
     onOpenChange: (open: boolean) => void;
-    /** コンテンツ */
     children: ReactNode;
 }>;
 
@@ -29,7 +25,8 @@ export const SideMenuDialog = (props: SideMenuDialogProps): JSX.Element => {
 const Root = (
     props: Partial<{
         closeOnInteractOutside: boolean;
-        defaultOpen: boolean;
+        unmountOnExit: boolean;
+        lazyMount: boolean;
         open: boolean;
         onOpenChange: (open: boolean) => void;
         children: ReactNode;
@@ -37,11 +34,10 @@ const Root = (
 ): JSX.Element => (
     <ArkDialog.Root
         closeOnInteractOutside={props.closeOnInteractOutside}
-        defaultOpen={props.defaultOpen}
+        unmountOnExit={props.unmountOnExit}
+        lazyMount={props.lazyMount}
         open={props.open}
         onOpenChange={(v) => props.onOpenChange?.(v.open)}
-        unmountOnExit
-        lazyMount
     >
         {props.children}
     </ArkDialog.Root>

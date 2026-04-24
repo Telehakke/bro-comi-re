@@ -4,53 +4,55 @@ import {
 } from "@ark-ui/react/slider";
 import type { JSX, ReactNode } from "react";
 
-export const Slider = (props: {
-    value: number; // スライダーの値
-    min?: number; // 最小値
-    max?: number; // 最大値
-    step?: number; // 増減値
-    origin?: "center" | "start" | "end"; // 塗りつぶしの原点
-    label?: (value: number) => ReactNode; // ラベル
-    onValueChange?: (value: number) => void; // 値が変化するたびに呼び出される関数
-    onValueChangeEnd?: (value: number) => void; // 値が確定すると呼び出される関数
-}): JSX.Element => {
+type SliderProps = {
+    label?: (value: number) => ReactNode;
+    origin?: "center" | "start" | "end";
+    min?: number;
+    max?: number;
+    step?: number;
+    value: number;
+    onValueChange?: (value: number) => void;
+    onValueChangeEnd?: (value: number) => void;
+};
+
+export const Slider = (props: SliderProps): JSX.Element => {
     return (
-        <SliderRoot
+        <Root
+            {...props}
             value={[props.value]}
-            min={props.min}
-            max={props.max}
-            step={props.step}
-            origin={props.origin}
             onValueChange={(v) => props.onValueChange?.(v.value[0])}
             onValueChangeEnd={(v) => props.onValueChangeEnd?.(v.value[0])}
         >
-            <SliderLabel>{props.label?.(props.value)}</SliderLabel>
-            <SliderControl />
-        </SliderRoot>
+            <Label>{props.label?.(props.value)}</Label>
+            <Control />
+        </Root>
     );
 };
 
 /* -------------------------------------------------------------------------- */
 
-const SliderRoot = (props: {
-    value?: number[];
-    min?: number;
-    max?: number;
-    step?: number;
-    origin?: "center" | "start" | "end";
-    onValueChange?: (details: SliderValueChangeDetails) => void;
-    onValueChangeEnd?: (details: SliderValueChangeDetails) => void;
-    children?: ReactNode;
-}): JSX.Element => {
+const Root = (
+    props: Partial<{
+        origin: "center" | "start" | "end";
+        min: number;
+        max: number;
+        step: number;
+        value: number[];
+        onValueChange: (details: SliderValueChangeDetails) => void;
+        onValueChangeEnd: (details: SliderValueChangeDetails) => void;
+        children: ReactNode;
+    }>,
+): JSX.Element => {
     return (
         <ArkSlider.Root
-            value={props.value}
+            origin={props.origin}
             min={props.min}
             max={props.max}
             step={props.step}
-            origin={props.origin}
+            value={props.value}
             onValueChange={(v) => props.onValueChange?.(v)}
             onValueChangeEnd={(v) => props.onValueChangeEnd?.(v)}
+            thumbSize={{ width: 20, height: 20 }}
             className="p-2"
         >
             {props.children}
@@ -60,9 +62,14 @@ const SliderRoot = (props: {
 
 /* -------------------------------------------------------------------------- */
 
-const SliderLabel = (props: { children?: ReactNode }): JSX.Element => {
+const Label = (props: { children?: ReactNode }): JSX.Element => {
+    const className = {
+        _: "block text-sm",
+        text: "text-neutral-500 dark:text-neutral-400",
+    };
+
     return (
-        <ArkSlider.Label className="flex items-center text-sm whitespace-pre-wrap tabular-nums">
+        <ArkSlider.Label className={Object.values(className).join(" ")}>
             {props.children}
         </ArkSlider.Label>
     );
@@ -70,36 +77,37 @@ const SliderLabel = (props: { children?: ReactNode }): JSX.Element => {
 
 /* -------------------------------------------------------------------------- */
 
-const SliderControl = (): JSX.Element => {
+const Control = (): JSX.Element => {
     return (
-        <ArkSlider.Control className="my-2">
-            <SliderTrack />
-            <SliderThumb />
+        <ArkSlider.Control className="group my-2">
+            <Track />
+            <Thumb />
         </ArkSlider.Control>
     );
 };
 
-const SliderTrack = (): JSX.Element => {
+const Track = (): JSX.Element => {
     const className = {
-        bgGray: "bg-neutral-300 dark:bg-neutral-600",
-        bgBlue: "bg-blue-500",
+        _: "h-2.5 overflow-hidden rounded-full transition",
+        bg: "bg-neutral-300 dark:bg-neutral-600",
+        hoverBg: "group-hover:bg-neutral-400 dark:group-hover:bg-neutral-500",
+        draggingBg:
+            "data-dragging:bg-neutral-400 dark:data-dragging:bg-neutral-500",
     };
 
     return (
-        <ArkSlider.Track
-            className={`h-2.5 overflow-hidden rounded-full ${className.bgGray}`}
-        >
-            <ArkSlider.Range className={`h-2.5 ${className.bgBlue}`} />
+        <ArkSlider.Track className={Object.values(className).join(" ")}>
+            <ArkSlider.Range className="h-2.5 bg-blue-500" />
         </ArkSlider.Track>
     );
 };
 
-const SliderThumb = (): JSX.Element => {
+const Thumb = (): JSX.Element => {
     const className = {
         _: "inset-0 my-auto size-5 rounded-full",
-        bg: "bg-white dark:bg-neutral-200",
+        bg: "bg-white",
         border: "border-2 border-blue-500",
-        outline: "outline-offset-1 focus-visible:outline-2 outline-blue-500/75",
+        outline: "outline-offset-1 outline-blue-500/75 focus-visible:outline-2",
     };
 
     return (

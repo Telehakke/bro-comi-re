@@ -1,23 +1,27 @@
 import type { Visibility } from "./types";
 
-export type messageManager = Readonly<{
-    value: string | undefined;
-    visibility: Visibility;
-    setMessage: (value: string | undefined) => messageManager;
-    hidden: () => messageManager;
-    none: () => messageManager;
-}>;
+export class MessageManager {
+    readonly value: string | undefined;
+    readonly visibility: Visibility;
 
-export const messageManager: messageManager = {
-    value: undefined,
-    visibility: "none",
-    setMessage(value) {
-        return { ...this, value, visibility: "visible" };
-    },
-    hidden() {
-        return { ...this, visibility: "hidden" };
-    },
-    none() {
-        return { ...this, visibility: "none" };
-    },
-};
+    constructor(value: string | undefined, visibility: Visibility) {
+        this.value = value;
+        this.visibility = visibility;
+    }
+
+    static readonly create = (): MessageManager => {
+        return new MessageManager(undefined, "none");
+    };
+
+    readonly setMessage = (value?: string): MessageManager => {
+        return new MessageManager(value, "visible");
+    };
+
+    readonly hidden = (): MessageManager => {
+        return new MessageManager(this.value, "hidden");
+    };
+
+    readonly none = (): MessageManager => {
+        return new MessageManager(this.value, "none");
+    };
+}
