@@ -39,7 +39,7 @@ export const ActionAtom = {
                 if (get(Atom.fileManager).hasNextFile()) {
                     set(ActionAtom.moveToNextPage);
                     set(ActionAtom.scrollToStart, viewer, content);
-                    set(ActionAtom.updateHistory);
+                    //set(ActionAtom.updateHistory);
                 } else {
                     set(Atom.messageManager, (m) =>
                         m.setMessage("最後のファイルです"),
@@ -59,7 +59,7 @@ export const ActionAtom = {
                 if (get(Atom.fileManager).hasPreviousFile()) {
                     set(ActionAtom.moveToPreviousPage);
                     set(ActionAtom.scrollToEnd, viewer, content);
-                    set(ActionAtom.updateHistory);
+                    //set(ActionAtom.updateHistory);
                 } else {
                     set(Atom.messageManager, (m) =>
                         m.setMessage("最初のファイルです"),

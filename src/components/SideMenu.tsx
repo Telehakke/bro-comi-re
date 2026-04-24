@@ -117,6 +117,7 @@ export const MenuButton = (): JSX.Element => {
 };
 
 const closeViewerAtom = atom(null, (_, set) => {
+    set(ActionAtom.updateHistory);
     set(Atom.fileManager, new FileManager());
     set(Atom.isOpenSideMenu, false);
     set(Atom.zipFileName, undefined);

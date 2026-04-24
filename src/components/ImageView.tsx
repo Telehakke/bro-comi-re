@@ -65,7 +65,7 @@ const goToLeftAtom = atom(
                 );
             }
         }
-        set(ActionAtom.updateHistory);
+        //set(ActionAtom.updateHistory);
     },
 );
 
@@ -93,7 +93,7 @@ const goToRightAtom = atom(
                 );
             }
         }
-        set(ActionAtom.updateHistory);
+        //set(ActionAtom.updateHistory);
     },
 );
 
