@@ -174,6 +174,8 @@ const TapArea = (props: {
     const timerRef = useRef<number | undefined>(undefined);
     const prevClientRef = useRef({ x: 0, y: 0 });
     const smoothScrollRef = useRef(new SmoothScroll());
+    const canClickRef = useRef(true);
+    const touchMoveCountRef = useRef(0);
     const [isActive, setIsActive] = useState(false);
 
     useEffect(() => {
@@ -193,6 +195,10 @@ const TapArea = (props: {
                 y: smoothScroll.averageY(),
             });
             prevClientRef.current = { x: clientX, y: clientY };
+            if (touchMoveCountRef.current > 5) {
+                canClickRef.current = false;
+            }
+            touchMoveCountRef.current += 1;
         };
 
         const handleWheel = (ev: WheelEvent): void => {
@@ -224,11 +230,15 @@ const TapArea = (props: {
         const { clientX, clientY } = ev.changedTouches[0];
         prevClientRef.current = { x: clientX, y: clientY };
         smoothScrollRef.current = new SmoothScroll();
+        canClickRef.current = true;
+        touchMoveCountRef.current = 0;
         setIsActive(true);
     };
 
-    const handleTouchEnd = (): void => {
+    const handleTouchEnd = (ev: React.TouchEvent<HTMLDivElement>): void => {
+        ev.preventDefault();
         setIsActive(false);
+        if (canClickRef.current) props.onClick();
     };
 
     const className = {

@@ -19,7 +19,7 @@ export class SharpeningFilter {
     }
 
     readonly addSVG = (): void => {
-        document.head.appendChild(this.svg);
+        document.body.appendChild(this.svg);
     };
 
     readonly hasSVG = (): boolean => {
@@ -40,6 +40,7 @@ export class SharpeningFilter {
             "http://www.w3.org/2000/svg",
             "feConvolveMatrix",
         );
+        feConvolveMatrix.setAttribute("order", "3");
         feConvolveMatrix.setAttribute(
             "kernelMatrix",
             this.createMatrix(strength),
