@@ -107,7 +107,9 @@ export const ImageView = ({
                 window.clearTimeout(timerRef.current);
                 zoomIn(viewerRef.current, contentRef.current);
             }}
-            onRightClick={() => zoomOut(viewerRef.current, contentRef.current)}
+            onRightClick={() => {
+                zoomOut(viewerRef.current, contentRef.current);
+            }}
             onLongPress={() => {
                 zoomOut(viewerRef.current, contentRef.current);
             }}
@@ -156,6 +158,7 @@ const Viewer = ({
     const canClickRef = useRef(true);
     const canDoubleClickRef = useRef(true);
     const canRightClickRef = useRef(true);
+    const canLongPressRef = useRef(true);
     const touchMoveCountRef = useRef(0);
     const setOnChevronLeft = useSetAtom(onChevronLeftAtom);
     const setOnChevronRight = useSetAtom(onChevronRightAtom);
@@ -178,6 +181,7 @@ const Viewer = ({
     return (
         <div
             className="fixed inset-0 flex h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
+            style={{ scrollbarWidth: "none" }}
             ref={viewerRef}
             onClick={() => {
                 if (canClickRef.current) {
@@ -191,36 +195,36 @@ const Viewer = ({
             }}
             onContextMenu={(ev) => {
                 ev.preventDefault();
+                window.clearTimeout(timerIdRef.current);
                 if (!canRightClickRef.current) return;
                 onRightClick();
+                canLongPressRef.current = false;
             }}
             onTouchStart={(ev) => {
                 timerIdRef.current = window.setTimeout(() => {
+                    if (!canLongPressRef.current) return;
                     onLongPress();
                     canClickRef.current = false;
                     canDoubleClickRef.current = false;
+                    canRightClickRef.current = false;
                 }, 500);
                 prevXRef.current = ev.targetTouches[0].clientX;
                 scrollCountRef.current = 0;
                 canClickRef.current = true;
                 canDoubleClickRef.current = true;
-                canRightClickRef.current = false;
+                canRightClickRef.current = true;
+                canLongPressRef.current = true;
                 touchMoveCountRef.current = 0;
             }}
             onTouchMove={(ev) => {
-                setIsUserScrolled(true);
-                if (touchMoveCountRef.current > 5) {
-                    window.clearTimeout(timerIdRef.current);
-                }
-                touchMoveCountRef.current += 1;
-
+                window.clearTimeout(timerIdRef.current);
                 const viewer = viewerRef.current;
                 const image = contentRef.current;
                 if (viewer == null || image == null) return;
 
+                const x = ev.targetTouches[0].clientX;
                 const scroll = ScrollManager.fromElement(viewer, image);
                 if (scroll.isHorizontalMin() || scroll.isHorizontalMax()) {
-                    const x = ev.targetTouches[0].clientX;
                     scrollCountRef.current += prevXRef.current - x;
                     if (scrollCountRef.current < -100) {
                         setOnChevronLeft(true);
@@ -230,11 +234,10 @@ const Viewer = ({
                         setOnChevronLeft(false);
                         setOnChevronRight(false);
                     }
-                    prevXRef.current = x;
                 }
+                prevXRef.current = x;
             }}
             onTouchEnd={() => {
-                canRightClickRef.current = true;
                 window.clearTimeout(timerIdRef.current);
                 setOnChevronLeft(false);
                 setOnChevronRight(false);

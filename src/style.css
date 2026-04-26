@@ -43,3 +43,9 @@
         }
     }
 }
+
+@media (hover: none) {
+    #viewer {
+        height: 100lvh;
+    }
+}

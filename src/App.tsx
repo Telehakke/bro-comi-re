@@ -18,7 +18,7 @@ export const App = (): JSX.Element => {
 
     if (shouldShowViewer) {
         return (
-            <div className="h-[150dvh]">
+            <div id="viewer" style={{ scrollbarWidth: "none" }}>
                 <ImageView viewerRef={viewerRef} contentRef={contentRef} />
                 <TapAreas viewerRef={viewerRef} contentRef={contentRef} />
                 <MenuButton />
