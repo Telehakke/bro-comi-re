@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
 import type { JSX } from "react";
-import { Atom } from "../atoms";
+import { AppStateAtom, Atom } from "../atoms";
 import { LinearProgress } from "./common/LinearProgress";
 
 export const Progress = (): JSX.Element => {
@@ -23,7 +23,7 @@ export const Progress = (): JSX.Element => {
 };
 
 export const Part = (): JSX.Element => {
-    const { writingType } = useAtomValue(Atom.appStore);
+    const writingType = useAtomValue(AppStateAtom.writingType);
     const file = useAtomValue(Atom.fileManager);
 
     const className = {

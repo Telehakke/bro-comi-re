@@ -6,12 +6,6 @@ import { SegmentGroup } from "../../common/SegmentGroup";
 
 const reloadAtom = atom(null, (get, set, value: DisplayMode) => {
     set(Atom.appStore, (a) => a.setDisplayMode(value));
-    set(Atom.prevLeftImageBlob, undefined);
-    set(Atom.prevRightImageBlob, undefined);
-    set(Atom.currentLeftImageBlob, undefined);
-    set(Atom.currentRightImageBlob, undefined);
-    set(Atom.nextLeftImageBlob, undefined);
-    set(Atom.nextRightImageBlob, undefined);
     const index = get(Atom.fileManager).index;
     set(ActionAtom.moveToIndexPage, index);
 });

@@ -45,7 +45,8 @@ export class FileManager {
         return this.files.length > 0;
     };
 
-    readonly getBlob = async (index: number): Promise<Blob | undefined> => {
+    readonly getBlob = async (index?: number): Promise<Blob | undefined> => {
+        if (index == null) return undefined;
         if (index < 0) return undefined;
 
         const file = this.files.at(index);
@@ -57,10 +58,13 @@ export class FileManager {
         return await asyncBlob;
     };
 
-    readonly getLeftBlob = async (
-        displayMode: DisplayMode,
-        writingType: WritingType,
-    ): Promise<Blob | undefined> => {
+    readonly getLeftIndex = ({
+        displayMode,
+        writingType,
+    }: {
+        displayMode: DisplayMode;
+        writingType: WritingType;
+    }): number => {
         let i = this.index;
         const isOdd = this.index % 2 === 1;
         switch (displayMode) {
@@ -79,13 +83,16 @@ export class FileManager {
                 }
                 break;
         }
-        return this.getBlob(i);
+        return i;
     };
 
-    readonly getRightBlob = async (
-        displayMode: DisplayMode,
-        writingType: WritingType,
-    ): Promise<Blob | undefined> => {
+    readonly getRightIndex = ({
+        displayMode,
+        writingType,
+    }: {
+        displayMode: DisplayMode;
+        writingType: WritingType;
+    }): number | undefined => {
         let i = this.index;
         const isOdd = this.index % 2 === 1;
         switch (displayMode) {
@@ -106,7 +113,7 @@ export class FileManager {
                 }
                 break;
         }
-        this.getBlob(i);
+        return i;
     };
 
     readonly progress = (): string | undefined => {
@@ -122,13 +129,23 @@ export class FileManager {
         return this.index < this.files.length - 1;
     };
 
-    readonly decrementIndex = (): FileManager => {
-        return this.copyWith({ index: Math.max(this.index - 1, 0) });
+    readonly prevIndex = ({
+        displayMode,
+    }: {
+        displayMode: DisplayMode;
+    }): FileManager => {
+        const amount = displayMode === "single" ? 1 : 2;
+        return this.copyWith({ index: Math.max(this.index - amount, 0) });
     };
 
-    readonly incrementIndex = (): FileManager => {
+    readonly nextIndex = ({
+        displayMode,
+    }: {
+        displayMode: DisplayMode;
+    }): FileManager => {
+        const amount = displayMode === "single" ? 1 : 2;
         return this.copyWith({
-            index: Math.min(this.index + 1, this.files.length - 1),
+            index: Math.min(this.index + amount, this.files.length - 1),
         });
     };
 

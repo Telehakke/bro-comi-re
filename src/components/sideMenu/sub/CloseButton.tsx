@@ -2,20 +2,16 @@ import { atom, useSetAtom } from "jotai";
 import type { JSX } from "react";
 import { ActionAtom, Atom } from "../../../atoms";
 import { FileManager } from "../../../models/fileManager";
+import { ImageBlobManager } from "../../../models/imageBlobManager";
 
 const closeViewerAtom = atom(null, (_, set) => {
     set(ActionAtom.updateHistory);
     set(Atom.fileManager, new FileManager());
+    set(Atom.imageBlobManager, ImageBlobManager.forCurrent());
     set(Atom.isOpenSideMenu, false);
     set(Atom.shouldShowViewer, false);
     set(Atom.zipFileName, undefined);
     set(Atom.zoomManager, (z) => z.reset());
-    set(Atom.prevLeftImageBlob, undefined);
-    set(Atom.prevRightImageBlob, undefined);
-    set(Atom.currentLeftImageBlob, undefined);
-    set(Atom.currentRightImageBlob, undefined);
-    set(Atom.nextLeftImageBlob, undefined);
-    set(Atom.nextRightImageBlob, undefined);
 });
 
 export const CloseButton = (): JSX.Element => {

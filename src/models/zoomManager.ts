@@ -8,21 +8,21 @@ const MAX = 1000;
 
 export class ZoomManager {
     readonly scale: number;
-    readonly viewerSize: Size | undefined;
-    readonly imageSize: Size | undefined;
+    readonly bodySize: Size | undefined;
+    readonly contentSize: Size | undefined;
 
     constructor(scale?: number, viewerSize?: Size, imageSize?: Size) {
         this.scale = scale ?? MIN;
-        this.viewerSize = viewerSize;
-        this.imageSize = imageSize;
+        this.bodySize = viewerSize;
+        this.contentSize = imageSize;
     }
 
-    readonly setViewerSize = (size: Size): ZoomManager => {
-        return this.copyWith({ viewerSize: size });
+    readonly setBodySize = (size: Size): ZoomManager => {
+        return this.copyWith({ bodySize: size });
     };
 
-    readonly setImageSize = (size: Size): ZoomManager => {
-        return this.copyWith({ imageSize: size });
+    readonly setContentSize = (size: Size): ZoomManager => {
+        return this.copyWith({ contentSize: size });
     };
 
     readonly zoomOut = (step: number): ZoomManager => {
@@ -39,17 +39,17 @@ export class ZoomManager {
 
     private readonly copyWith = ({
         scale,
-        viewerSize,
-        imageSize,
+        bodySize,
+        contentSize,
     }: Partial<{
         scale: number;
-        viewerSize: Size;
-        imageSize: Size;
+        bodySize: Size;
+        contentSize: Size;
     }>): ZoomManager => {
         return new ZoomManager(
             scale ?? this.scale,
-            viewerSize ?? this.viewerSize,
-            imageSize ?? this.imageSize,
+            bodySize ?? this.bodySize,
+            contentSize ?? this.contentSize,
         );
     };
 }

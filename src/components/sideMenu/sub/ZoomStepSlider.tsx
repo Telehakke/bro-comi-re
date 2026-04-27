@@ -11,7 +11,7 @@ export const ZoomStepSlider = (): JSX.Element => {
 
     return (
         <Slider
-            label={(v) => `ズームの増加率：${v}%`}
+            label={(v) => `ズームの増減率：${v}%`}
             min={ZoomStep.MIN}
             max={ZoomStep.MAX}
             step={5}

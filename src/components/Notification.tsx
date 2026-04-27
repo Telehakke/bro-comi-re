@@ -3,30 +3,29 @@ import { useEffect, useRef, type JSX } from "react";
 import { Atom } from "../atoms";
 
 export const Notification = (): JSX.Element => {
-    const divRef = useRef<HTMLDivElement | null>(null);
-    const timerRef = useRef<number | undefined>(undefined);
+    const div = useRef<HTMLDivElement | null>(null);
+    const timerId = useRef<number | undefined>(undefined);
     const [message, setMessage] = useAtom(Atom.messageManager);
 
     useEffect(() => {
         if (message.visibility === "visible") {
-            window.clearInterval(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
+            window.clearInterval(timerId.current);
+            timerId.current = window.setTimeout(() => {
                 setMessage((m) => m.hidden());
             }, 1000);
         }
 
-        const div = divRef.current;
-        if (div == null) return;
+        const el = div.current;
+        if (el == null) return;
 
         const handleAnimationEnd = (): void => {
             if (message.visibility === "hidden") {
                 setMessage((m) => m.none());
             }
         };
-        div.addEventListener("animationend", handleAnimationEnd);
-        return (): void => {
-            div.removeEventListener("animationend", handleAnimationEnd);
-        };
+        el.addEventListener("animationend", handleAnimationEnd);
+        return (): void =>
+            el.removeEventListener("animationend", handleAnimationEnd);
     }, [message, setMessage]);
 
     const className = {
@@ -44,7 +43,7 @@ export const Notification = (): JSX.Element => {
     return (
         <div
             className={Object.values(className).join(" ")}
-            ref={divRef}
+            ref={div}
             data-state={message.visibility}
         >
             {message.value}

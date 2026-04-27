@@ -3,6 +3,7 @@ import {
     type AppState,
     type DisplayMode,
     type History,
+    type TapAreaLength,
     type ViewSplitCount,
     type WritingType,
 } from "./appState";
@@ -17,6 +18,8 @@ type AppStore = AppState &
         setScrollSpeed: (value: number) => AppStore;
         setSharpeningFilterStrength: (value: number) => AppStore;
         setShouldAdvance: (value: boolean) => AppStore;
+        setTapAreaWidth: (value: TapAreaLength) => AppStore;
+        setTapAreaHeight: (value: TapAreaLength) => AppStore;
         setViewSplitCount: (value: ViewSplitCount) => AppStore;
         setWritingType: (value: WritingType) => AppStore;
         setZoomStep: (value: number) => AppStore;
@@ -56,6 +59,16 @@ export const appStore: AppStore = {
     },
     setShouldAdvance(value) {
         const obj: AppStore = { ...this, shouldAdvance: value };
+        LocalStorage.setAppState(obj);
+        return obj;
+    },
+    setTapAreaWidth(value) {
+        const obj: AppStore = { ...this, tapAreaWidth: value };
+        LocalStorage.setAppState(obj);
+        return obj;
+    },
+    setTapAreaHeight(value) {
+        const obj: AppStore = { ...this, tapAreaHeight: value };
         LocalStorage.setAppState(obj);
         return obj;
     },

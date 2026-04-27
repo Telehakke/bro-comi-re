@@ -9,23 +9,23 @@ import { Time } from "./components/Time";
 import { Home } from "./components/home/Home";
 import { SideMenu } from "./components/sideMenu/SideMenu";
 import { MenuButton } from "./components/sideMenu/sub/MenuButton";
-import type { Content, Viewer } from "./models/types";
+import type { Body, Content } from "./models/types";
 
 export const App = (): JSX.Element => {
-    const viewerRef = useRef<Viewer>(null);
-    const contentRef = useRef<Content>(null);
+    const body = useRef<Body>(null);
+    const content = useRef<Content>(null);
     const shouldShowViewer = useAtomValue(Atom.shouldShowViewer);
 
     if (shouldShowViewer) {
         return (
             <div id="viewer" style={{ scrollbarWidth: "none" }}>
-                <ImageView viewerRef={viewerRef} contentRef={contentRef} />
-                <TapAreas viewerRef={viewerRef} contentRef={contentRef} />
+                <ImageView body={body} content={content} />
+                <TapAreas body={body} content={content} />
+                <SideMenu body={body} content={content} />
                 <MenuButton />
                 <Time />
                 <Progress />
                 <Notification />
-                <SideMenu viewerRef={viewerRef} contentRef={contentRef} />
             </div>
         );
     } else {

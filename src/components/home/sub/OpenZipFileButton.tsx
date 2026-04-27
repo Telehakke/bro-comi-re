@@ -26,14 +26,14 @@ const openZipFileAtom = atom(null, async (get, set, file: File) => {
 });
 
 export const OpenZipFileButton = (): JSX.Element => {
-    const inputRef = useRef<HTMLInputElement | null>(null);
+    const input = useRef<HTMLInputElement | null>(null);
     const openZipFile = useSetAtom(openZipFileAtom);
 
     return (
         <>
             <input
                 className="hidden"
-                ref={inputRef}
+                ref={input}
                 type="file"
                 accept=".zip"
                 onChange={(ev) => {
@@ -44,7 +44,7 @@ export const OpenZipFileButton = (): JSX.Element => {
             />
             <button
                 className="h-8 rounded-full border px-2"
-                onClick={() => inputRef.current?.click()}
+                onClick={() => input.current?.click()}
             >
                 Zipファイルを開く
             </button>

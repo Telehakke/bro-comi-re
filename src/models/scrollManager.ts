@@ -1,4 +1,5 @@
 import type { ViewSplitCount, WritingType } from "./appState";
+import type { Viewer } from "./viewer";
 
 const MIN = 0;
 const CENTER = 50;
@@ -8,9 +9,9 @@ export class ScrollManager {
     readonly x: number;
     readonly y: number;
 
-    constructor(horizontalPercentage?: number, verticalPercentage?: number) {
-        this.x = Math.max(Math.min(horizontalPercentage ?? MIN, MAX), MIN);
-        this.y = Math.max(Math.min(verticalPercentage ?? MIN, MAX), MIN);
+    constructor(x?: number, y?: number) {
+        this.x = Math.max(Math.min(x ?? MIN, MAX), MIN);
+        this.y = Math.max(Math.min(y ?? MIN, MAX), MIN);
     }
 
     static readonly fromWritingType = (
@@ -34,62 +35,34 @@ export class ScrollManager {
         }
     };
 
-    static readonly fromElement = (
-        viewer: HTMLDivElement,
-        content: HTMLDivElement,
-    ): ScrollManager => {
-        const diffW = content.clientWidth - viewer.clientWidth;
-        const diffH = content.clientHeight - viewer.clientHeight;
+    readonly update = (viewer: Viewer): ScrollManager => {
         return new ScrollManager(
-            diffW == 0 ? 0 : (Math.ceil(viewer.scrollLeft) / diffW) * 100,
-            diffH == 0 ? 0 : (Math.ceil(viewer.scrollTop) / diffH) * 100,
+            viewer.positionX() ?? this.x,
+            viewer.positionY() ?? this.y,
         );
     };
 
-    readonly update = (
-        viewer: HTMLDivElement,
-        content: HTMLDivElement,
-    ): ScrollManager => {
-        const diffW = content.clientWidth - viewer.clientWidth;
-        const diffH = content.clientHeight - viewer.clientHeight;
-        return new ScrollManager(
-            diffW > 0 ? (Math.ceil(viewer.scrollLeft) / diffW) * 100 : this.x,
-            diffH > 0 ? (Math.ceil(viewer.scrollTop) / diffH) * 100 : this.y,
-        );
+    readonly applyScroll = (viewer: Viewer): void => {
+        const x = (viewer.spaceWidth() * this.x) / 100;
+        const y = (viewer.spaceHeight() * this.y) / 100;
+        viewer.body?.scroll(x, y);
     };
 
-    readonly isHorizontalMin = (): boolean => {
-        return this.x === MIN;
-    };
-
-    readonly isHorizontalMax = (): boolean => {
-        return this.x === MAX;
-    };
-
-    readonly applyScroll = (
-        viewer: HTMLElement,
-        content: HTMLDivElement,
-    ): void => {
-        const x =
-            ((content.clientWidth - viewer.clientWidth) * (this.x ?? 0)) / 100;
-        const y =
-            ((content.clientHeight - viewer.clientHeight) * (this.y ?? 0)) /
-            100;
-        viewer.scroll(x, y);
-    };
-
-    readonly next = (
-        writingType: WritingType,
-        viewSplitCount: ViewSplitCount,
-        viewer: HTMLDivElement,
-        content: HTMLDivElement,
-    ): ScrollManager => {
-        const diffH = content.clientHeight - viewer.clientHeight;
+    readonly next = ({
+        writingType,
+        viewSplitCount,
+        viewer,
+    }: {
+        writingType: WritingType;
+        viewSplitCount: ViewSplitCount;
+        viewer: Viewer;
+    }): ScrollManager => {
+        const h = viewer.spaceHeight();
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
         let x: number | undefined = undefined;
         let y: number | undefined = undefined;
-        if (diffH <= 0) {
+        if (h <= 0) {
             x = hOrigin.next(writingType, viewSplitCount).VALUE;
         } else {
             y = vOrigin.next(writingType, viewSplitCount).VALUE;
@@ -100,18 +73,21 @@ export class ScrollManager {
         return new ScrollManager(x ?? this.x, y ?? this.y);
     };
 
-    readonly previous = (
-        writingType: WritingType,
-        viewSplitCount: ViewSplitCount,
-        viewer: HTMLDivElement,
-        content: HTMLDivElement,
-    ): ScrollManager => {
-        const diffH = content.clientHeight - viewer.clientHeight;
+    readonly previous = ({
+        writingType,
+        viewSplitCount,
+        viewer,
+    }: {
+        writingType: WritingType;
+        viewSplitCount: ViewSplitCount;
+        viewer: Viewer;
+    }): ScrollManager => {
+        const h = viewer.spaceHeight();
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
         let x: number | undefined = undefined;
         let y: number | undefined = undefined;
-        if (diffH <= 0) {
+        if (h <= 0) {
             x = hOrigin.previous(writingType, viewSplitCount).VALUE;
         } else {
             y = vOrigin.previous(writingType, viewSplitCount).VALUE;
@@ -122,31 +98,39 @@ export class ScrollManager {
         return new ScrollManager(x ?? this.x, y ?? this.y);
     };
 
-    readonly shouldMoveToNextPage = (
-        viewer: HTMLElement,
-        content: HTMLDivElement,
-        writingType: WritingType,
-    ): boolean => {
-        const diffW = content.clientWidth - viewer.clientWidth;
-        const diffH = content.clientHeight - viewer.clientHeight;
-        const result1 =
-            diffW <= 0 ? true : this.getHorizontalOrigin().isEnd(writingType);
-        const result2 =
-            diffH <= 0 ? true : this.getVerticalOrigin().isEnd(writingType);
+    readonly shouldMoveToNextPage = ({
+        writingType,
+        viewer,
+    }: {
+        writingType: WritingType;
+        viewer: Viewer;
+    }): boolean => {
+        const notSpaceWidth = viewer.spaceWidth() <= 0;
+        const notSpaceHeight = viewer.spaceHeight() <= 0;
+        const result1 = notSpaceWidth
+            ? true
+            : this.getHorizontalOrigin().isEnd(writingType);
+        const result2 = notSpaceHeight
+            ? true
+            : this.getVerticalOrigin().isEnd(writingType);
         return result1 && result2;
     };
 
-    readonly shouldMoveToPreviousPage = (
-        viewer: HTMLElement,
-        content: HTMLDivElement,
-        writingType: WritingType,
-    ): boolean => {
-        const diffW = content.clientWidth - viewer.clientWidth;
-        const diffH = content.clientHeight - viewer.clientHeight;
-        const result1 =
-            diffW <= 0 ? true : this.getHorizontalOrigin().isStart(writingType);
-        const result2 =
-            diffH <= 0 ? true : this.getVerticalOrigin().isStart(writingType);
+    readonly shouldMoveToPreviousPage = ({
+        writingType,
+        viewer,
+    }: {
+        writingType: WritingType;
+        viewer: Viewer;
+    }): boolean => {
+        const notSpaceWidth = viewer.spaceWidth() <= 0;
+        const notSpaceHeight = viewer.spaceHeight() <= 0;
+        const result1 = notSpaceWidth
+            ? true
+            : this.getHorizontalOrigin().isStart(writingType);
+        const result2 = notSpaceHeight
+            ? true
+            : this.getVerticalOrigin().isStart(writingType);
         return result1 && result2;
     };
 

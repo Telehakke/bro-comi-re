@@ -13,14 +13,14 @@ const openImageFilesAtom = atom(null, (get, set, files: File[]) => {
 });
 
 export const OpenImageFilesButton = (): JSX.Element => {
-    const inputRef = useRef<HTMLInputElement | null>(null);
+    const input = useRef<HTMLInputElement | null>(null);
     const openImageFiles = useSetAtom(openImageFilesAtom);
 
     return (
         <>
             <input
                 className="hidden"
-                ref={inputRef}
+                ref={input}
                 type="file"
                 accept="image/*"
                 multiple
@@ -32,7 +32,7 @@ export const OpenImageFilesButton = (): JSX.Element => {
             />
             <button
                 className="h-8 rounded-full border px-2"
-                onClick={() => inputRef.current?.click()}
+                onClick={() => input.current?.click()}
             >
                 画像ファイルを開く
             </button>

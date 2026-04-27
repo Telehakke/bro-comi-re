@@ -3,12 +3,12 @@ import { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, AppStateAtom, Atom } from "../../../atoms";
 import type { WritingType } from "../../../models/appState";
 import type { FileManager } from "../../../models/fileManager";
-import type { Content, Viewer } from "../../../models/types";
+import type { Body, Content } from "../../../models/types";
 import { Slider } from "../../common/Slider";
 
 export const SelectPageSlider = (props: {
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
     const writingType = useAtomValue(AppStateAtom.writingType);
 
@@ -18,8 +18,8 @@ export const SelectPageSlider = (props: {
 /* -------------------------------------------------------------------------- */
 
 const Part = (props: {
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
     const writingType = useAtomValue(AppStateAtom.writingType);
     const fileManager = useAtomValue(Atom.fileManager);
@@ -71,11 +71,11 @@ const correctIndex = (
 
 const moveToIndexPageAtom = atom(
     null,
-    (_, set, index: number, viewer: Viewer, content: Content) => {
+    (_, set, index: number, viewer: Body, content: Content) => {
         if (viewer == null || content == null) return;
 
         set(ActionAtom.moveToIndexPage, index);
-        set(ActionAtom.scrollToStart, viewer, content);
+        set(ActionAtom.positionStart);
         set(Atom.zoomManager, (z) => z.reset());
         set(Atom.isOpenSideMenu, false);
     },
@@ -84,18 +84,17 @@ const moveToIndexPageAtom = atom(
 const Thumbnail = (props: {
     blob?: Blob;
     index: number;
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
-    const imgRef = useRef<HTMLImageElement | null>(null);
+    const image = useRef<HTMLImageElement | null>(null);
     const moveToIndexPage = useSetAtom(moveToIndexPageAtom);
 
     useEffect(() => {
-        const img = imgRef.current;
-        if (img == null || props.blob == null) return;
+        if (image.current == null || props.blob == null) return;
 
         const imageURL = URL.createObjectURL(props.blob);
-        img.src = imageURL;
+        image.current.src = imageURL;
         return (): void => {
             URL.revokeObjectURL(imageURL);
         };
@@ -105,12 +104,12 @@ const Thumbnail = (props: {
     return (
         <img
             className="m-auto max-h-50 max-w-50"
-            ref={imgRef}
+            ref={image}
             onClick={() => {
                 moveToIndexPage(
                     props.index,
-                    props.viewerRef.current,
-                    props.contentRef.current,
+                    props.body.current,
+                    props.content.current,
                 );
             }}
         />

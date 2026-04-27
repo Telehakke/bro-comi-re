@@ -7,82 +7,68 @@ import React, {
     type JSX,
     type ReactNode,
 } from "react";
-import { ActionAtom, Atom } from "../atoms";
-import { ScrollManager } from "../models/scrollManager";
-import type { Content, Viewer } from "../models/types";
+import { ActionAtom, AppStateAtom, Atom } from "../atoms";
+import { PullManager } from "../models/pullManager";
+import type { Body, Content } from "../models/types";
+import { Viewer } from "../models/viewer";
 import { ZoomManager } from "../models/zoomManager";
 
 const onChevronLeftAtom = atom(false);
 const onChevronRightAtom = atom(false);
 
-const zoomInAtom = atom(null, (get, set, viewer: Viewer, content: Content) => {
-    if (viewer == null || content == null) return;
-
-    set(Atom.scrollManager, (s) => s.update(viewer, content));
+const zoomInAtom = atom(null, (get, set, viewer: Viewer) => {
+    set(Atom.scrollManager, (s) => s.update(viewer));
     const { zoomStep } = get(Atom.appStore);
     const zoom = get(Atom.zoomManager).zoomIn(zoomStep);
     set(Atom.zoomManager, zoom);
     set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
-const zoomOutAtom = atom(null, (get, set, viewer: Viewer, content: Content) => {
-    if (viewer == null || content == null) return;
-
-    set(Atom.scrollManager, (s) => s.update(viewer, content));
+const zoomOutAtom = atom(null, (get, set, viewer: Viewer) => {
+    set(Atom.scrollManager, (s) => s.update(viewer));
     const { zoomStep } = get(Atom.appStore);
     const zoom = get(Atom.zoomManager).zoomOut(zoomStep);
     set(Atom.zoomManager, zoom);
     set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
-const goToLeftAtom = atom(
-    null,
-    (get, set, viewer: Viewer, content: Content) => {
-        if (viewer == null || content == null) return;
+const goToLeftAtom = atom(null, (get, set) => {
+    const { writingType } = get(Atom.appStore);
+    switch (writingType) {
+        case "vertical":
+            set(ActionAtom.moveToNextPage);
+            set(ActionAtom.positionStart);
+            break;
+        case "horizontal":
+            set(ActionAtom.moveToPreviousPage);
+            set(ActionAtom.positionEnd);
+            break;
+    }
+});
 
-        const { writingType } = get(Atom.appStore);
-        if (writingType === "vertical") {
-            if (get(Atom.fileManager).hasNextFile()) {
-                set(ActionAtom.moveToNextPage);
-                set(ActionAtom.scrollToStart, viewer, content);
-            }
-        } else {
-            if (get(Atom.fileManager).hasPreviousFile()) {
-                set(ActionAtom.moveToPreviousPage);
-                set(ActionAtom.scrollToEnd, viewer, content);
-            }
-        }
-    },
-);
+const goToRightAtom = atom(null, (get, set) => {
+    const { writingType } = get(Atom.appStore);
+    switch (writingType) {
+        case "vertical":
+            set(ActionAtom.moveToPreviousPage);
+            set(ActionAtom.positionEnd);
+            break;
 
-const goToRightAtom = atom(
-    null,
-    (get, set, viewer: Viewer, content: Content) => {
-        if (viewer == null || content == null) return;
-
-        const { writingType } = get(Atom.appStore);
-        if (writingType === "vertical") {
-            if (get(Atom.fileManager).hasPreviousFile()) {
-                set(ActionAtom.moveToPreviousPage);
-                set(ActionAtom.scrollToEnd, viewer, content);
-            }
-        } else {
-            if (get(Atom.fileManager).hasNextFile()) {
-                set(ActionAtom.moveToNextPage);
-                set(ActionAtom.scrollToStart, viewer, content);
-            }
-        }
-    },
-);
+        case "horizontal":
+            set(ActionAtom.moveToNextPage);
+            set(ActionAtom.positionStart);
+            break;
+    }
+});
 
 export const ImageView = ({
-    viewerRef,
-    contentRef,
+    body,
+    content,
 }: {
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
-    const timerRef = useRef<number | undefined>(undefined);
+    const timerId = useRef<number | undefined>(undefined);
     const setZoomManager = useSetAtom(Atom.zoomManager);
     const setShouldShowInfo = useSetAtom(Atom.shouldShowInfo);
     const zoomIn = useSetAtom(zoomInAtom);
@@ -90,49 +76,44 @@ export const ImageView = ({
     const goToLeft = useSetAtom(goToLeftAtom);
     const goToRight = useSetAtom(goToRightAtom);
 
+    const createViewer = (): Viewer => {
+        return Viewer.create(body.current, content.current);
+    };
+
     return (
-        <Viewer
-            viewerRef={viewerRef}
-            contentRef={contentRef}
-            onResize={(width, height) => {
-                setZoomManager((z) => z.setViewerSize({ width, height }));
-            }}
+        <Body
+            body={body}
+            content={content}
+            onResize={(width, height) =>
+                setZoomManager((z) => z.setBodySize({ width, height }))
+            }
             onClick={() => {
-                window.clearTimeout(timerRef.current);
-                timerRef.current = window.setTimeout(() => {
+                window.clearTimeout(timerId.current);
+                timerId.current = window.setTimeout(() => {
                     setShouldShowInfo((v) => !v);
                 }, 300);
             }}
             onDoubleClick={() => {
-                window.clearTimeout(timerRef.current);
-                zoomIn(viewerRef.current, contentRef.current);
+                window.clearTimeout(timerId.current);
+                zoomIn(createViewer());
             }}
-            onRightClick={() => {
-                zoomOut(viewerRef.current, contentRef.current);
-            }}
-            onLongPress={() => {
-                zoomOut(viewerRef.current, contentRef.current);
-            }}
-            onLeftSidePull={() =>
-                goToLeft(viewerRef.current, contentRef.current)
-            }
-            onRightSidePull={() =>
-                goToRight(viewerRef.current, contentRef.current)
-            }
+            onRightClick={() => zoomOut(createViewer())}
+            onLongPress={() => zoomOut(createViewer())}
+            onLeftSidePull={() => goToLeft()}
+            onRightSidePull={() => goToRight()}
         >
-            <Img viewerRef={viewerRef} contentRef={contentRef} />
+            <Img body={body} content={content} />
             <ChevronLeft />
             <ChevronRight />
-        </Viewer>
+        </Body>
     );
 };
 
 /* -------------------------------------------------------------------------- */
 
-const Viewer = ({
-    viewerRef,
-    contentRef,
-    children,
+const Body = ({
+    body,
+    content,
     onResize,
     onClick,
     onDoubleClick,
@@ -140,9 +121,10 @@ const Viewer = ({
     onLongPress,
     onLeftSidePull,
     onRightSidePull,
+    children,
 }: {
-    viewerRef: React.RefObject<HTMLDivElement | null>;
-    contentRef: React.RefObject<HTMLDivElement | null>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
     onResize: (width: number, height: number) => void;
     onClick: () => void;
     onDoubleClick: () => void;
@@ -152,99 +134,86 @@ const Viewer = ({
     onRightSidePull: () => void;
     children: ReactNode;
 }): JSX.Element => {
-    const timerIdRef = useRef<number | undefined>(undefined);
-    const prevXRef = useRef(0);
-    const scrollCountRef = useRef(0);
-    const canClickRef = useRef(true);
-    const canDoubleClickRef = useRef(true);
-    const canRightClickRef = useRef(true);
-    const canLongPressRef = useRef(true);
-    const touchMoveCountRef = useRef(0);
+    const timerId = useRef<number | undefined>(undefined);
+    const prevX = useRef(0);
+    const pullManager = useRef(new PullManager());
+    const canClick = useRef(true);
+    const canDoubleClick = useRef(true);
+    const canRightClick = useRef(true);
+    const canLongPress = useRef(true);
     const setOnChevronLeft = useSetAtom(onChevronLeftAtom);
     const setOnChevronRight = useSetAtom(onChevronRightAtom);
     const setIsUserScrolled = useSetAtom(Atom.isUserScrolled);
 
     useEffect(() => {
-        const viewer = viewerRef.current;
-        if (viewer == null) return;
+        if (body.current == null) return;
 
         const observer = new ResizeObserver(() => {
-            const { clientWidth, clientHeight } = viewer;
+            const { clientWidth, clientHeight } = body.current!;
             onResize(clientWidth, clientHeight);
         });
-        observer.observe(viewer);
-        return (): void => {
-            observer.disconnect();
-        };
-    }, [onResize, viewerRef]);
+        observer.observe(body.current);
+        return (): void => observer.disconnect();
+    }, [body, onResize]);
 
     return (
         <div
             className="fixed inset-0 flex h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
             style={{ scrollbarWidth: "none" }}
-            ref={viewerRef}
+            ref={body}
             onClick={() => {
-                if (canClickRef.current) {
-                    onClick();
-                }
+                if (canClick.current) onClick();
             }}
             onDoubleClick={() => {
-                if (canDoubleClickRef.current) {
-                    onDoubleClick();
-                }
+                if (canDoubleClick.current) onDoubleClick();
             }}
             onContextMenu={(ev) => {
                 ev.preventDefault();
-                window.clearTimeout(timerIdRef.current);
-                if (!canRightClickRef.current) return;
+                window.clearTimeout(timerId.current);
+                if (!canRightClick.current) return;
                 onRightClick();
-                canLongPressRef.current = false;
+                canLongPress.current = false;
             }}
             onTouchStart={(ev) => {
-                timerIdRef.current = window.setTimeout(() => {
-                    if (!canLongPressRef.current) return;
+                timerId.current = window.setTimeout(() => {
+                    if (!canLongPress.current) return;
                     onLongPress();
-                    canClickRef.current = false;
-                    canDoubleClickRef.current = false;
-                    canRightClickRef.current = false;
+                    canClick.current = false;
+                    canDoubleClick.current = false;
+                    canRightClick.current = false;
                 }, 500);
-                prevXRef.current = ev.targetTouches[0].clientX;
-                scrollCountRef.current = 0;
-                canClickRef.current = true;
-                canDoubleClickRef.current = true;
-                canRightClickRef.current = true;
-                canLongPressRef.current = true;
-                touchMoveCountRef.current = 0;
+                prevX.current = ev.targetTouches[0].clientX;
+                pullManager.current = new PullManager();
+                canClick.current = true;
+                canDoubleClick.current = true;
+                canRightClick.current = true;
+                canLongPress.current = true;
             }}
             onTouchMove={(ev) => {
-                window.clearTimeout(timerIdRef.current);
-                const viewer = viewerRef.current;
-                const image = contentRef.current;
-                if (viewer == null || image == null) return;
-
+                window.clearTimeout(timerId.current);
+                setIsUserScrolled(true);
                 const x = ev.targetTouches[0].clientX;
-                const scroll = ScrollManager.fromElement(viewer, image);
-                if (scroll.isHorizontalMin() || scroll.isHorizontalMax()) {
-                    scrollCountRef.current += prevXRef.current - x;
-                    if (scrollCountRef.current < -100) {
+                const viewer = Viewer.create(body.current, content.current);
+                if (viewer.isReachedLimitX()) {
+                    pullManager.current.add(prevX.current - x);
+                    if (pullManager.current.canLeftPull()) {
                         setOnChevronLeft(true);
-                    } else if (scrollCountRef.current > 100) {
+                    } else if (pullManager.current.canRightPull()) {
                         setOnChevronRight(true);
                     } else {
                         setOnChevronLeft(false);
                         setOnChevronRight(false);
                     }
                 }
-                prevXRef.current = x;
+                prevX.current = x;
             }}
             onTouchEnd={() => {
-                window.clearTimeout(timerIdRef.current);
+                window.clearTimeout(timerId.current);
                 setOnChevronLeft(false);
                 setOnChevronRight(false);
-
-                if (scrollCountRef.current < -100) {
+                if (pullManager.current.canLeftPull()) {
                     onLeftSidePull();
-                } else if (scrollCountRef.current > 100) {
+                } else if (pullManager.current.canRightPull()) {
                     onRightSidePull();
                 }
             }}
@@ -259,68 +228,57 @@ const Viewer = ({
 
 /* -------------------------------------------------------------------------- */
 
-const applyScrollAtom = atom(
-    null,
-    (get, _, viewer: Viewer, content: Content) => {
-        if (viewer == null || content == null) return;
-        get(Atom.scrollManager).applyScroll(viewer, content);
-    },
-);
+const applyScrollAtom = atom(null, (get, _, viewer: Viewer) => {
+    get(Atom.scrollManager).applyScroll(viewer);
+});
 
 const Img = ({
-    viewerRef,
-    contentRef,
+    body,
+    content,
 }: {
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
-    const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
-    const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
+    const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
+    const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
     const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
-    const { sharpeningFilterStrength, onSharpeningFilter } = useAtomValue(
-        Atom.appStore,
-    );
+    const filterStrength = useAtomValue(AppStateAtom.sharpeningFilterStrength);
+    const onSharpeningFilter = useAtomValue(AppStateAtom.onSharpeningFilter);
     const applyScroll = useSetAtom(applyScrollAtom);
 
     useEffect(() => {
-        const content = contentRef.current;
-        if (content == null) return;
+        if (content.current == null) return;
 
         if (!sharpeningFilter.hasSVG()) {
             sharpeningFilter.addSVG();
-            sharpeningFilter.setStrength(sharpeningFilterStrength);
+            sharpeningFilter.setStrength(filterStrength);
         }
         if (onSharpeningFilter) {
-            sharpeningFilter.applyFilter(content);
+            sharpeningFilter.applyFilter(content.current);
         } else {
-            sharpeningFilter.clearFilter(content);
+            sharpeningFilter.clearFilter(content.current);
         }
-    }, [
-        contentRef,
-        onSharpeningFilter,
-        sharpeningFilter,
-        sharpeningFilterStrength,
-    ]);
+    }, [content, filterStrength, onSharpeningFilter, sharpeningFilter]);
 
     useEffect(() => {
-        const content = contentRef.current;
-        if (content == null) return;
+        if (content.current == null) return;
 
         const observer = new MutationObserver(() => {
-            applyScroll(viewerRef.current, content);
+            // <LeftImage>と<RightImage>が拡大・縮小されるとスクロールする
+            applyScroll(Viewer.create(body.current, content.current));
         });
-        observer.observe(content, { attributes: true, subtree: true });
+        observer.observe(content.current, { attributes: true, subtree: true });
         return (): void => observer.disconnect();
-    }, [applyScroll, contentRef, viewerRef]);
+    }, [applyScroll, content, body]);
 
     return (
         <div className="m-auto">
             <div
-                className={`relative grid size-max items-start ${leftImageBlob != null && rightImageBlob != null && "grid-cols-2"}`}
-                ref={contentRef}
+                className={`relative grid size-max items-start ${leftBlob != null && rightBlob != null && "grid-cols-2"}`}
+                ref={content}
             >
-                <LeftImage viewerRef={viewerRef} contentRef={contentRef} />
-                <RightImage viewerRef={viewerRef} contentRef={contentRef} />
+                <LeftImage body={body} content={content} />
+                <RightImage body={body} content={content} />
                 <div className="absolute inset-0" />
             </div>
         </div>
@@ -329,56 +287,55 @@ const Img = ({
 
 /* -------------------------------------------------------------------------- */
 
-const setupAtom = atom(null, (get, set, viewer: Viewer, content: Content) => {
-    if (viewer == null || content == null) return;
-
+const setupAtom = atom(null, (get, set, viewer: Viewer) => {
     const scroll = get(Atom.scrollManager);
-    scroll.applyScroll(viewer, content);
-    const width = content.clientWidth;
-    const height = content.clientHeight;
-    set(Atom.zoomManager, (z) => z.setImageSize({ width, height }));
+    scroll.applyScroll(viewer);
+    if (viewer.content == null) return;
+
+    const width = viewer.content.clientWidth;
+    const height = viewer.content.clientHeight;
+    set(Atom.zoomManager, (z) => z.setContentSize({ width, height }));
 });
 
 const LeftImage = ({
-    viewerRef,
-    contentRef,
+    body,
+    content,
 }: {
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
-    const leftImageRef = useRef<HTMLImageElement | null>(null);
-    const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
-    const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
+    const image = useRef<HTMLImageElement | null>(null);
+    const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
+    const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
     const zoomManager = useAtomValue(Atom.zoomManager);
     const setup = useSetAtom(setupAtom);
 
     useEffect(() => {
-        const image = leftImageRef.current;
-        if (image == null || leftImageBlob == null) return;
+        if (image.current == null || leftBlob == null) return;
 
-        const imageURL = URL.createObjectURL(leftImageBlob);
-        image.src = imageURL;
+        const imageURL = URL.createObjectURL(leftBlob);
+        image.current.src = imageURL;
         return (): void => URL.revokeObjectURL(imageURL);
-    }, [leftImageBlob, leftImageRef]);
+    }, [leftBlob, image]);
 
-    if (leftImageBlob == null) return <></>;
+    if (leftBlob == null) return <></>;
     return (
         <img
             className="size-auto justify-self-end object-contain"
-            style={leftImgStyle(zoomManager, rightImageBlob)}
-            ref={leftImageRef}
-            onLoad={() => setup(viewerRef.current, contentRef.current)}
+            style={leftImgStyle(zoomManager, rightBlob)}
+            ref={image}
+            onLoad={() => setup(Viewer.create(body.current, content.current))}
         />
     );
 };
 
 const leftImgStyle = (
     zoomManager: ZoomManager,
-    rightImageBlob?: Blob,
+    rightBlob?: Blob,
 ): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        maxWidth: rightImageBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
+        maxWidth: rightBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
         maxHeight: `${scale}dvh`,
         WebkitTouchCallout: "none",
     };
@@ -387,45 +344,44 @@ const leftImgStyle = (
 /* -------------------------------------------------------------------------- */
 
 const RightImage = ({
-    viewerRef,
-    contentRef,
+    body,
+    content,
 }: {
-    viewerRef: React.RefObject<Viewer>;
-    contentRef: React.RefObject<Content>;
+    body: React.RefObject<Body>;
+    content: React.RefObject<Content>;
 }): JSX.Element => {
-    const imageRef = useRef<HTMLImageElement | null>(null);
-    const leftImageBlob = useAtomValue(Atom.currentLeftImageBlob);
-    const rightImageBlob = useAtomValue(Atom.currentRightImageBlob);
+    const image = useRef<HTMLImageElement | null>(null);
+    const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
+    const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
     const zoomManager = useAtomValue(Atom.zoomManager);
     const setup = useSetAtom(setupAtom);
 
     useEffect(() => {
-        const image = imageRef.current;
-        if (image == null || rightImageBlob == null) return;
+        if (image.current == null || rightBlob == null) return;
 
-        const imageURL = URL.createObjectURL(rightImageBlob);
-        image.src = imageURL;
+        const imageURL = URL.createObjectURL(rightBlob);
+        image.current.src = imageURL;
         return (): void => URL.revokeObjectURL(imageURL);
-    }, [rightImageBlob]);
+    }, [rightBlob]);
 
-    if (rightImageBlob == null) return <></>;
+    if (rightBlob == null) return <></>;
     return (
         <img
             className="size-auto object-contain"
-            style={rightImgStyle(zoomManager, leftImageBlob)}
-            ref={imageRef}
-            onLoad={() => setup(viewerRef.current, contentRef.current)}
+            style={rightImgStyle(zoomManager, leftBlob)}
+            ref={image}
+            onLoad={() => setup(Viewer.create(body.current, content.current))}
         />
     );
 };
 
 const rightImgStyle = (
     zoomManager: ZoomManager,
-    leftImageBlob?: Blob,
+    leftBlob?: Blob,
 ): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        maxWidth: leftImageBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
+        maxWidth: leftBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
         maxHeight: `${scale}dvh`,
         WebkitTouchCallout: "none",
     };

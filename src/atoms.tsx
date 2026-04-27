@@ -3,15 +3,18 @@ import { selectAtom } from "jotai/utils";
 import { appStore } from "./models/appStore";
 import { FileManager } from "./models/fileManager";
 import { HistoryManager } from "./models/historyManager";
+import { ImageBlobManager } from "./models/imageBlobManager";
 import { MessageManager } from "./models/messageManager";
 import { ScrollManager } from "./models/scrollManager";
 import { SharpeningFilter } from "./models/sharpeningFilter";
+import type { Viewer } from "./models/viewer";
 import { ZoomManager } from "./models/zoomManager";
 
 export const Atom = {
     appStore: atom(appStore),
     fileManager: atom(new FileManager()),
     historyManager: atom(new HistoryManager()),
+    imageBlobManager: atom(ImageBlobManager.forCurrent()),
     isOpenSideMenu: atom(false),
     isUserScrolled: atom(false),
     messageManager: atom(MessageManager.create()),
@@ -21,12 +24,6 @@ export const Atom = {
     shouldShowViewer: atom(false),
     zipFileName: atom<string | undefined>(undefined),
     zoomManager: atom(new ZoomManager()),
-    prevLeftImageBlob: atom<Blob | undefined>(undefined),
-    prevRightImageBlob: atom<Blob | undefined>(undefined),
-    currentLeftImageBlob: atom<Blob | undefined>(undefined),
-    currentRightImageBlob: atom<Blob | undefined>(undefined),
-    nextLeftImageBlob: atom<Blob | undefined>(undefined),
-    nextRightImageBlob: atom<Blob | undefined>(undefined),
 } as const;
 
 export const AppStateAtom = {
@@ -39,6 +36,8 @@ export const AppStateAtom = {
         (a) => a.sharpeningFilterStrength,
     ),
     shouldAdvance: selectAtom(Atom.appStore, (a) => a.shouldAdvance),
+    tapAreaWidth: selectAtom(Atom.appStore, (a) => a.tapAreaWidth),
+    tapAreaHeight: selectAtom(Atom.appStore, (a) => a.tapAreaHeight),
     viewSplitCount: selectAtom(Atom.appStore, (a) => a.viewSplitCount),
     writingType: selectAtom(Atom.appStore, (a) => a.writingType),
     zoomStep: selectAtom(Atom.appStore, (a) => a.zoomStep),
@@ -47,168 +46,118 @@ export const AppStateAtom = {
 /* -------------------------------------------------------------------------- */
 
 export const ActionAtom = {
-    moveToNextPage: atom(null, async (get, set) => {
-        const { displayMode, writingType } = get(Atom.appStore);
-        let file: FileManager;
-        if (displayMode === "single") {
-            file = get(Atom.fileManager).incrementIndex();
-        } else {
-            file = get(Atom.fileManager).incrementIndex().incrementIndex();
-        }
-        set(Atom.fileManager, file);
-        set(Atom.messageManager, (m) => m.setMessage(file.progress()));
-
-        set(Atom.prevLeftImageBlob, get(Atom.currentLeftImageBlob));
-        set(Atom.prevRightImageBlob, get(Atom.currentRightImageBlob));
-
-        const currentLeft = get(Atom.nextLeftImageBlob);
-        set(
-            Atom.currentLeftImageBlob,
-            currentLeft != null
-                ? currentLeft
-                : await file.getLeftBlob(displayMode, writingType),
-        );
-        const currentRight = get(Atom.nextRightImageBlob);
-        set(
-            Atom.currentRightImageBlob,
-            currentRight != null
-                ? currentRight
-                : await file.getRightBlob(displayMode, writingType),
-        );
-
-        let nextFile: FileManager;
-        if (displayMode === "single") {
-            nextFile = file.incrementIndex();
-        } else {
-            nextFile = file.incrementIndex().incrementIndex();
-        }
-        nextFile.getLeftBlob(displayMode, writingType).then((blob) => {
-            set(Atom.nextLeftImageBlob, blob);
-        });
-        nextFile.getRightBlob(displayMode, writingType).then((blob) => {
-            set(Atom.nextRightImageBlob, blob);
-        });
-    }),
-    moveToPreviousPage: atom(null, async (get, set) => {
-        const { displayMode, writingType } = get(Atom.appStore);
-        let file: FileManager;
-        if (displayMode === "single") {
-            file = get(Atom.fileManager).decrementIndex();
-        } else {
-            file = get(Atom.fileManager).decrementIndex().decrementIndex();
-        }
-
-        set(Atom.fileManager, file);
-        set(Atom.messageManager, (m) => m.setMessage(file.progress()));
-
-        set(Atom.nextLeftImageBlob, get(Atom.currentLeftImageBlob));
-        set(Atom.nextRightImageBlob, get(Atom.currentRightImageBlob));
-
-        const currentLeft = get(Atom.prevLeftImageBlob);
-        set(
-            Atom.currentLeftImageBlob,
-            currentLeft != null
-                ? currentLeft
-                : await file.getLeftBlob(displayMode, writingType),
-        );
-        const currentRight = get(Atom.prevRightImageBlob);
-        set(
-            Atom.currentRightImageBlob,
-            currentRight != null
-                ? currentRight
-                : await file.getRightBlob(displayMode, writingType),
-        );
-
-        let prevFile: FileManager;
-        if (displayMode == "single") {
-            prevFile = file.decrementIndex();
-        } else {
-            prevFile = file.decrementIndex().decrementIndex();
-        }
-        prevFile.getLeftBlob(displayMode, writingType).then((blob) => {
-            set(Atom.prevLeftImageBlob, blob);
-        });
-        prevFile.getRightBlob(displayMode, writingType).then((blob) => {
-            set(Atom.prevRightImageBlob, blob);
-        });
-    }),
     moveToIndexPage: atom(null, async (get, set, index: number) => {
-        const { displayMode, writingType } = get(Atom.appStore);
         const file = get(Atom.fileManager).setIndex(index);
         set(Atom.fileManager, file);
+
+        const appStore = get(Atom.appStore);
+        const leftIndex = file.getLeftIndex({ ...appStore });
+        const rightIndex = file.getRightIndex({ ...appStore });
+        const imageBlob = ImageBlobManager.forCurrent(
+            { id: leftIndex, blob: await file.getBlob(leftIndex) },
+            { id: rightIndex, blob: await file.getBlob(rightIndex) },
+        );
+        set(Atom.imageBlobManager, imageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
 
-        set(Atom.prevLeftImageBlob, undefined);
-        set(Atom.prevRightImageBlob, undefined);
-
-        set(
-            Atom.currentLeftImageBlob,
-            await file.getLeftBlob(displayMode, writingType),
-        );
-        set(
-            Atom.currentRightImageBlob,
-            await file.getRightBlob(displayMode, writingType),
-        );
-
-        let nextFile: FileManager;
-        if (displayMode === "single") {
-            nextFile = file.incrementIndex();
-        } else {
-            nextFile = file.incrementIndex().incrementIndex();
-        }
-        nextFile.getLeftBlob(displayMode, writingType).then((blob) => {
-            set(Atom.nextLeftImageBlob, blob);
-        });
-        nextFile.getRightBlob(displayMode, writingType).then((blob) => {
-            set(Atom.prevRightImageBlob, blob);
-        });
+        const nextFile = file.nextIndex({ ...appStore });
+        const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
+        nextFile
+            .getBlob(nextLeftIndex)
+            .then((b) => imageBlob.setNextLeft(nextLeftIndex, b));
+        const nextRightIndex = nextFile.getRightIndex({ ...appStore });
+        nextFile
+            .getBlob(nextRightIndex)
+            .then((b) => imageBlob.setNextRight(nextRightIndex, b));
     }),
-    scrollToStart: atom(
-        null,
-        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
-            const { writingType } = get(Atom.appStore);
-            const scroll = ScrollManager.fromWritingType(writingType);
-            set(Atom.scrollManager, scroll);
-            scroll.applyScroll(viewer, content);
-        },
-    ),
-    scrollToEnd: atom(
-        null,
-        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
-            const { writingType } = get(Atom.appStore);
-            const scroll = ScrollManager.fromWritingType(writingType, true);
-            set(Atom.scrollManager, scroll);
-            scroll.applyScroll(viewer, content);
-        },
-    ),
-    scrollToNext: atom(
-        null,
-        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
-            const { writingType, viewSplitCount } = get(Atom.appStore);
-            const scroll = get(Atom.scrollManager).next(
-                writingType,
-                viewSplitCount,
-                viewer,
-                content,
-            );
-            set(Atom.scrollManager, scroll);
-            scroll.applyScroll(viewer, content);
-        },
-    ),
-    scrollToPrevious: atom(
-        null,
-        (get, set, viewer: HTMLDivElement, content: HTMLDivElement) => {
-            const { writingType, viewSplitCount } = get(Atom.appStore);
-            const scroll = get(Atom.scrollManager).previous(
-                writingType,
-                viewSplitCount,
-                viewer,
-                content,
-            );
-            set(Atom.scrollManager, scroll);
-            scroll.applyScroll(viewer, content);
-        },
-    ),
+    moveToNextPage: atom(null, async (get, set) => {
+        const appStore = get(Atom.appStore);
+        const file = get(Atom.fileManager).nextIndex({ ...appStore });
+        set(Atom.fileManager, file);
+
+        const imageBlob = get(Atom.imageBlobManager).shiftToPrev();
+        const leftIndex = file.getLeftIndex({ ...appStore });
+        const leftBlob =
+            imageBlob.getCurrentLeftBlobWithId(leftIndex) ??
+            (await file.getBlob(leftIndex));
+        const rightIndex = file.getRightIndex({ ...appStore });
+        const rightBlob =
+            imageBlob.getCurrentRightBlobWithId(rightIndex) ??
+            (await file.getBlob(rightIndex));
+        const newImageBlob = imageBlob.setCurrent(
+            { id: leftIndex, blob: leftBlob },
+            { id: rightIndex, blob: rightBlob },
+        );
+        set(Atom.imageBlobManager, newImageBlob);
+        set(Atom.messageManager, (m) => m.setMessage(file.progress()));
+
+        const nextFile = file.nextIndex({ ...appStore });
+        const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
+        nextFile
+            .getBlob(nextLeftIndex)
+            .then((b) => newImageBlob.setNextLeft(nextLeftIndex, b));
+        const nextRightIndex = nextFile.getRightIndex({ ...appStore });
+        nextFile
+            .getBlob(nextRightIndex)
+            .then((b) => newImageBlob.setNextRight(nextRightIndex, b));
+    }),
+    moveToPreviousPage: atom(null, async (get, set) => {
+        const appStore = get(Atom.appStore);
+        const file = get(Atom.fileManager).prevIndex({ ...appStore });
+        set(Atom.fileManager, file);
+
+        const imageBlob = get(Atom.imageBlobManager).shiftToNext();
+        const leftIndex = file.getLeftIndex({ ...appStore });
+        const leftBlob =
+            imageBlob.getCurrentLeftBlobWithId(leftIndex) ??
+            (await file.getBlob(leftIndex));
+        const rightIndex = file.getRightIndex({ ...appStore });
+        const rightBlob =
+            imageBlob.getCurrentRightBlobWithId(rightIndex) ??
+            (await file.getBlob(rightIndex));
+        const newImageBlob = imageBlob.setCurrent(
+            { id: leftIndex, blob: leftBlob },
+            { id: rightIndex, blob: rightBlob },
+        );
+        set(Atom.imageBlobManager, newImageBlob);
+        set(Atom.messageManager, (m) => m.setMessage(file.progress()));
+
+        const prevFile = file.prevIndex({ ...appStore });
+        const prevLeftIndex = prevFile.getLeftIndex({ ...appStore });
+        prevFile
+            .getBlob(prevLeftIndex)
+            .then((b) => newImageBlob.setPrevLeft(prevLeftIndex, b));
+        const prevRightIndex = prevFile.getRightIndex({ ...appStore });
+        prevFile
+            .getBlob(prevRightIndex)
+            .then((b) => newImageBlob.setPrevRight(prevRightIndex, b));
+    }),
+    positionStart: atom(null, (get, set) => {
+        const { writingType } = get(Atom.appStore);
+        set(Atom.scrollManager, ScrollManager.fromWritingType(writingType));
+    }),
+    positionEnd: atom(null, (get, set) => {
+        const { writingType } = get(Atom.appStore);
+        set(
+            Atom.scrollManager,
+            ScrollManager.fromWritingType(writingType, true),
+        );
+    }),
+    scrollToNext: atom(null, (get, set, viewer: Viewer) => {
+        const appStore = get(Atom.appStore);
+        const scroll = get(Atom.scrollManager).next({ ...appStore, viewer });
+        set(Atom.scrollManager, scroll);
+        scroll.applyScroll(viewer);
+    }),
+    scrollToPrevious: atom(null, (get, set, viewer: Viewer) => {
+        const appStore = get(Atom.appStore);
+        const scroll = get(Atom.scrollManager).previous({
+            ...appStore,
+            viewer,
+        });
+        set(Atom.scrollManager, scroll);
+        scroll.applyScroll(viewer);
+    }),
     updateHistory: atom(null, (get, set) => {
         const zipFileName = get(Atom.zipFileName);
         if (zipFileName == null) return;

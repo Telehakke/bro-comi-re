@@ -8,6 +8,8 @@ export type AppState = Readonly<{
     scrollSpeed: number;
     sharpeningFilterStrength: number;
     shouldAdvance: boolean;
+    tapAreaWidth: TapAreaLength;
+    tapAreaHeight: TapAreaLength;
     viewSplitCount: ViewSplitCount;
     writingType: WritingType;
     zoomStep: number;
@@ -20,6 +22,8 @@ export const defaultAppState: AppState = {
     scrollSpeed: 4,
     sharpeningFilterStrength: 3,
     shouldAdvance: false,
+    tapAreaWidth: "s",
+    tapAreaHeight: "s",
     viewSplitCount: "four",
     writingType: "vertical",
     zoomStep: 50,
@@ -52,6 +56,14 @@ export const createAppState = (value: unknown): AppState => {
         shouldAdvance: ensureBoolean(
             v.shouldAdvance,
             defaultAppState.shouldAdvance,
+        ),
+        tapAreaWidth: ensureTapAreaLength(
+            v.tapAreaWidth,
+            defaultAppState.tapAreaWidth,
+        ),
+        tapAreaHeight: ensureTapAreaLength(
+            v.tapAreaHeight,
+            defaultAppState.tapAreaHeight,
         ),
         viewSplitCount: ensureViewSplitCount(
             v.viewSplitCount,
@@ -119,6 +131,27 @@ const ensureHistories = (
 
 /* -------------------------------------------------------------------------- */
 
+export const TapAreaLengthEnum = {
+    s: { value: "s", label: "S", length: "75px" },
+    m: { value: "m", label: "M", length: "100px" },
+    l: { value: "l", label: "L", length: "125px" },
+} as const;
+
+export type TapAreaLength = keyof typeof TapAreaLengthEnum;
+
+export const isTapAreaLength = (value: unknown): value is TapAreaLength => {
+    return Object.keys(TapAreaLengthEnum).some((v) => v === value);
+};
+
+const ensureTapAreaLength = (
+    value: unknown,
+    defaultValue: TapAreaLength,
+): TapAreaLength => {
+    return isTapAreaLength(value) ? value : defaultValue;
+};
+
+/* -------------------------------------------------------------------------- */
+
 export const ViewSplitCountEnum = {
     four: { value: "four", label: "4" },
     six: { value: "six", label: "6" },
@@ -140,8 +173,8 @@ const ensureViewSplitCount = (
 /* -------------------------------------------------------------------------- */
 
 export const WritingTypeEnum = {
-    vertical: { value: "vertical", label: "縦書き" },
     horizontal: { value: "horizontal", label: "横書き" },
+    vertical: { value: "vertical", label: "縦書き" },
 } as const;
 
 export type WritingType = keyof typeof WritingTypeEnum;
