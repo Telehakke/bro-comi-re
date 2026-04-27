@@ -123,6 +123,14 @@ export const TapAreas = ({
     return (
         <>
             <TapArea
+                className="inset-x-0 bottom-0"
+                style={{ height: TapAreaLengthEnum[tapAreaHeight].length }}
+                onClick={() =>
+                    bottomClick(Viewer.create(body.current, content.current))
+                }
+                onScroll={(delta) => horizontalScroll(delta, body.current)}
+            />
+            <TapArea
                 className="inset-y-0 left-0"
                 style={{ width: TapAreaLengthEnum[tapAreaWidth].length }}
                 onClick={() =>
@@ -137,14 +145,6 @@ export const TapAreas = ({
                     rightClick(Viewer.create(body.current, content.current))
                 }
                 onScroll={(delta) => verticalScroll(delta, body.current)}
-            />
-            <TapArea
-                className="inset-x-0 bottom-0"
-                style={{ height: TapAreaLengthEnum[tapAreaHeight].length }}
-                onClick={() =>
-                    bottomClick(Viewer.create(body.current, content.current))
-                }
-                onScroll={(delta) => horizontalScroll(delta, body.current)}
             />
         </>
     );
