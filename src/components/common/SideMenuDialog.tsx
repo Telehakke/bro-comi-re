@@ -7,6 +7,7 @@ type SideMenuDialogProps = Partial<{
     closeOnInteractOutside: boolean;
     unmountOnExit: boolean;
     lazyMount: boolean;
+    modal: boolean;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     children: ReactNode;
@@ -27,6 +28,7 @@ const Root = (
         closeOnInteractOutside: boolean;
         unmountOnExit: boolean;
         lazyMount: boolean;
+        modal: boolean;
         open: boolean;
         onOpenChange: (open: boolean) => void;
         children: ReactNode;
@@ -36,6 +38,7 @@ const Root = (
         closeOnInteractOutside={props.closeOnInteractOutside}
         unmountOnExit={props.unmountOnExit}
         lazyMount={props.lazyMount}
+        modal={props.modal}
         open={props.open}
         onOpenChange={(v) => props.onOpenChange?.(v.open)}
     >

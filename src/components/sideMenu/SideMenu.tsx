@@ -12,6 +12,7 @@ import { ScrollSpeedSlider } from "./sub/ScrollSpeedSlider";
 import { SelectPageSlider } from "./sub/SelectPageSlider";
 import { SharpeningFilterStrengthSlider } from "./sub/SharpeningFilterStrengthSlider";
 import { ShouldAdvanceSwitch } from "./sub/ShouldAdvanceSwitch";
+import { ShouldShowInvertButton } from "./sub/ShouldShowInvertButtonSwitch";
 import { TapAreaHeightSegmentGroup } from "./sub/TapAreaHeightSegmentGroup";
 import { TapAreaWidthSegmentGroup } from "./sub/TapAreaWidthSegmentGroup";
 import { ViewSplitCountSegmentGroup } from "./sub/ViewSplitCountSegmentGroup";
@@ -29,6 +30,7 @@ export const SideMenu = (props: {
             closeOnInteractOutside
             unmountOnExit
             lazyMount
+            modal={false}
             open={isOpenSideMenu}
             onOpenChange={setIsOpenSideMenu}
         >
@@ -68,6 +70,9 @@ export const SideMenu = (props: {
                 <Card>
                     <OnSharpeningFilterSwitch />
                     <SharpeningFilterStrengthSlider />
+                </Card>
+                <Card>
+                    <ShouldShowInvertButton />
                 </Card>
                 <History />
             </div>

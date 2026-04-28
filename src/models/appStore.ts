@@ -18,6 +18,7 @@ type AppStore = AppState &
         setScrollSpeed: (value: number) => AppStore;
         setSharpeningFilterStrength: (value: number) => AppStore;
         setShouldAdvance: (value: boolean) => AppStore;
+        setShouldShowInvertButton: (value: boolean) => AppStore;
         setTapAreaWidth: (value: TapAreaLength) => AppStore;
         setTapAreaHeight: (value: TapAreaLength) => AppStore;
         setViewSplitCount: (value: ViewSplitCount) => AppStore;
@@ -59,6 +60,11 @@ export const appStore: AppStore = {
     },
     setShouldAdvance(value) {
         const obj: AppStore = { ...this, shouldAdvance: value };
+        LocalStorage.setAppState(obj);
+        return obj;
+    },
+    setShouldShowInvertButton(value) {
+        const obj: AppStore = { ...this, shouldShowInvertButton: value };
         LocalStorage.setAppState(obj);
         return obj;
     },

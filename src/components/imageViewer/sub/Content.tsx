@@ -84,6 +84,7 @@ const LeftImage = ({
     const image = useRef<HTMLImageElement | null>(null);
     const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
     const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
+    const onInvertFilter = useAtomValue(Atom.onInvertFilter);
     const zoomManager = useAtomValue(Atom.zoomManager);
     const setup = useSetAtom(setupAtom);
 
@@ -98,7 +99,7 @@ const LeftImage = ({
     if (leftBlob == null) return <></>;
     return (
         <img
-            className="size-auto justify-self-end object-contain"
+            className={`size-auto justify-self-end object-contain ${onInvertFilter && "invert"}`}
             style={leftImgStyle(zoomManager, rightBlob)}
             ref={image}
             onLoad={() => setup(Viewer.create(body.current, content.current))}
@@ -130,6 +131,7 @@ const RightImage = ({
     const image = useRef<HTMLImageElement | null>(null);
     const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
     const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
+    const onInvertFilter = useAtomValue(Atom.onInvertFilter);
     const zoomManager = useAtomValue(Atom.zoomManager);
     const setup = useSetAtom(setupAtom);
 
@@ -144,7 +146,7 @@ const RightImage = ({
     if (rightBlob == null) return <></>;
     return (
         <img
-            className="size-auto object-contain"
+            className={`size-auto object-contain ${onInvertFilter && "invert"}`}
             style={rightImgStyle(zoomManager, leftBlob)}
             ref={image}
             onLoad={() => setup(Viewer.create(body.current, content.current))}

@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai";
 import { useRef, type JSX } from "react";
 import { Atom } from "./atoms";
+import { InvertFilterButton } from "./components/InvertFilterButton";
 import { Notification } from "./components/Notification";
 import { Progress } from "./components/Progress";
 import { TapAreas } from "./components/TapAreas";
@@ -23,6 +24,7 @@ export const App = (): JSX.Element => {
                 <TapAreas body={body} content={content} />
                 <SideMenu body={body} content={content} />
                 <MenuButton />
+                <InvertFilterButton />
                 <Time />
                 <Progress />
                 <Notification />

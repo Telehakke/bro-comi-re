@@ -20,6 +20,7 @@ export const Atom = {
     messageManager: atom(MessageManager.create()),
     onChevronLeft: atom(false),
     onChevronRight: atom(false),
+    onInvertFilter: atom(false),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
     shouldShowInfo: atom(true),
@@ -38,6 +39,10 @@ export const AppStateAtom = {
         (a) => a.sharpeningFilterStrength,
     ),
     shouldAdvance: selectAtom(Atom.appStore, (a) => a.shouldAdvance),
+    shouldShowInvertButton: selectAtom(
+        Atom.appStore,
+        (a) => a.shouldShowInvertButton,
+    ),
     tapAreaWidth: selectAtom(Atom.appStore, (a) => a.tapAreaWidth),
     tapAreaHeight: selectAtom(Atom.appStore, (a) => a.tapAreaHeight),
     viewSplitCount: selectAtom(Atom.appStore, (a) => a.viewSplitCount),

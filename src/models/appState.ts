@@ -8,6 +8,7 @@ export type AppState = Readonly<{
     scrollSpeed: number;
     sharpeningFilterStrength: number;
     shouldAdvance: boolean;
+    shouldShowInvertButton: boolean;
     tapAreaWidth: TapAreaLength;
     tapAreaHeight: TapAreaLength;
     viewSplitCount: ViewSplitCount;
@@ -22,6 +23,7 @@ export const defaultAppState: AppState = {
     scrollSpeed: 4,
     sharpeningFilterStrength: 3,
     shouldAdvance: false,
+    shouldShowInvertButton: false,
     tapAreaWidth: "s",
     tapAreaHeight: "s",
     viewSplitCount: "four",
@@ -56,6 +58,10 @@ export const createAppState = (value: unknown): AppState => {
         shouldAdvance: ensureBoolean(
             v.shouldAdvance,
             defaultAppState.shouldAdvance,
+        ),
+        shouldShowInvertButton: ensureBoolean(
+            v.shouldShowInvertButton,
+            defaultAppState.shouldShowInvertButton,
         ),
         tapAreaWidth: ensureTapAreaLength(
             v.tapAreaWidth,
