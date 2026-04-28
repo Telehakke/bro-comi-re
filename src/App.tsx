@@ -24,7 +24,7 @@ export const App = (): JSX.Element => {
                 <TapAreas body={body} content={content} />
                 <SideMenu body={body} content={content} />
                 <MenuButton />
-                <InvertFilterButton />
+                <InvertFilterButton body={body} content={content} />
                 <Time />
                 <Progress />
                 <Notification />

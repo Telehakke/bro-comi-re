@@ -65,7 +65,6 @@ const Root = (
 const Label = (props: { children?: ReactNode }): JSX.Element => {
     const className = {
         _: "block text-sm",
-        text: "text-neutral-500 dark:text-neutral-400",
     };
 
     return (

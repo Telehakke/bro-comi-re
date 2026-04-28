@@ -68,7 +68,7 @@ export const SideMenu = (props: {
                     <ZoomStepSlider />
                 </Card>
                 <Card>
-                    <OnSharpeningFilterSwitch />
+                    <OnSharpeningFilterSwitch {...props} />
                     <SharpeningFilterStrengthSlider />
                 </Card>
                 <Card>

@@ -1,9 +1,15 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { Droplet, DropletOff } from "lucide-react";
+import type React from "react";
 import type { JSX, ReactNode } from "react";
 import { AppStateAtom, Atom } from "../atoms";
+import type { ViewerBody, ViewerContent } from "../models/types";
+import { Viewer } from "../models/viewer";
 
-export const InvertFilterButton = (): JSX.Element => {
+export const InvertFilterButton = (props: {
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
+}): JSX.Element => {
     const shouldShowInvertButton = useAtomValue(
         AppStateAtom.shouldShowInvertButton,
     );
@@ -21,15 +27,20 @@ export const InvertFilterButton = (): JSX.Element => {
             className={Object.values(className).join(" ")}
             data-visible={shouldShowInfo}
         >
-            <Button>
+            <Button {...props}>
                 <Icon />
             </Button>
         </div>
     );
 };
 
-const Button = (props: { children: ReactNode }): JSX.Element => {
+const Button = (props: {
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
+    children: ReactNode;
+}): JSX.Element => {
     const setOnInvertFilter = useSetAtom(Atom.onInvertFilter);
+    const setScrollManager = useSetAtom(Atom.scrollManager);
 
     const className = {
         _: "group rounded-full transition select-none",
@@ -40,7 +51,17 @@ const Button = (props: { children: ReactNode }): JSX.Element => {
     return (
         <button
             className={Object.values(className).join(" ")}
-            onClick={() => setOnInvertFilter((v) => !v)}
+            onClick={() => {
+                setOnInvertFilter((v) => !v);
+                setScrollManager((s) =>
+                    s.update(
+                        Viewer.create(
+                            props.body.current,
+                            props.content.current,
+                        ),
+                    ),
+                );
+            }}
         >
             {props.children}
         </button>
