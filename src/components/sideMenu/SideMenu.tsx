@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { type JSX } from "react";
 import { Atom } from "../../atoms";
-import type { Body, Content } from "../../models/types";
+import type { ViewerBody, ViewerContent } from "../../models/types";
 import { Card } from "../common/Card";
 import { SideMenuDialog } from "../common/SideMenuDialog";
 import { CloseButton } from "./sub/CloseButton";
@@ -19,8 +19,8 @@ import { WritingTypeSegmentGroup } from "./sub/WritingTypeSegmentGroup";
 import { ZoomStepSlider } from "./sub/ZoomStepSlider";
 
 export const SideMenu = (props: {
-    body: React.RefObject<Body>;
-    content: React.RefObject<Content>;
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
 }): JSX.Element => {
     const [isOpenSideMenu, setIsOpenSideMenu] = useAtom(Atom.isOpenSideMenu);
 

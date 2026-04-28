@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, AppStateAtom, Atom } from "../atoms";
 import { TapAreaLengthEnum } from "../models/appState";
 import { SmoothScroll } from "../models/smoothScroll";
-import type { Body, Content } from "../models/types";
+import type { ViewerBody, ViewerContent } from "../models/types";
 import { Viewer } from "../models/viewer";
 
 const leftClickAtom = atom(null, (get, set, viewer: Viewer) => {
@@ -14,11 +14,11 @@ const leftClickAtom = atom(null, (get, set, viewer: Viewer) => {
 
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom, viewer);
     } else if (writingType === "vertical") {
-        set(goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom, viewer);
     } else if (writingType === "horizontal") {
-        set(goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom, viewer);
     }
 });
 
@@ -30,11 +30,11 @@ const rightClickAtom = atom(null, (get, set, viewer: Viewer) => {
 
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom, viewer);
     } else if (writingType === "vertical") {
-        set(goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom, viewer);
     } else if (writingType === "horizontal") {
-        set(goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom, viewer);
     }
 });
 
@@ -46,33 +46,7 @@ const bottomClickAtom = atom(null, (get, set, viewer: Viewer) => {
 
     const { shouldAdvance } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(goToPreviousAtom, viewer);
-    }
-});
-
-const goToNextAtom = atom(null, (get, set, viewer: Viewer) => {
-    const appStore = get(Atom.appStore);
-    const scroll = get(Atom.scrollManager);
-    if (scroll.shouldMoveToNextPage({ ...appStore, viewer })) {
-        if (get(Atom.fileManager).hasNextFile()) {
-            set(ActionAtom.moveToNextPage);
-            set(ActionAtom.positionStart);
-        }
-    } else {
-        set(ActionAtom.scrollToNext, viewer);
-    }
-});
-
-const goToPreviousAtom = atom(null, (get, set, viewer: Viewer) => {
-    const appStore = get(Atom.appStore);
-    const scroll = get(Atom.scrollManager);
-    if (scroll.shouldMoveToPreviousPage({ ...appStore, viewer })) {
-        if (get(Atom.fileManager).hasPreviousFile()) {
-            set(ActionAtom.moveToPreviousPage);
-            set(ActionAtom.positionEnd);
-        }
-    } else {
-        set(ActionAtom.scrollToPrevious, viewer);
+        set(ActionAtom.goToPreviousAtom, viewer);
     }
 });
 
@@ -82,7 +56,7 @@ type Delta = { x: number; y: number };
 
 const horizontalScrollAtom = atom(
     null,
-    (get, set, delta: Delta, body: Body) => {
+    (get, set, delta: Delta, body: ViewerBody) => {
         if (body == null) return;
 
         const { scrollSpeed } = get(Atom.appStore);
@@ -93,15 +67,18 @@ const horizontalScrollAtom = atom(
     },
 );
 
-const verticalScrollAtom = atom(null, (get, set, delta: Delta, body: Body) => {
-    if (body == null) return;
+const verticalScrollAtom = atom(
+    null,
+    (get, set, delta: Delta, body: ViewerBody) => {
+        if (body == null) return;
 
-    const { scrollSpeed } = get(Atom.appStore);
-    const x = body.scrollLeft;
-    const y = scrollSpeed * delta.y + body.scrollTop;
-    body.scroll(x, y);
-    set(Atom.isUserScrolled, true);
-});
+        const { scrollSpeed } = get(Atom.appStore);
+        const x = body.scrollLeft;
+        const y = scrollSpeed * delta.y + body.scrollTop;
+        body.scroll(x, y);
+        set(Atom.isUserScrolled, true);
+    },
+);
 
 /* -------------------------------------------------------------------------- */
 
@@ -109,8 +86,8 @@ export const TapAreas = ({
     body,
     content,
 }: {
-    body: React.RefObject<Body>;
-    content: React.RefObject<Content>;
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
 }): JSX.Element => {
     const tapAreaWidth = useAtomValue(AppStateAtom.tapAreaWidth);
     const tapAreaHeight = useAtomValue(AppStateAtom.tapAreaHeight);

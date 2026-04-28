@@ -10,13 +10,13 @@ export const History = (): JSX.Element => {
     return (
         <div>
             <div className="flex items-center justify-between">
-                <p className="">履歴（最大100件）</p>
+                <p>{`履歴：${histories.length}件（最大100件）`}</p>
                 {histories.length > 0 && <ClearButton />}
             </div>
             <ol className="list-decimal pl-5">
                 {histories.map((h) => (
                     <li className="text-sm" key={h.name}>
-                        {`${h.name}: `}
+                        {`${h.name}：`}
                         <span className="text-nowrap">{`${h.index + 1}ページ`}</span>
                     </li>
                 ))}

@@ -18,6 +18,8 @@ export const Atom = {
     isOpenSideMenu: atom(false),
     isUserScrolled: atom(false),
     messageManager: atom(MessageManager.create()),
+    onChevronLeft: atom(false),
+    onChevronRight: atom(false),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
     shouldShowInfo: atom(true),
@@ -46,6 +48,30 @@ export const AppStateAtom = {
 /* -------------------------------------------------------------------------- */
 
 export const ActionAtom = {
+    goToNextAtom: atom(null, (get, set, viewer: Viewer) => {
+        const appStore = get(Atom.appStore);
+        const scroll = get(Atom.scrollManager);
+        if (scroll.shouldMoveToNextPage({ ...appStore, viewer })) {
+            if (get(Atom.fileManager).hasNextFile()) {
+                set(ActionAtom.moveToNextPage);
+                set(ActionAtom.positionStart);
+            }
+        } else {
+            set(ActionAtom.scrollToNext, viewer);
+        }
+    }),
+    goToPreviousAtom: atom(null, (get, set, viewer: Viewer) => {
+        const appStore = get(Atom.appStore);
+        const scroll = get(Atom.scrollManager);
+        if (scroll.shouldMoveToPreviousPage({ ...appStore, viewer })) {
+            if (get(Atom.fileManager).hasPreviousFile()) {
+                set(ActionAtom.moveToPreviousPage);
+                set(ActionAtom.positionEnd);
+            }
+        } else {
+            set(ActionAtom.scrollToPrevious, viewer);
+        }
+    }),
     moveToIndexPage: atom(null, async (get, set, index: number) => {
         const file = get(Atom.fileManager).setIndex(index);
         set(Atom.fileManager, file);

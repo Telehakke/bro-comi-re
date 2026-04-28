@@ -3,12 +3,12 @@ import { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, AppStateAtom, Atom } from "../../../atoms";
 import type { WritingType } from "../../../models/appState";
 import type { FileManager } from "../../../models/fileManager";
-import type { Body, Content } from "../../../models/types";
+import type { ViewerBody, ViewerContent } from "../../../models/types";
 import { Slider } from "../../common/Slider";
 
 export const SelectPageSlider = (props: {
-    body: React.RefObject<Body>;
-    content: React.RefObject<Content>;
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
 }): JSX.Element => {
     const writingType = useAtomValue(AppStateAtom.writingType);
 
@@ -18,8 +18,8 @@ export const SelectPageSlider = (props: {
 /* -------------------------------------------------------------------------- */
 
 const Part = (props: {
-    body: React.RefObject<Body>;
-    content: React.RefObject<Content>;
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
 }): JSX.Element => {
     const writingType = useAtomValue(AppStateAtom.writingType);
     const fileManager = useAtomValue(Atom.fileManager);
@@ -71,7 +71,7 @@ const correctIndex = (
 
 const moveToIndexPageAtom = atom(
     null,
-    (_, set, index: number, viewer: Body, content: Content) => {
+    (_, set, index: number, viewer: ViewerBody, content: ViewerContent) => {
         if (viewer == null || content == null) return;
 
         set(ActionAtom.moveToIndexPage, index);
@@ -84,8 +84,8 @@ const moveToIndexPageAtom = atom(
 const Thumbnail = (props: {
     blob?: Blob;
     index: number;
-    body: React.RefObject<Body>;
-    content: React.RefObject<Content>;
+    body: React.RefObject<ViewerBody>;
+    content: React.RefObject<ViewerContent>;
 }): JSX.Element => {
     const image = useRef<HTMLImageElement | null>(null);
     const moveToIndexPage = useSetAtom(moveToIndexPageAtom);

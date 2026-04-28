@@ -1,10 +1,9 @@
+import type { ViewerBody, ViewerContent } from "./types";
+
 export type Viewer = Readonly<{
-    body: HTMLDivElement | undefined;
-    content: HTMLDivElement | undefined;
-    create: (
-        body: HTMLDivElement | null,
-        content: HTMLDivElement | null,
-    ) => Viewer;
+    body: ViewerBody;
+    content: ViewerContent;
+    create: (body: ViewerBody, content: ViewerContent) => Viewer;
     spaceWidth: () => number;
     spaceHeight: () => number;
     positionX: () => number | undefined;
@@ -13,13 +12,13 @@ export type Viewer = Readonly<{
 }>;
 
 export const Viewer: Viewer = {
-    body: undefined,
-    content: undefined,
+    body: null,
+    content: null,
     create(body, content) {
         return {
             ...this,
-            body: body ?? undefined,
-            content: content ?? undefined,
+            body: body,
+            content: content,
         };
     },
     spaceWidth() {
