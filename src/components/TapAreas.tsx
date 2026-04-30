@@ -6,12 +6,8 @@ import { SmoothScroll } from "../models/smoothScroll";
 import type { ViewerBody, ViewerContent } from "../models/types";
 import { Viewer } from "../models/viewer";
 
-const leftClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    if (get(Atom.isUserScrolled)) {
-        set(Atom.isUserScrolled, false);
-        set(Atom.scrollManager, (s) => s.update(viewer));
-    }
-
+const handleLeftEdgeClickAtom = atom(null, (get, set, viewer: Viewer) => {
+    set(ActionAtom.updateScrollManager, viewer);
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
         set(ActionAtom.goToNextAtom, viewer);
@@ -22,12 +18,20 @@ const leftClickAtom = atom(null, (get, set, viewer: Viewer) => {
     }
 });
 
-const rightClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    if (get(Atom.isUserScrolled)) {
-        set(Atom.isUserScrolled, false);
-        set(Atom.scrollManager, (s) => s.update(viewer));
+const handleLeftEdgeSubClickAtom = atom(null, (get, set, viewer: Viewer) => {
+    set(ActionAtom.updateScrollManager, viewer);
+    const { shouldAdvance, writingType } = get(Atom.appStore);
+    if (shouldAdvance) {
+        set(ActionAtom.goToPreviousAtom, viewer);
+    } else if (writingType === "vertical") {
+        set(ActionAtom.goToPreviousAtom, viewer);
+    } else if (writingType === "horizontal") {
+        set(ActionAtom.goToNextAtom, viewer);
     }
+});
 
+const handleRightEdgeClickAtom = atom(null, (get, set, viewer: Viewer) => {
+    set(ActionAtom.updateScrollManager, viewer);
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
         set(ActionAtom.goToNextAtom, viewer);
@@ -38,23 +42,33 @@ const rightClickAtom = atom(null, (get, set, viewer: Viewer) => {
     }
 });
 
-const bottomClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    if (get(Atom.isUserScrolled)) {
-        set(Atom.isUserScrolled, false);
-        set(Atom.scrollManager, (s) => s.update(viewer));
-    }
-
-    const { shouldAdvance } = get(Atom.appStore);
+const handleRightEdgeSubClickAtom = atom(null, (get, set, viewer: Viewer) => {
+    set(ActionAtom.updateScrollManager, viewer);
+    const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
         set(ActionAtom.goToPreviousAtom, viewer);
+    } else if (writingType === "vertical") {
+        set(ActionAtom.goToNextAtom, viewer);
+    } else if (writingType === "horizontal") {
+        set(ActionAtom.goToPreviousAtom, viewer);
     }
+});
+
+const handleBottomClickAtom = atom(null, (_, set, viewer: Viewer) => {
+    set(ActionAtom.updateScrollManager, viewer);
+    set(ActionAtom.goToNextAtom, viewer);
+});
+
+const handleBottomSubClickAtom = atom(null, (_, set, viewer: Viewer) => {
+    set(ActionAtom.updateScrollManager, viewer);
+    set(ActionAtom.goToPreviousAtom, viewer);
 });
 
 /* -------------------------------------------------------------------------- */
 
 type Delta = { x: number; y: number };
 
-const horizontalScrollAtom = atom(
+const handleHorizontalScrollAtom = atom(
     null,
     (get, set, delta: Delta, body: ViewerBody) => {
         if (body == null) return;
@@ -67,7 +81,7 @@ const horizontalScrollAtom = atom(
     },
 );
 
-const verticalScrollAtom = atom(
+const handleVerticalScrollAtom = atom(
     null,
     (get, set, delta: Delta, body: ViewerBody) => {
         if (body == null) return;
@@ -91,11 +105,14 @@ export const TapAreas = ({
 }): JSX.Element => {
     const tapAreaWidth = useAtomValue(AppStateAtom.tapAreaWidth);
     const tapAreaHeight = useAtomValue(AppStateAtom.tapAreaHeight);
-    const leftClick = useSetAtom(leftClickAtom);
-    const rightClick = useSetAtom(rightClickAtom);
-    const bottomClick = useSetAtom(bottomClickAtom);
-    const verticalScroll = useSetAtom(verticalScrollAtom);
-    const horizontalScroll = useSetAtom(horizontalScrollAtom);
+    const handleLeftEdgeClick = useSetAtom(handleLeftEdgeClickAtom);
+    const handleLeftEdgeSubClick = useSetAtom(handleLeftEdgeSubClickAtom);
+    const handleRightEdgeClick = useSetAtom(handleRightEdgeClickAtom);
+    const handleRightEdgeSubClick = useSetAtom(handleRightEdgeSubClickAtom);
+    const handleBottomClick = useSetAtom(handleBottomClickAtom);
+    const handleBottomSubClick = useSetAtom(handleBottomSubClickAtom);
+    const handleHorizontalScroll = useSetAtom(handleVerticalScrollAtom);
+    const horizontalScroll = useSetAtom(handleHorizontalScrollAtom);
 
     return (
         <>
@@ -103,7 +120,14 @@ export const TapAreas = ({
                 className="inset-x-0 bottom-0"
                 style={{ height: TapAreaLengthEnum[tapAreaHeight].length }}
                 onClick={() =>
-                    bottomClick(Viewer.create(body.current, content.current))
+                    handleBottomClick(
+                        Viewer.create(body.current, content.current),
+                    )
+                }
+                onSubClick={() =>
+                    handleBottomSubClick(
+                        Viewer.create(body.current, content.current),
+                    )
                 }
                 onScroll={(delta) => horizontalScroll(delta, body.current)}
             />
@@ -111,17 +135,35 @@ export const TapAreas = ({
                 className="inset-y-0 left-0"
                 style={{ width: TapAreaLengthEnum[tapAreaWidth].length }}
                 onClick={() =>
-                    leftClick(Viewer.create(body.current, content.current))
+                    handleLeftEdgeClick(
+                        Viewer.create(body.current, content.current),
+                    )
                 }
-                onScroll={(delta) => verticalScroll(delta, body.current)}
+                onSubClick={() =>
+                    handleLeftEdgeSubClick(
+                        Viewer.create(body.current, content.current),
+                    )
+                }
+                onScroll={(delta) =>
+                    handleHorizontalScroll(delta, body.current)
+                }
             />
             <TapArea
                 className="inset-y-0 right-0"
                 style={{ width: TapAreaLengthEnum[tapAreaWidth].length }}
                 onClick={() =>
-                    rightClick(Viewer.create(body.current, content.current))
+                    handleRightEdgeClick(
+                        Viewer.create(body.current, content.current),
+                    )
                 }
-                onScroll={(delta) => verticalScroll(delta, body.current)}
+                onSubClick={() =>
+                    handleRightEdgeSubClick(
+                        Viewer.create(body.current, content.current),
+                    )
+                }
+                onScroll={(delta) =>
+                    handleHorizontalScroll(delta, body.current)
+                }
             />
         </>
     );
@@ -131,6 +173,7 @@ const TapArea = (props: {
     className: string;
     style: React.CSSProperties;
     onClick: () => void;
+    onSubClick: () => void;
     onScroll: (delta: Delta) => void;
 }): JSX.Element => {
     const div = useRef<HTMLDivElement | null>(null);
@@ -138,6 +181,8 @@ const TapArea = (props: {
     const prevClient = useRef({ x: 0, y: 0 });
     const smoothScroll = useRef(new SmoothScroll());
     const canClick = useRef(true);
+    const canRightClick = useRef(true);
+    const canLongPress = useRef(true);
     const [isActive, setIsActive] = useState(false);
 
     useEffect(() => {
@@ -146,6 +191,8 @@ const TapArea = (props: {
 
         const handleTouchMove = (ev: TouchEvent): void => {
             ev.preventDefault();
+            window.clearTimeout(timerId.current);
+            setIsActive(true);
             const { clientX, clientY } = ev.changedTouches[0];
             const diffX = prevClient.current.x - clientX;
             const diffY = prevClient.current.y - clientY;
@@ -182,18 +229,34 @@ const TapArea = (props: {
         };
     }, [props]);
 
+    const handleContextMenu = (
+        ev: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    ): void => {
+        ev.preventDefault();
+        window.clearTimeout(timerId.current);
+        if (!canRightClick.current) return;
+        props.onSubClick();
+        canLongPress.current = false;
+    };
+
     const handleTouchStart = (ev: React.TouchEvent<HTMLDivElement>): void => {
+        timerId.current = window.setTimeout(() => {
+            if (!canLongPress) return;
+            props.onSubClick();
+            canClick.current = false;
+            canRightClick.current = false;
+        }, 500);
         const { clientX, clientY } = ev.changedTouches[0];
         prevClient.current = { x: clientX, y: clientY };
         smoothScroll.current = new SmoothScroll();
         canClick.current = true;
-        setIsActive(true);
+        canRightClick.current = true;
+        canLongPress.current = true;
     };
 
-    const handleTouchEnd = (ev: React.TouchEvent<HTMLDivElement>): void => {
-        ev.preventDefault();
+    const handleTouchEnd = (): void => {
         setIsActive(false);
-        if (canClick.current) props.onClick();
+        window.clearTimeout(timerId.current);
     };
 
     const className = {
@@ -208,7 +271,10 @@ const TapArea = (props: {
             className={Object.values(className).join(" ")}
             style={props.style}
             ref={div}
-            onClick={props.onClick}
+            onClick={() => {
+                if (canClick.current) props.onClick();
+            }}
+            onContextMenu={handleContextMenu}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
         />

@@ -7,7 +7,7 @@ import { ImageBlobManager } from "./models/imageBlobManager";
 import { MessageManager } from "./models/messageManager";
 import { ScrollManager } from "./models/scrollManager";
 import { SharpeningFilter } from "./models/sharpeningFilter";
-import type { Viewer } from "./models/viewer";
+import { Viewer } from "./models/viewer";
 import { ZoomManager } from "./models/zoomManager";
 
 export const Atom = {
@@ -199,5 +199,10 @@ export const ActionAtom = {
         });
         set(Atom.historyManager, history);
         set(Atom.appStore, (a) => a.setHistories(history.histories));
+    }),
+    updateScrollManager: atom(null, (get, set, viewer: Viewer) => {
+        if (!get(Atom.isUserScrolled)) return;
+        set(Atom.isUserScrolled, false);
+        set(Atom.scrollManager, (s) => s.update(viewer));
     }),
 } as const;
