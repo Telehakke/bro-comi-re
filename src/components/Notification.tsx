@@ -31,7 +31,7 @@ export const Notification = (): JSX.Element => {
     const className = {
         _: "w-max rounded-md px-2 py-1 tabular-nums",
         opacity: "data-[state=hidden]:opacity-0",
-        position: "fixed top-4 left-1/2 -translate-x-1/2",
+        position: "fixed bottom-4 left-1/2 -translate-x-1/2",
         text: "text-neutral-100",
         bg: "bg-neutral-900",
         animation:

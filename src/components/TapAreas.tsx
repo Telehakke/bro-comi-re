@@ -192,7 +192,6 @@ const TapArea = (props: {
         const handleTouchMove = (ev: TouchEvent): void => {
             ev.preventDefault();
             window.clearTimeout(timerId.current);
-            setIsActive(true);
             const { clientX, clientY } = ev.changedTouches[0];
             const diffX = prevClient.current.x - clientX;
             const diffY = prevClient.current.y - clientY;
@@ -255,7 +254,6 @@ const TapArea = (props: {
     };
 
     const handleTouchEnd = (): void => {
-        setIsActive(false);
         window.clearTimeout(timerId.current);
     };
 

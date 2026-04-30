@@ -21,13 +21,13 @@ export const App = (): JSX.Element => {
         return (
             <div id="viewer" style={{ scrollbarWidth: "none" }}>
                 <ImageViewer body={body} content={content} />
+                <Notification />
                 <TapAreas body={body} content={content} />
                 <SideMenu body={body} content={content} />
                 <MenuButton />
                 <InvertFilterButton body={body} content={content} />
                 <Time />
                 <Progress />
-                <Notification />
             </div>
         );
     } else {
