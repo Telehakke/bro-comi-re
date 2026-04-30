@@ -191,6 +191,7 @@ const TapArea = (props: {
 
         const handleTouchMove = (ev: TouchEvent): void => {
             ev.preventDefault();
+            setIsActive(true);
             window.clearTimeout(timerId.current);
             const { clientX, clientY } = ev.changedTouches[0];
             const diffX = prevClient.current.x - clientX;
@@ -239,6 +240,7 @@ const TapArea = (props: {
     };
 
     const handleTouchStart = (ev: React.TouchEvent<HTMLDivElement>): void => {
+        setIsActive(true);
         timerId.current = window.setTimeout(() => {
             if (!canLongPress) return;
             props.onSubClick();
@@ -255,12 +257,12 @@ const TapArea = (props: {
 
     const handleTouchEnd = (): void => {
         window.clearTimeout(timerId.current);
+        setIsActive(false);
     };
 
     const className = {
         _: "fixed transition select-none",
-        activeBg: "active:bg-blue-500/15",
-        activeBg2: isActive && "bg-blue-500/15",
+        activeBg: isActive && "bg-blue-500/15",
         props: props.className,
     };
 
@@ -269,6 +271,15 @@ const TapArea = (props: {
             className={Object.values(className).join(" ")}
             style={props.style}
             ref={div}
+            onMouseDown={() => {
+                setIsActive(true);
+            }}
+            onMouseUp={() => {
+                setIsActive(false);
+            }}
+            onMouseLeave={() => {
+                setIsActive(false);
+            }}
             onClick={() => {
                 if (canClick.current) props.onClick();
             }}
