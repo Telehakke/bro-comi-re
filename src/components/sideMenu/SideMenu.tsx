@@ -53,7 +53,7 @@ export const SideMenu = (props: {
                     <TapAreaHeightSegmentGroup />
                 </Card>
                 <Card
-                    footer={`左右どちらをタップしても次に進みます\n有効時は下をタップで戻ります`}
+                    footer={`左右どちらをタップしても次に進みます\n右クリック、またはロングタッチで前に戻ります`}
                 >
                     <ShouldAdvanceSwitch />
                 </Card>

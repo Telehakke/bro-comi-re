@@ -107,36 +107,23 @@ const behaveKeyDown = (props: {
     zoomIn: () => void;
     zoomOut: () => void;
 }): void => {
-    if (props.ev.shiftKey) {
-        switch (props.ev.code) {
-            case "ArrowLeft":
-                props.goToLeft();
-                break;
-            case "ArrowRight":
-                props.goToRight();
-                break;
-            case "ArrowUp":
-                props.zoomIn();
-                break;
-            case "ArrowDown":
-                props.zoomOut();
-                break;
-        }
-    } else {
-        switch (props.ev.code) {
-            case "KeyZ":
-                props.goToLeft();
-                break;
-            case "KeyC":
-                props.goToRight();
-                break;
-            case "KeyS":
-                props.zoomIn();
-                break;
-            case "KeyX":
-                props.zoomOut();
-                break;
-        }
+    switch (props.ev.code) {
+        case "ArrowLeft":
+            props.ev.preventDefault();
+            props.goToLeft();
+            break;
+        case "ArrowRight":
+            props.ev.preventDefault();
+            props.goToRight();
+            break;
+        case "ArrowUp":
+            props.ev.preventDefault();
+            props.zoomIn();
+            break;
+        case "ArrowDown":
+            props.ev.preventDefault();
+            props.zoomOut();
+            break;
     }
 };
 
