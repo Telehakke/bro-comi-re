@@ -1,6 +1,7 @@
 import {
     defaultAppState,
     type AppState,
+    type ContentFit,
     type DisplayMode,
     type History,
     type TapAreaLength,
@@ -12,6 +13,7 @@ import { LocalStorage } from "./localStorage";
 type AppStore = AppState &
     Readonly<{
         setAppState: (value: AppState) => AppStore;
+        setContentFit: (value: ContentFit) => AppStore;
         setDisplayMode: (value: DisplayMode) => AppStore;
         setHistories: (value: readonly History[]) => AppStore;
         setOnSharpeningFilter: (value: boolean) => AppStore;
@@ -30,6 +32,11 @@ export const appStore: AppStore = {
     ...defaultAppState,
     setAppState(value) {
         const obj: AppStore = { ...this, ...value };
+        LocalStorage.setAppState(obj);
+        return obj;
+    },
+    setContentFit(value) {
+        const obj: AppStore = { ...this, contentFit: value };
         LocalStorage.setAppState(obj);
         return obj;
     },

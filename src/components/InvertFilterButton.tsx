@@ -44,7 +44,6 @@ const Button = (props: {
 
     const className = {
         _: "group rounded-full transition select-none",
-        position: "fixed top-4 left-18",
         outline: "outline-blue-500/75 focus-visible:outline-2",
     };
 

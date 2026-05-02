@@ -35,7 +35,6 @@ const Text = (): JSX.Element => {
 
     const className = {
         _: "tabular-nums opacity-50 select-none",
-        position: "fixed top-4 right-4",
     };
 
     return (

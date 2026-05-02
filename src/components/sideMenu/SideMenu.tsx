@@ -5,6 +5,7 @@ import type { ViewerBody, ViewerContent } from "../../models/types";
 import { Card } from "../common/Card";
 import { SideMenuDialog } from "../common/SideMenuDialog";
 import { CloseButton } from "./sub/CloseButton";
+import { ContentFitSegmentGroup } from "./sub/ContentFitSegmentGroup";
 import { DisplayModeSegmentGroup } from "./sub/DisplayModeSegmentGroup";
 import { History } from "./sub/History";
 import { OnSharpeningFilterSwitch } from "./sub/OnSharpeningFilterSwitch";
@@ -34,11 +35,15 @@ export const SideMenu = (props: {
             open={isOpenSideMenu}
             onOpenChange={setIsOpenSideMenu}
         >
-            <div className="w-80 space-y-4">
+            <div
+                className="w-80 space-y-4"
+                style={{ marginLeft: "env(safe-area-inset-left)" }}
+            >
                 <CloseButton />
                 <SelectPageSlider {...props} />
                 <Card>
                     <WritingTypeSegmentGroup />
+                    <ContentFitSegmentGroup />
                 </Card>
                 <Card
                     footer={`1：1枚の画像を表示\n1・2：表紙だけ1枚、以降は2枚\n2：2枚の画像を並べて表示`}

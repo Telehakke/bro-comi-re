@@ -13,7 +13,7 @@ export const History = (): JSX.Element => {
                 <p>{`履歴：${histories.length}件（最大100件）`}</p>
                 {histories.length > 0 && <ClearButton />}
             </div>
-            <ol className="list-decimal pl-5">
+            <ol className="list-decimal pl-8">
                 {histories.map((h) => (
                     <li className="text-sm" key={h.name}>
                         {`${h.name}：`}

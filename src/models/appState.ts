@@ -2,6 +2,7 @@ import { isBoolean, isNotNull } from "./typeGuards";
 import { FilterStrength, ScrollSpeed, ZoomStep } from "./validator";
 
 export type AppState = Readonly<{
+    contentFit: ContentFit;
     displayMode: DisplayMode;
     histories: readonly History[];
     onSharpeningFilter: boolean;
@@ -17,6 +18,7 @@ export type AppState = Readonly<{
 }>;
 
 export const defaultAppState: AppState = {
+    contentFit: "all",
     displayMode: "single",
     histories: [],
     onSharpeningFilter: false,
@@ -38,6 +40,7 @@ export const createAppState = (value: unknown): AppState => {
 
     const v = value as AppState;
     const obj: AppState = {
+        contentFit: ensureContentFit(v.contentFit, defaultAppState.contentFit),
         displayMode: ensureDisplayMode(
             v.displayMode,
             defaultAppState.displayMode,
@@ -86,6 +89,27 @@ export const createAppState = (value: unknown): AppState => {
 
 const ensureBoolean = (value: unknown, defaultValue: boolean): boolean => {
     return isBoolean(value) ? value : defaultValue;
+};
+
+/* -------------------------------------------------------------------------- */
+
+export const ContentFitEnum = {
+    all: { value: "all", label: "全体" },
+    vertical: { value: "vertical", label: "縦" },
+    horizontal: { value: "horizontal", label: "横" },
+};
+
+export type ContentFit = keyof typeof ContentFitEnum;
+
+export const isContentFit = (value: unknown): value is ContentFit => {
+    return Object.keys(ContentFitEnum).some((v) => v === value);
+};
+
+const ensureContentFit = (
+    value: unknown,
+    defaultValue: ContentFit,
+): ContentFit => {
+    return isContentFit(value) ? value : defaultValue;
 };
 
 /* -------------------------------------------------------------------------- */

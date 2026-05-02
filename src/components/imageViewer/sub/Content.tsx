@@ -1,6 +1,7 @@
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useEffect, useRef, type CSSProperties, type JSX } from "react";
 import { AppStateAtom, Atom } from "../../../atoms";
+import type { ContentFit } from "../../../models/appState";
 import type { ViewerBody, ViewerContent } from "../../../models/types";
 import { Viewer } from "../../../models/viewer";
 import type { ZoomManager } from "../../../models/zoomManager";
@@ -52,6 +53,10 @@ export const Content = ({
         <div className="m-auto">
             <div
                 className={`relative grid size-max items-start ${leftBlob != null && rightBlob != null && "grid-cols-2"}`}
+                style={{
+                    paddingLeft: "env(safe-area-inset-left)",
+                    paddingRight: "env(safe-area-inset-right)",
+                }}
                 ref={content}
             >
                 <LeftImage body={body} content={content} />
@@ -85,6 +90,7 @@ const LeftImage = ({
     const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
     const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
     const onInvertFilter = useAtomValue(Atom.onInvertFilter);
+    const contentFit = useAtomValue(AppStateAtom.contentFit);
     const zoomManager = useAtomValue(Atom.zoomManager);
     const setup = useSetAtom(setupAtom);
 
@@ -100,7 +106,7 @@ const LeftImage = ({
     return (
         <img
             className={`size-auto justify-self-end object-contain ${onInvertFilter && "invert"}`}
-            style={leftImgStyle(zoomManager, rightBlob)}
+            style={leftImgStyle(contentFit, zoomManager, rightBlob)}
             ref={image}
             onLoad={() => setup(Viewer.create(body.current, content.current))}
         />
@@ -108,13 +114,19 @@ const LeftImage = ({
 };
 
 const leftImgStyle = (
+    contentFit: ContentFit,
     zoomManager: ZoomManager,
     rightBlob?: Blob,
 ): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        maxWidth: rightBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
-        maxHeight: `${scale}dvh`,
+        maxWidth:
+            contentFit !== "vertical"
+                ? rightBlob == null
+                    ? `${scale}dvw`
+                    : `${scale / 2}dvw`
+                : undefined,
+        maxHeight: contentFit !== "horizontal" ? `${scale}dvh` : undefined,
         WebkitTouchCallout: "none",
     };
 };
@@ -132,6 +144,7 @@ const RightImage = ({
     const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
     const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
     const onInvertFilter = useAtomValue(Atom.onInvertFilter);
+    const contentFit = useAtomValue(AppStateAtom.contentFit);
     const zoomManager = useAtomValue(Atom.zoomManager);
     const setup = useSetAtom(setupAtom);
 
@@ -147,7 +160,7 @@ const RightImage = ({
     return (
         <img
             className={`size-auto object-contain ${onInvertFilter && "invert"}`}
-            style={rightImgStyle(zoomManager, leftBlob)}
+            style={rightImgStyle(contentFit, zoomManager, leftBlob)}
             ref={image}
             onLoad={() => setup(Viewer.create(body.current, content.current))}
         />
@@ -155,13 +168,19 @@ const RightImage = ({
 };
 
 const rightImgStyle = (
+    contentFit: ContentFit,
     zoomManager: ZoomManager,
     leftBlob?: Blob,
 ): CSSProperties => {
     const scale = zoomManager.scale;
     return {
-        maxWidth: leftBlob == null ? `${scale}dvw` : `${scale / 2}dvw`,
-        maxHeight: `${scale}dvh`,
+        maxWidth:
+            contentFit !== "vertical"
+                ? leftBlob == null
+                    ? `${scale}dvw`
+                    : `${scale / 2}dvw`
+                : undefined,
+        maxHeight: contentFit !== "horizontal" ? `${scale}dvh` : undefined,
         WebkitTouchCallout: "none",
     };
 };

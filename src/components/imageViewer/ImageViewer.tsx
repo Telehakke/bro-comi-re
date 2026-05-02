@@ -4,7 +4,6 @@ import { ActionAtom, Atom } from "../../atoms";
 import type { ViewerBody, ViewerContent } from "../../models/types";
 import { Viewer } from "../../models/viewer";
 import { BodyView } from "./sub/BodyView";
-import { ChevronLeft, ChevronRight } from "./sub/ChevronIcons";
 import { Content } from "./sub/Content";
 
 const goToLeftAtom = atom(null, (get, set, viewer: Viewer) => {
@@ -187,8 +186,6 @@ export const ImageViewer = ({
             onRightSidePull={() => moveToRightPage()}
         >
             <Content body={body} content={content} />
-            <ChevronLeft />
-            <ChevronRight />
         </BodyView>
     );
 };

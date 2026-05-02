@@ -30,6 +30,7 @@ export const Atom = {
 } as const;
 
 export const AppStateAtom = {
+    contentFit: selectAtom(Atom.appStore, (a) => a.contentFit),
     displayMode: selectAtom(Atom.appStore, (a) => a.displayMode),
     histories: selectAtom(Atom.appStore, (a) => a.histories),
     onSharpeningFilter: selectAtom(Atom.appStore, (a) => a.onSharpeningFilter),
