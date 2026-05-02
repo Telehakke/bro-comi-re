@@ -1,14 +1,12 @@
-import { unzipSync } from "fflate";
+import { BlobReader, BlobWriter, ZipReader, type Entry } from "@zip.js/zip.js";
 import type { DisplayMode, WritingType } from "./appState";
 
 export class FileManager {
-    readonly files: readonly File[] | Uint8Array<ArrayBufferLike>[];
+    readonly files: readonly File[] | Entry[];
     readonly index: number;
+    readonly blobWriter = new BlobWriter();
 
-    constructor(
-        files?: readonly File[] | Uint8Array<ArrayBufferLike>[],
-        index?: number,
-    ) {
+    constructor(files?: readonly File[] | Entry[], index?: number) {
         this.files = files ?? [];
         this.index = index ?? 0;
     }
@@ -19,12 +17,11 @@ export class FileManager {
     };
 
     static readonly fromZip = async (zip: File): Promise<FileManager> => {
-        const buffer = await zip.arrayBuffer();
-        const data = new Uint8Array(buffer);
-        const unzipped = unzipSync(data);
-        const images = Object.keys(unzipped)
-            .filter((filename) => {
-                const name = filename.toLowerCase();
+        const zipReader = new ZipReader(new BlobReader(zip));
+        const entries = await zipReader.getEntries();
+        const images = entries
+            .filter((entry) => {
+                const name = entry.filename.toLowerCase();
                 if (name.startsWith("__")) return false;
                 if (name.startsWith(".")) return false;
                 if (name.endsWith(".jpg")) return true;
@@ -36,8 +33,8 @@ export class FileManager {
                 if (name.endsWith(".jxl")) return true;
                 return false;
             })
-            .sort((a, b) => a.localeCompare(b))
-            .map((key) => unzipped[key]);
+            .sort((a, b) => a.filename.localeCompare(b.filename));
+        zipReader.close();
         return new FileManager(images);
     };
 
@@ -57,7 +54,8 @@ export class FileManager {
         if (file == null) return undefined;
         if (file instanceof File) return file;
 
-        return new Blob([file as BlobPart]);
+        // @ts-expect-error getData()が型定義されていないため警告を無視
+        return (await file.getData(new BlobWriter())) as Promise<Blob>;
     };
 
     readonly getLeftIndex = ({
@@ -161,7 +159,7 @@ export class FileManager {
         files,
         index,
     }: Partial<{
-        files: readonly File[] | Uint8Array<ArrayBufferLike>[];
+        files: readonly File[] | Entry[];
         index: number;
     }>): FileManager => {
         return new FileManager(files ?? this.files, index ?? this.index);
