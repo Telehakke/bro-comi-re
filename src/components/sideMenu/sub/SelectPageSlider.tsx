@@ -40,9 +40,11 @@ const Part = (props: {
                 value={index}
                 onValueChange={setIndex}
                 onValueChangeEnd={(v) => {
-                    fileManager
-                        .getBlob(correctIndex(writingType, fileManager, v))
-                        .then((blob) => setBlob(blob));
+                    setBlob(
+                        fileManager.getBlob(
+                            correctIndex(writingType, fileManager, v),
+                        ),
+                    );
                 }}
             />
             <Thumbnail

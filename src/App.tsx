@@ -1,5 +1,6 @@
 import { useAtomValue } from "jotai";
 import { useRef, type JSX } from "react";
+import init from "../rustProject/pkg/wasm_zip";
 import { Atom } from "./atoms";
 import { ChevronLeft, ChevronRight } from "./components/ChevronIcons";
 import { InvertFilterButton } from "./components/InvertFilterButton";
@@ -17,6 +18,7 @@ const pl = { paddingLeft: "env(safe-area-inset-left)" };
 const pr = { paddingRight: "env(safe-area-inset-right)" };
 
 export const App = (): JSX.Element => {
+    init();
     const body = useRef<ViewerBody>(null);
     const content = useRef<ViewerContent>(null);
     const shouldShowViewer = useAtomValue(Atom.shouldShowViewer);

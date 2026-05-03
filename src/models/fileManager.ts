@@ -1,14 +1,19 @@
-import { BlobReader, BlobWriter, ZipReader, type Entry } from "@zip.js/zip.js";
+import { ZipManager } from "../../rustProject/pkg/wasm_zip";
 import type { DisplayMode, WritingType } from "./appState";
 
 export class FileManager {
-    readonly files: readonly File[] | Entry[];
+    readonly files: readonly File[] | readonly string[];
     readonly index: number;
-    readonly blobWriter = new BlobWriter();
+    private zipManager: ZipManager | undefined;
 
-    constructor(files?: readonly File[] | Entry[], index?: number) {
+    constructor(
+        files?: readonly File[] | readonly string[],
+        index?: number,
+        zipManager?: ZipManager,
+    ) {
         this.files = files ?? [];
         this.index = index ?? 0;
+        this.zipManager = zipManager;
     }
 
     static readonly fromFiles = (files: readonly File[]): FileManager => {
@@ -16,12 +21,13 @@ export class FileManager {
         return new FileManager(sorted);
     };
 
-    static readonly fromZip = async (zip: File): Promise<FileManager> => {
-        const zipReader = new ZipReader(new BlobReader(zip));
-        const entries = await zipReader.getEntries();
+    static readonly fromZip = async (file: File): Promise<FileManager> => {
+        const buffer = await file.arrayBuffer();
+        const zipManager = new ZipManager(new Uint8Array(buffer));
+        const entries = zipManager.get_file_name() as string[];
         const images = entries
             .filter((entry) => {
-                const name = entry.filename.toLowerCase();
+                const name = entry.toLowerCase();
                 if (name.startsWith("__")) return false;
                 if (name.startsWith(".")) return false;
                 if (name.endsWith(".jpg")) return true;
@@ -33,9 +39,8 @@ export class FileManager {
                 if (name.endsWith(".jxl")) return true;
                 return false;
             })
-            .sort((a, b) => a.filename.localeCompare(b.filename));
-        zipReader.close();
-        return new FileManager(images);
+            .sort((a, b) => a.localeCompare(b));
+        return new FileManager(images, 0, zipManager);
     };
 
     get length(): number {
@@ -46,7 +51,7 @@ export class FileManager {
         return this.files.length > 0;
     };
 
-    readonly getBlob = async (index?: number): Promise<Blob | undefined> => {
+    readonly getBlob = (index?: number): Blob | undefined => {
         if (index == null) return undefined;
         if (index < 0) return undefined;
 
@@ -54,8 +59,8 @@ export class FileManager {
         if (file == null) return undefined;
         if (file instanceof File) return file;
 
-        // @ts-expect-error getData()が型定義されていないため警告を無視
-        return (await file.getData(new BlobWriter())) as Promise<Blob>;
+        const data = this.zipManager?.decompress_file(file);
+        return new Blob([data as BlobPart]);
     };
 
     readonly getLeftIndex = ({
@@ -159,9 +164,13 @@ export class FileManager {
         files,
         index,
     }: Partial<{
-        files: readonly File[] | Entry[];
+        files: readonly File[] | readonly string[];
         index: number;
     }>): FileManager => {
-        return new FileManager(files ?? this.files, index ?? this.index);
+        return new FileManager(
+            files ?? this.files,
+            index ?? this.index,
+            this.zipManager,
+        );
     };
 }
