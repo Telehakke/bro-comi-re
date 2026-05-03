@@ -80,8 +80,8 @@ const Icon = (): JSX.Element => {
     };
 
     if (onInvertFilter) {
-        return <Droplet className={Object.values(className).join(" ")} />;
-    } else {
         return <DropletOff className={Object.values(className).join(" ")} />;
+    } else {
+        return <Droplet className={Object.values(className).join(" ")} />;
     }
 };

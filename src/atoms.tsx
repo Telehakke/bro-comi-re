@@ -20,6 +20,7 @@ export const Atom = {
     messageManager: atom(MessageManager.create()),
     onChevronLeft: atom(false),
     onChevronRight: atom(false),
+    onFullscreen: atom(false),
     onInvertFilter: atom(false),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
@@ -40,6 +41,10 @@ export const AppStateAtom = {
         (a) => a.sharpeningFilterStrength,
     ),
     shouldAdvance: selectAtom(Atom.appStore, (a) => a.shouldAdvance),
+    shouldShowFullscreenButton: selectAtom(
+        Atom.appStore,
+        (a) => a.shouldShowFullscreenButton,
+    ),
     shouldShowInvertButton: selectAtom(
         Atom.appStore,
         (a) => a.shouldShowInvertButton,

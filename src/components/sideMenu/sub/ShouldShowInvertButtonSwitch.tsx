@@ -3,7 +3,7 @@ import type { JSX } from "react";
 import { AppStateAtom, Atom } from "../../../atoms";
 import { Switch } from "../../common/Switch";
 
-export const ShouldShowInvertButton = (): JSX.Element => {
+export const ShouldShowInvertButtonSwitch = (): JSX.Element => {
     const shouldShowInvertButton = useAtomValue(
         AppStateAtom.shouldShowInvertButton,
     );

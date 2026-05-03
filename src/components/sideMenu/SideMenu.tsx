@@ -13,12 +13,13 @@ import { ScrollSpeedSlider } from "./sub/ScrollSpeedSlider";
 import { SelectPageSlider } from "./sub/SelectPageSlider";
 import { SharpeningFilterStrengthSlider } from "./sub/SharpeningFilterStrengthSlider";
 import { ShouldAdvanceSwitch } from "./sub/ShouldAdvanceSwitch";
-import { ShouldShowInvertButton } from "./sub/ShouldShowInvertButtonSwitch";
+import { ShouldShowInvertButtonSwitch } from "./sub/ShouldShowInvertButtonSwitch";
 import { TapAreaHeightSegmentGroup } from "./sub/TapAreaHeightSegmentGroup";
 import { TapAreaWidthSegmentGroup } from "./sub/TapAreaWidthSegmentGroup";
 import { ViewSplitCountSegmentGroup } from "./sub/ViewSplitCountSegmentGroup";
 import { WritingTypeSegmentGroup } from "./sub/WritingTypeSegmentGroup";
 import { ZoomStepSlider } from "./sub/ZoomStepSlider";
+import { ShouldShowFullscreenButtonSwitch } from "./sub/shouldShowFullscreenButtonSwitch";
 
 export const SideMenu = (props: {
     body: React.RefObject<ViewerBody>;
@@ -76,8 +77,9 @@ export const SideMenu = (props: {
                     <OnSharpeningFilterSwitch {...props} />
                     <SharpeningFilterStrengthSlider />
                 </Card>
-                <Card>
-                    <ShouldShowInvertButton />
+                <Card footer="全画面への切り替えはiPhone以外で使用できます">
+                    <ShouldShowInvertButtonSwitch />
+                    <ShouldShowFullscreenButtonSwitch />
                 </Card>
                 <History />
             </div>

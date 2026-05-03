@@ -3,6 +3,7 @@ import { useRef, type JSX } from "react";
 import init from "../rustProject/pkg/wasm_zip";
 import { Atom } from "./atoms";
 import { ChevronLeft, ChevronRight } from "./components/ChevronIcons";
+import { FullscreenButton } from "./components/FullscreenButton";
 import { InvertFilterButton } from "./components/InvertFilterButton";
 import { Notification } from "./components/Notification";
 import { Progress } from "./components/Progress";
@@ -42,6 +43,7 @@ export const App = (): JSX.Element => {
                 >
                     <MenuButton />
                     <InvertFilterButton body={body} content={content} />
+                    <FullscreenButton />
                 </div>
                 <div className="fixed top-4 right-4" style={{ ...pr }}>
                     <Time />

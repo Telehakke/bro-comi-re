@@ -9,9 +9,13 @@ const closeViewerAtom = atom(null, (_, set) => {
     set(Atom.fileManager, new FileManager());
     set(Atom.imageBlobManager, ImageBlobManager.forCurrent());
     set(Atom.isOpenSideMenu, false);
+    set(Atom.onFullscreen, false);
     set(Atom.shouldShowViewer, false);
     set(Atom.zipFileName, undefined);
     set(Atom.zoomManager, (z) => z.reset());
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    }
 });
 
 export const CloseButton = (): JSX.Element => {

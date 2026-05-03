@@ -20,6 +20,7 @@ type AppStore = AppState &
         setScrollSpeed: (value: number) => AppStore;
         setSharpeningFilterStrength: (value: number) => AppStore;
         setShouldAdvance: (value: boolean) => AppStore;
+        setShouldShowFullscreenButton: (value: boolean) => AppStore;
         setShouldShowInvertButton: (value: boolean) => AppStore;
         setTapAreaWidth: (value: TapAreaLength) => AppStore;
         setTapAreaHeight: (value: TapAreaLength) => AppStore;
@@ -67,6 +68,11 @@ export const appStore: AppStore = {
     },
     setShouldAdvance(value) {
         const obj: AppStore = { ...this, shouldAdvance: value };
+        LocalStorage.setAppState(obj);
+        return obj;
+    },
+    setShouldShowFullscreenButton(value) {
+        const obj: AppStore = { ...this, shouldShowFullscreenButton: value };
         LocalStorage.setAppState(obj);
         return obj;
     },

@@ -9,6 +9,7 @@ export type AppState = Readonly<{
     scrollSpeed: number;
     sharpeningFilterStrength: number;
     shouldAdvance: boolean;
+    shouldShowFullscreenButton: boolean;
     shouldShowInvertButton: boolean;
     tapAreaWidth: TapAreaLength;
     tapAreaHeight: TapAreaLength;
@@ -25,6 +26,7 @@ export const defaultAppState: AppState = {
     scrollSpeed: 4,
     sharpeningFilterStrength: 3,
     shouldAdvance: false,
+    shouldShowFullscreenButton: false,
     shouldShowInvertButton: false,
     tapAreaWidth: "s",
     tapAreaHeight: "s",
@@ -61,6 +63,10 @@ export const createAppState = (value: unknown): AppState => {
         shouldAdvance: ensureBoolean(
             v.shouldAdvance,
             defaultAppState.shouldAdvance,
+        ),
+        shouldShowFullscreenButton: ensureBoolean(
+            v.shouldShowFullscreenButton,
+            defaultAppState.shouldShowFullscreenButton,
         ),
         shouldShowInvertButton: ensureBoolean(
             v.shouldShowInvertButton,
