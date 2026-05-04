@@ -1,6 +1,8 @@
 import { atom, useSetAtom } from "jotai";
 import React, { useEffect, useRef, type JSX } from "react";
 import { ActionAtom, Atom } from "../../atoms";
+import { behaveGamepad } from "../../models/behaveGamepad";
+import { behaveKeyDown } from "../../models/behaveKeyDown";
 import type { ViewerBody, ViewerContent } from "../../models/types";
 import { Viewer } from "../../models/viewer";
 import { BodyView } from "./sub/BodyView";
@@ -64,6 +66,16 @@ const zoomOutAtom = atom(null, (get, set, viewer: Viewer) => {
     set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
+const scrollAtom = atom(
+    null,
+    (get, set, x: number, y: number, viewer: Viewer) => {
+        const scroll = get(Atom.scrollManager).add(x, y);
+        scroll.applyScroll(viewer);
+        set(Atom.scrollManager, scroll);
+        set(Atom.isUserScrolled, true);
+    },
+);
+
 const moveToLeftPageAtom = atom(null, (get, set) => {
     const { writingType } = get(Atom.appStore);
     const file = get(Atom.fileManager);
@@ -99,33 +111,6 @@ const moveToRightPageAtom = atom(null, (get, set) => {
     }
 });
 
-const behaveKeyDown = (props: {
-    ev: KeyboardEvent;
-    goToLeft: () => void;
-    goToRight: () => void;
-    zoomIn: () => void;
-    zoomOut: () => void;
-}): void => {
-    switch (props.ev.code) {
-        case "ArrowLeft":
-            props.ev.preventDefault();
-            props.goToLeft();
-            break;
-        case "ArrowRight":
-            props.ev.preventDefault();
-            props.goToRight();
-            break;
-        case "ArrowUp":
-            props.ev.preventDefault();
-            props.zoomIn();
-            break;
-        case "ArrowDown":
-            props.ev.preventDefault();
-            props.zoomOut();
-            break;
-    }
-};
-
 export const ImageViewer = ({
     body,
     content,
@@ -140,6 +125,7 @@ export const ImageViewer = ({
     const setShouldShowInfo = useSetAtom(Atom.shouldShowInfo);
     const zoomIn = useSetAtom(zoomInAtom);
     const zoomOut = useSetAtom(zoomOutAtom);
+    const scroll = useSetAtom(scrollAtom);
     const moveToLeftPage = useSetAtom(moveToLeftPageAtom);
     const moveToRightPage = useSetAtom(moveToRightPageAtom);
 
@@ -155,9 +141,24 @@ export const ImageViewer = ({
             });
         };
         document.body.addEventListener("keydown", handleKeyDown);
-        return (): void =>
+
+        const gamepadLoop = (): void => {
+            const viewer = Viewer.create(body.current, content.current);
+            behaveGamepad({
+                goToLeft: () => goToLeft(viewer),
+                goToRight: () => goToRight(viewer),
+                zoomIn: () => zoomIn(viewer),
+                zoomOut: () => zoomOut(viewer),
+                scroll: (x, y) => scroll(x, y, viewer),
+            });
+            requestAnimationFrame(gamepadLoop);
+        };
+        window.addEventListener("gamepadconnected", gamepadLoop);
+        return (): void => {
             document.body.removeEventListener("keydown", handleKeyDown);
-    }, [body, content, goToLeft, goToRight, zoomIn, zoomOut]);
+            window.removeEventListener("gamepadconnected", gamepadLoop);
+        };
+    }, [body, content, goToLeft, goToRight, scroll, zoomIn, zoomOut]);
 
     return (
         <BodyView

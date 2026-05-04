@@ -14,7 +14,7 @@ const closeViewerAtom = atom(null, (_, set) => {
     set(Atom.zipFileName, undefined);
     set(Atom.zoomManager, (z) => z.reset());
     if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
     }
 });
 

@@ -46,9 +46,11 @@ const Button = (props: { children: ReactNode }): JSX.Element => {
                     if (!document.documentElement.requestFullscreen)
                         return false;
                     if (v) {
-                        document.exitFullscreen();
+                        document.exitFullscreen().catch(() => {});
                     } else {
-                        document.documentElement.requestFullscreen();
+                        document.documentElement
+                            .requestFullscreen()
+                            .catch(() => {});
                     }
                     return !v;
                 });

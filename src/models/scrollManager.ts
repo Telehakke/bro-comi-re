@@ -42,6 +42,10 @@ export class ScrollManager {
         );
     };
 
+    readonly add = (x: number, y: number): ScrollManager => {
+        return new ScrollManager(this.x + x, this.y + y);
+    };
+
     readonly applyScroll = (viewer: Viewer): void => {
         const x = (viewer.spaceWidth() * this.x) / 100;
         const y = (viewer.spaceHeight() * this.y) / 100;
