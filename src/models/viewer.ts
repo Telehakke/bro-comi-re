@@ -9,6 +9,7 @@ export type Viewer = Readonly<{
     positionX: () => number | undefined;
     positionY: () => number | undefined;
     isReachedLimitX: () => boolean;
+    isHorizontalFit: () => boolean;
 }>;
 
 export const Viewer: Viewer = {
@@ -42,5 +43,12 @@ export const Viewer: Viewer = {
     isReachedLimitX() {
         const x = this.positionX() ?? 0;
         return x <= 0 || x >= 100;
+    },
+    isHorizontalFit() {
+        if (this.body == null || this.content == null) return true;
+        const bodyRatio = this.body.clientWidth / this.body.clientHeight;
+        const contentRatio =
+            this.content.clientWidth / this.content.clientHeight;
+        return bodyRatio <= contentRatio;
     },
 };

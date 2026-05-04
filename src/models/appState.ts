@@ -101,8 +101,7 @@ const ensureBoolean = (value: unknown, defaultValue: boolean): boolean => {
 
 export const ContentFitEnum = {
     all: { value: "all", label: "全体" },
-    vertical: { value: "vertical", label: "縦" },
-    horizontal: { value: "horizontal", label: "横" },
+    fill: { value: "fill", label: "満たす" },
 };
 
 export type ContentFit = keyof typeof ContentFitEnum;

@@ -92,6 +92,7 @@ const LeftImage = ({
     const onInvertFilter = useAtomValue(Atom.onInvertFilter);
     const contentFit = useAtomValue(AppStateAtom.contentFit);
     const zoomManager = useAtomValue(Atom.zoomManager);
+    const viewer = Viewer.create(body.current, content.current);
     const setup = useSetAtom(setupAtom);
 
     useEffect(() => {
@@ -106,32 +107,12 @@ const LeftImage = ({
     return (
         <img
             className={`size-auto justify-self-end object-contain ${onInvertFilter && "invert"}`}
-            style={leftImgStyle(contentFit, zoomManager, rightBlob)}
+            style={imageStyle(contentFit, zoomManager, rightBlob, viewer)}
             ref={image}
             onLoad={() => setup(Viewer.create(body.current, content.current))}
         />
     );
 };
-
-const leftImgStyle = (
-    contentFit: ContentFit,
-    zoomManager: ZoomManager,
-    rightBlob?: Blob,
-): CSSProperties => {
-    const scale = zoomManager.scale;
-    return {
-        maxWidth:
-            contentFit !== "vertical"
-                ? rightBlob == null
-                    ? `${scale}dvw`
-                    : `${scale / 2}dvw`
-                : undefined,
-        maxHeight: contentFit !== "horizontal" ? `${scale}dvh` : undefined,
-        WebkitTouchCallout: "none",
-    };
-};
-
-/* -------------------------------------------------------------------------- */
 
 const RightImage = ({
     body,
@@ -146,6 +127,7 @@ const RightImage = ({
     const onInvertFilter = useAtomValue(Atom.onInvertFilter);
     const contentFit = useAtomValue(AppStateAtom.contentFit);
     const zoomManager = useAtomValue(Atom.zoomManager);
+    const viewer = Viewer.create(body.current, content.current);
     const setup = useSetAtom(setupAtom);
 
     useEffect(() => {
@@ -160,27 +142,30 @@ const RightImage = ({
     return (
         <img
             className={`size-auto object-contain ${onInvertFilter && "invert"}`}
-            style={rightImgStyle(contentFit, zoomManager, leftBlob)}
+            style={imageStyle(contentFit, zoomManager, leftBlob, viewer)}
             ref={image}
             onLoad={() => setup(Viewer.create(body.current, content.current))}
         />
     );
 };
 
-const rightImgStyle = (
+const imageStyle = (
     contentFit: ContentFit,
     zoomManager: ZoomManager,
-    leftBlob?: Blob,
+    otherBlob: Blob | undefined,
+    viewer: Viewer,
 ): CSSProperties => {
     const scale = zoomManager.scale;
-    return {
-        maxWidth:
-            contentFit !== "vertical"
-                ? leftBlob == null
-                    ? `${scale}dvw`
-                    : `${scale / 2}dvw`
-                : undefined,
-        maxHeight: contentFit !== "horizontal" ? `${scale}dvh` : undefined,
-        WebkitTouchCallout: "none",
-    };
+    const maxWidth = otherBlob == null ? `${scale}dvw` : `${scale / 2}dvw`;
+    const maxHeight = `${scale}dvh`;
+    switch (contentFit) {
+        case "all":
+            return { maxWidth, maxHeight, WebkitTouchCallout: "none" };
+        case "fill":
+            if (viewer.isHorizontalFit()) {
+                return { maxHeight, WebkitTouchCallout: "none" };
+            } else {
+                return { maxWidth, WebkitTouchCallout: "none" };
+            }
+    }
 };
