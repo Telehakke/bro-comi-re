@@ -156,7 +156,21 @@ const imageStyle = (
     viewer: Viewer,
 ): CSSProperties => {
     const scale = zoomManager.scale;
-    const maxWidth = otherBlob == null ? `${scale}dvw` : `${scale / 2}dvw`;
+    let paddingLeft =
+        viewer.content != null
+            ? parseInt(getComputedStyle(viewer.content).paddingLeft)
+            : 0;
+    paddingLeft = Number.isInteger(paddingLeft) ? paddingLeft : 0;
+    let paddingRight =
+        viewer.content != null
+            ? parseInt(getComputedStyle(viewer.content).paddingRight)
+            : 0;
+    paddingRight = Number.isInteger(paddingRight) ? paddingRight : 0;
+    const padding = (Math.max(paddingLeft, paddingRight) * scale) / 100;
+    const maxWidth =
+        otherBlob == null
+            ? `calc(${scale}dvw - ${padding}px)`
+            : `calc(${scale / 2}dvw - ${padding / 2}px)`;
     const maxHeight = `${scale}dvh`;
     switch (contentFit) {
         case "all":
