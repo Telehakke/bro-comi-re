@@ -32,4 +32,7 @@ impl ZipManager {
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(buffer)
     }
+
+    // メモリの解放
+    pub fn free(self) {}
 }

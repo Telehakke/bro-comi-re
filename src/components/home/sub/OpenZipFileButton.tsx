@@ -40,6 +40,7 @@ export const OpenZipFileButton = (): JSX.Element => {
                     const file = ev.currentTarget.files?.[0];
                     if (file == null) return;
                     openZipFile(file);
+                    ev.currentTarget.value = "";
                 }}
             />
             <button

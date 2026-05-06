@@ -28,6 +28,7 @@ export const OpenImageFilesButton = (): JSX.Element => {
                     const files = ev.currentTarget.files;
                     if (files == null) return;
                     openImageFiles(Array.from(files));
+                    ev.currentTarget.value = "";
                 }}
             />
             <button

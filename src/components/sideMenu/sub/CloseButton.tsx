@@ -4,7 +4,8 @@ import { ActionAtom, Atom } from "../../../atoms";
 import { FileManager } from "../../../models/fileManager";
 import { ImageBlobManager } from "../../../models/imageBlobManager";
 
-const closeViewerAtom = atom(null, (_, set) => {
+const closeViewerAtom = atom(null, (get, set) => {
+    get(Atom.fileManager).freeZip();
     set(ActionAtom.updateHistory);
     set(Atom.fileManager, new FileManager());
     set(Atom.imageBlobManager, ImageBlobManager.forCurrent());

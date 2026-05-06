@@ -160,6 +160,10 @@ export class FileManager {
         });
     };
 
+    readonly freeZip = (): void => {
+        this.zipManager?.free();
+    };
+
     private readonly copyWith = ({
         files,
         index,
