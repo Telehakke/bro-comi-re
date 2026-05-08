@@ -1,19 +1,19 @@
-import { ZipManager } from "../../rustProject/pkg/wasm_zip";
+import {
+    Uint8ArrayReader,
+    Uint8ArrayWriter,
+    ZipReader,
+    type Entry,
+    type FileEntry,
+} from "@zip.js/zip.js";
 import type { DisplayMode, WritingType } from "./appState";
 
 export class FileManager {
-    readonly files: readonly File[] | readonly string[];
+    readonly files: readonly File[] | readonly Entry[];
     readonly index: number;
-    private zipManager: ZipManager | undefined;
 
-    constructor(
-        files?: readonly File[] | readonly string[],
-        index?: number,
-        zipManager?: ZipManager,
-    ) {
+    constructor(files?: readonly File[] | readonly Entry[], index?: number) {
         this.files = files ?? [];
         this.index = index ?? 0;
-        this.zipManager = zipManager;
     }
 
     static readonly fromFiles = (files: readonly File[]): FileManager => {
@@ -23,11 +23,13 @@ export class FileManager {
 
     static readonly fromZip = async (file: File): Promise<FileManager> => {
         const buffer = await file.arrayBuffer();
-        const zipManager = new ZipManager(new Uint8Array(buffer));
-        const entries = zipManager.get_file_name() as string[];
+        const zipReader = new ZipReader(
+            new Uint8ArrayReader(new Uint8Array(buffer)),
+        );
+        const entries = await zipReader.getEntries();
         const images = entries
             .filter((entry) => {
-                const name = entry.toLowerCase();
+                const name = entry.filename.toLowerCase();
                 if (name.startsWith("__")) return false;
                 if (name.startsWith(".")) return false;
                 if (name.endsWith(".jpg")) return true;
@@ -39,8 +41,9 @@ export class FileManager {
                 if (name.endsWith(".jxl")) return true;
                 return false;
             })
-            .sort((a, b) => a.localeCompare(b));
-        return new FileManager(images, 0, zipManager);
+            .sort((a, b) => a.filename.localeCompare(b.filename));
+        zipReader.close();
+        return new FileManager(images);
     };
 
     get length(): number {
@@ -51,7 +54,7 @@ export class FileManager {
         return this.files.length > 0;
     };
 
-    readonly getBlob = (index?: number): Blob | undefined => {
+    readonly getBlob = async (index?: number): Promise<Blob | undefined> => {
         if (index == null) return undefined;
         if (index < 0) return undefined;
 
@@ -59,8 +62,10 @@ export class FileManager {
         if (file == null) return undefined;
         if (file instanceof File) return file;
 
-        const data = this.zipManager?.decompress_file(file);
-        return new Blob([data as BlobPart]);
+        const buffer = await (file as FileEntry).getData(
+            new Uint8ArrayWriter(),
+        );
+        return new Blob([buffer]);
     };
 
     readonly getLeftIndex = ({
@@ -160,21 +165,13 @@ export class FileManager {
         });
     };
 
-    readonly freeZip = (): void => {
-        this.zipManager?.free();
-    };
-
     private readonly copyWith = ({
         files,
         index,
     }: Partial<{
-        files: readonly File[] | readonly string[];
+        files: readonly File[] | readonly Entry[];
         index: number;
     }>): FileManager => {
-        return new FileManager(
-            files ?? this.files,
-            index ?? this.index,
-            this.zipManager,
-        );
+        return new FileManager(files ?? this.files, index ?? this.index);
     };
 }

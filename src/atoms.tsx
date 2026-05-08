@@ -97,14 +97,15 @@ export const ActionAtom = {
         set(Atom.imageBlobManager, imageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
 
-        const nextFile = file.nextIndex({ ...appStore });
-        const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
-        imageBlob.setNextLeft(nextLeftIndex, nextFile.getBlob(nextLeftIndex));
-        const nextRightIndex = nextFile.getRightIndex({ ...appStore });
-        imageBlob.setNextRight(
-            nextRightIndex,
-            nextFile.getBlob(nextRightIndex),
-        );
+        // const nextFile = file.nextIndex({ ...appStore });
+        // const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
+        // nextFile
+        //     .getBlob(nextLeftIndex)
+        //     .then((b) => imageBlob.setNextLeft(nextLeftIndex, b));
+        // const nextRightIndex = nextFile.getRightIndex({ ...appStore });
+        // nextFile
+        //     .getBlob(nextRightIndex)
+        //     .then((b) => imageBlob.setNextRight(nextRightIndex, b));
     }),
     moveToNextPage: atom(null, async (get, set) => {
         const appStore = get(Atom.appStore);
@@ -127,17 +128,15 @@ export const ActionAtom = {
         set(Atom.imageBlobManager, newImageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
 
-        const nextFile = file.nextIndex({ ...appStore });
-        const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
-        newImageBlob.setNextLeft(
-            nextLeftIndex,
-            nextFile.getBlob(nextLeftIndex),
-        );
-        const nextRightIndex = nextFile.getRightIndex({ ...appStore });
-        newImageBlob.setNextRight(
-            nextRightIndex,
-            nextFile.getBlob(nextRightIndex),
-        );
+        // const nextFile = file.nextIndex({ ...appStore });
+        // const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
+        // nextFile
+        //     .getBlob(nextLeftIndex)
+        //     .then((b) => newImageBlob.setNextLeft(nextLeftIndex, b));
+        // const nextRightIndex = nextFile.getRightIndex({ ...appStore });
+        // nextFile
+        //     .getBlob(nextRightIndex)
+        //     .then((b) => newImageBlob.setNextRight(nextRightIndex, b));
     }),
     moveToPreviousPage: atom(null, async (get, set) => {
         const appStore = get(Atom.appStore);
@@ -160,17 +159,15 @@ export const ActionAtom = {
         set(Atom.imageBlobManager, newImageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
 
-        const prevFile = file.prevIndex({ ...appStore });
-        const prevLeftIndex = prevFile.getLeftIndex({ ...appStore });
-        const prevRightIndex = prevFile.getRightIndex({ ...appStore });
-        newImageBlob.setPrevLeft(
-            prevLeftIndex,
-            prevFile.getBlob(prevLeftIndex),
-        );
-        newImageBlob.setPrevRight(
-            prevRightIndex,
-            prevFile.getBlob(prevRightIndex),
-        );
+        // const prevFile = file.prevIndex({ ...appStore });
+        // const prevLeftIndex = prevFile.getLeftIndex({ ...appStore });
+        // prevFile
+        //     .getBlob(prevLeftIndex)
+        //     .then((b) => newImageBlob.setPrevLeft(prevLeftIndex, b));
+        // const prevRightIndex = prevFile.getRightIndex({ ...appStore });
+        // prevFile
+        //     .getBlob(prevRightIndex)
+        //     .then((b) => newImageBlob.setPrevRight(prevRightIndex, b));
     }),
     positionStart: atom(null, (get, set) => {
         const { writingType } = get(Atom.appStore);

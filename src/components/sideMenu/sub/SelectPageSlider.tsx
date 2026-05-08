@@ -39,9 +39,9 @@ const Part = (props: {
                 max={fileManager.length - 1}
                 value={index}
                 onValueChange={setIndex}
-                onValueChangeEnd={(v) => {
+                onValueChangeEnd={async (v) => {
                     setBlob(
-                        fileManager.getBlob(
+                        await fileManager.getBlob(
                             correctIndex(writingType, fileManager, v),
                         ),
                     );
