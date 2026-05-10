@@ -7,7 +7,6 @@ import { SideMenuDialog } from "../common/SideMenuDialog";
 import { CloseButton } from "./sub/CloseButton";
 import { ContentFitSegmentGroup } from "./sub/ContentFitSegmentGroup";
 import { DisplayModeSegmentGroup } from "./sub/DisplayModeSegmentGroup";
-import { History } from "./sub/History";
 import { OnSharpeningFilterSwitch } from "./sub/OnSharpeningFilterSwitch";
 import { ScrollSpeedSlider } from "./sub/ScrollSpeedSlider";
 import { SelectPageSlider } from "./sub/SelectPageSlider";
@@ -82,7 +81,6 @@ export const SideMenu = (props: {
                     <ShouldShowInvertButtonSwitch />
                     <ShouldShowFullscreenButtonSwitch />
                 </Card>
-                <History />
             </div>
         </SideMenuDialog>
     );
