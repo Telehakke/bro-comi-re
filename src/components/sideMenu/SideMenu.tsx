@@ -13,13 +13,13 @@ import { ScrollSpeedSlider } from "./sub/ScrollSpeedSlider";
 import { SelectPageSlider } from "./sub/SelectPageSlider";
 import { SharpeningFilterStrengthSlider } from "./sub/SharpeningFilterStrengthSlider";
 import { ShouldAdvanceSwitch } from "./sub/ShouldAdvanceSwitch";
+import { ShouldShowFullscreenButtonSwitch } from "./sub/shouldShowFullscreenButtonSwitch";
 import { ShouldShowInvertButtonSwitch } from "./sub/ShouldShowInvertButtonSwitch";
 import { TapAreaHeightSegmentGroup } from "./sub/TapAreaHeightSegmentGroup";
 import { TapAreaWidthSegmentGroup } from "./sub/TapAreaWidthSegmentGroup";
 import { ViewSplitCountSegmentGroup } from "./sub/ViewSplitCountSegmentGroup";
 import { WritingTypeSegmentGroup } from "./sub/WritingTypeSegmentGroup";
 import { ZoomStepSlider } from "./sub/ZoomStepSlider";
-import { ShouldShowFullscreenButtonSwitch } from "./sub/shouldShowFullscreenButtonSwitch";
 
 export const SideMenu = (props: {
     body: React.RefObject<ViewerBody>;
@@ -54,6 +54,11 @@ export const SideMenu = (props: {
                 <Card footer="拡大時に次、または前のページに移動するのに必要な最大タップ数">
                     <ViewSplitCountSegmentGroup />
                 </Card>
+                <Card
+                    footer={`拡大：ダブルタップ\n縮小：右クリック、またはロングタッチ`}
+                >
+                    <ZoomStepSlider />
+                </Card>
                 <Card>
                     <TapAreaWidthSegmentGroup />
                     <TapAreaHeightSegmentGroup />
@@ -68,11 +73,7 @@ export const SideMenu = (props: {
                 >
                     <ScrollSpeedSlider />
                 </Card>
-                <Card
-                    footer={`拡大：ダブルタップ\n縮小：右クリック、またはロングタッチ`}
-                >
-                    <ZoomStepSlider />
-                </Card>
+
                 <Card>
                     <OnSharpeningFilterSwitch {...props} />
                     <SharpeningFilterStrengthSlider />
