@@ -4,9 +4,9 @@ import type { JSX } from "react";
 import { Atom } from "../atoms";
 
 export const ChevronLeft = (): JSX.Element => {
-    const onChevronLeft = useAtomValue(Atom.onChevronLeft);
+    const onChevron = useAtomValue(Atom.onChevron);
 
-    if (!onChevronLeft) return <></>;
+    if (onChevron != "left") return <></>;
     return (
         <div className="grid h-full place-items-center">
             <CircleChevronLeft className="size-15 stroke-green-500" />
@@ -15,9 +15,9 @@ export const ChevronLeft = (): JSX.Element => {
 };
 
 export const ChevronRight = (): JSX.Element => {
-    const onChevronRight = useAtomValue(Atom.onChevronRight);
+    const onChevron = useAtomValue(Atom.onChevron);
 
-    if (!onChevronRight) return <></>;
+    if (onChevron != "right") return <></>;
     return (
         <div className="grid h-full place-items-center">
             <CircleChevronRight className="size-15 stroke-green-500" />

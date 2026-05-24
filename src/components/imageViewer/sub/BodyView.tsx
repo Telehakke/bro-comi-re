@@ -35,8 +35,7 @@ export const BodyView = ({
     const canDoubleClick = useRef(true);
     const canRightClick = useRef(true);
     const canLongPress = useRef(true);
-    const setOnChevronLeft = useSetAtom(Atom.onChevronLeft);
-    const setOnChevronRight = useSetAtom(Atom.onChevronRight);
+    const setOnChevron = useSetAtom(Atom.onChevron);
     const setIsUserScrolled = useSetAtom(Atom.isUserScrolled);
 
     useEffect(() => {
@@ -91,20 +90,18 @@ export const BodyView = ({
                 if (viewer.isReachedLimitX()) {
                     pullManager.current.add(prevX.current - x);
                     if (pullManager.current.canLeftPull()) {
-                        setOnChevronLeft(true);
+                        setOnChevron("left");
                     } else if (pullManager.current.canRightPull()) {
-                        setOnChevronRight(true);
+                        setOnChevron("right");
                     } else {
-                        setOnChevronLeft(false);
-                        setOnChevronRight(false);
+                        setOnChevron("none");
                     }
                 }
                 prevX.current = x;
             }}
             onTouchEnd={() => {
                 window.clearTimeout(timerId.current);
-                setOnChevronLeft(false);
-                setOnChevronRight(false);
+                setOnChevron("none");
                 if (pullManager.current.canLeftPull()) {
                     onLeftSidePull();
                 } else if (pullManager.current.canRightPull()) {

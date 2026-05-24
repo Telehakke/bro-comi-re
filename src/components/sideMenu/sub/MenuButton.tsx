@@ -29,7 +29,6 @@ const Button = (props: { children: ReactNode }): JSX.Element => {
 
     const className = {
         _: "group rounded-full transition select-none",
-        // position: "fixed top-4 left-4",
         outline: "outline-blue-500/75 focus-visible:outline-2",
     };
 

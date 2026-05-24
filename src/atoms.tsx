@@ -18,8 +18,7 @@ export const Atom = {
     isOpenSideMenu: atom(false),
     isUserScrolled: atom(false),
     messageManager: atom(MessageManager.create()),
-    onChevronLeft: atom(false),
-    onChevronRight: atom(false),
+    onChevron: atom<"left" | "right" | "none">("none"),
     onFullscreen: atom(false),
     onInvertFilter: atom(false),
     scrollManager: atom(new ScrollManager()),
@@ -30,25 +29,17 @@ export const Atom = {
     zoomManager: atom(new ZoomManager()),
 } as const;
 
+// prettier-ignore
 export const AppStateAtom = {
     contentFit: selectAtom(Atom.appStore, (a) => a.contentFit),
     displayMode: selectAtom(Atom.appStore, (a) => a.displayMode),
     histories: selectAtom(Atom.appStore, (a) => a.histories),
     onSharpeningFilter: selectAtom(Atom.appStore, (a) => a.onSharpeningFilter),
     scrollSpeed: selectAtom(Atom.appStore, (a) => a.scrollSpeed),
-    sharpeningFilterStrength: selectAtom(
-        Atom.appStore,
-        (a) => a.sharpeningFilterStrength,
-    ),
+    sharpeningFilterStrength: selectAtom(Atom.appStore, (a) => a.sharpeningFilterStrength),
     shouldAdvance: selectAtom(Atom.appStore, (a) => a.shouldAdvance),
-    shouldShowFullscreenButton: selectAtom(
-        Atom.appStore,
-        (a) => a.shouldShowFullscreenButton,
-    ),
-    shouldShowInvertButton: selectAtom(
-        Atom.appStore,
-        (a) => a.shouldShowInvertButton,
-    ),
+    shouldShowFullscreenButton: selectAtom(Atom.appStore, (a) => a.shouldShowFullscreenButton),
+    shouldShowInvertButton: selectAtom(Atom.appStore, (a) => a.shouldShowInvertButton),
     tapAreaWidth: selectAtom(Atom.appStore, (a) => a.tapAreaWidth),
     tapAreaHeight: selectAtom(Atom.appStore, (a) => a.tapAreaHeight),
     viewSplitCount: selectAtom(Atom.appStore, (a) => a.viewSplitCount),
@@ -96,16 +87,6 @@ export const ActionAtom = {
         );
         set(Atom.imageBlobManager, imageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
-
-        // const nextFile = file.nextIndex({ ...appStore });
-        // const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
-        // nextFile
-        //     .getBlob(nextLeftIndex)
-        //     .then((b) => imageBlob.setNextLeft(nextLeftIndex, b));
-        // const nextRightIndex = nextFile.getRightIndex({ ...appStore });
-        // nextFile
-        //     .getBlob(nextRightIndex)
-        //     .then((b) => imageBlob.setNextRight(nextRightIndex, b));
     }),
     moveToNextPage: atom(null, async (get, set) => {
         const appStore = get(Atom.appStore);
@@ -127,16 +108,6 @@ export const ActionAtom = {
         );
         set(Atom.imageBlobManager, newImageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
-
-        // const nextFile = file.nextIndex({ ...appStore });
-        // const nextLeftIndex = nextFile.getLeftIndex({ ...appStore });
-        // nextFile
-        //     .getBlob(nextLeftIndex)
-        //     .then((b) => newImageBlob.setNextLeft(nextLeftIndex, b));
-        // const nextRightIndex = nextFile.getRightIndex({ ...appStore });
-        // nextFile
-        //     .getBlob(nextRightIndex)
-        //     .then((b) => newImageBlob.setNextRight(nextRightIndex, b));
     }),
     moveToPreviousPage: atom(null, async (get, set) => {
         const appStore = get(Atom.appStore);
@@ -158,16 +129,6 @@ export const ActionAtom = {
         );
         set(Atom.imageBlobManager, newImageBlob);
         set(Atom.messageManager, (m) => m.setMessage(file.progress()));
-
-        // const prevFile = file.prevIndex({ ...appStore });
-        // const prevLeftIndex = prevFile.getLeftIndex({ ...appStore });
-        // prevFile
-        //     .getBlob(prevLeftIndex)
-        //     .then((b) => newImageBlob.setPrevLeft(prevLeftIndex, b));
-        // const prevRightIndex = prevFile.getRightIndex({ ...appStore });
-        // prevFile
-        //     .getBlob(prevRightIndex)
-        //     .then((b) => newImageBlob.setPrevRight(prevRightIndex, b));
     }),
     positionStart: atom(null, (get, set) => {
         const { writingType } = get(Atom.appStore);
