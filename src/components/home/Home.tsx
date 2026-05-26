@@ -10,9 +10,12 @@ export const Home = (): JSX.Element => {
     };
 
     return (
-        <div className={Object.values(className).join(" ")}>
-            <OpenImageFilesButton />
-            <OpenZipFileButton />
-        </div>
+        <>
+            <div className={Object.values(className).join(" ")}>
+                <OpenImageFilesButton />
+                <OpenZipFileButton />
+            </div>
+            <p className="fixed bottom-4 left-4">v0.260527b</p>
+        </>
     );
 };

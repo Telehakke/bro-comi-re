@@ -46,7 +46,7 @@ export const OpenZipFileButton = (): JSX.Element => {
                 }}
             />
             <button
-                className="h-8 rounded-full border px-2"
+                className="h-12 rounded-full border px-6"
                 onClick={() => input.current?.click()}
             >
                 Zipファイルを開く
