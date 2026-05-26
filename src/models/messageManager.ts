@@ -1,4 +1,4 @@
-import type { Visibility } from "./types";
+type Visibility = "visible" | "hidden" | "none";
 
 export class MessageManager {
     readonly value: string | undefined;

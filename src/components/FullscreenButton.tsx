@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { Fullscreen, Minimize } from "lucide-react";
-import type { JSX, ReactNode } from "react";
+import { useEffect, type JSX, type ReactNode } from "react";
 import { AppStateAtom, Atom } from "../atoms";
 
 export const FullscreenButton = (): JSX.Element => {
@@ -30,6 +30,18 @@ export const FullscreenButton = (): JSX.Element => {
 
 const Button = (props: { children: ReactNode }): JSX.Element => {
     const setOnFullscreen = useSetAtom(Atom.onFullscreen);
+
+    useEffect(() => {
+        const handleFullscreenChange = (): void => {
+            setOnFullscreen(document.fullscreenElement != null);
+        };
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return (): void =>
+            document.removeEventListener(
+                "fullscreenchange",
+                handleFullscreenChange,
+            );
+    }, [setOnFullscreen]);
 
     const className = {
         _: "group rounded-full transition select-none",

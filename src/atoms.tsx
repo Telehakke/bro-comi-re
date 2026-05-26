@@ -7,7 +7,7 @@ import { ImageBlobManager } from "./models/imageBlobManager";
 import { MessageManager } from "./models/messageManager";
 import { ScrollManager } from "./models/scrollManager";
 import { SharpeningFilter } from "./models/sharpeningFilter";
-import { Viewer } from "./models/viewer";
+import { ViewerManager } from "./models/viewerManager";
 import { ZoomManager } from "./models/zoomManager";
 
 export const Atom = {
@@ -25,6 +25,7 @@ export const Atom = {
     sharpeningFilter: atom(() => new SharpeningFilter()),
     shouldShowInfo: atom(true),
     shouldShowViewer: atom(false),
+    viewerManager: atom(new ViewerManager(null, null)),
     zipFileName: atom<string | undefined>(undefined),
     zoomManager: atom(new ZoomManager()),
 } as const;
@@ -50,28 +51,30 @@ export const AppStateAtom = {
 /* -------------------------------------------------------------------------- */
 
 export const ActionAtom = {
-    goToNextAtom: atom(null, (get, set, viewer: Viewer) => {
+    goToNextAtom: atom(null, (get, set) => {
         const appStore = get(Atom.appStore);
+        const viewerManager = get(Atom.viewerManager);
         const scroll = get(Atom.scrollManager);
-        if (scroll.shouldMoveToNextPage({ ...appStore, viewer })) {
+        if (scroll.shouldMoveToNextPage({ ...appStore, viewerManager })) {
             if (get(Atom.fileManager).hasNextFile()) {
                 set(ActionAtom.moveToNextPage);
                 set(ActionAtom.positionStart);
             }
         } else {
-            set(ActionAtom.scrollToNext, viewer);
+            set(ActionAtom.scrollToNext);
         }
     }),
-    goToPreviousAtom: atom(null, (get, set, viewer: Viewer) => {
+    goToPreviousAtom: atom(null, (get, set) => {
         const appStore = get(Atom.appStore);
+        const viewerManager = get(Atom.viewerManager);
         const scroll = get(Atom.scrollManager);
-        if (scroll.shouldMoveToPreviousPage({ ...appStore, viewer })) {
+        if (scroll.shouldMoveToPreviousPage({ ...appStore, viewerManager })) {
             if (get(Atom.fileManager).hasPreviousFile()) {
                 set(ActionAtom.moveToPreviousPage);
                 set(ActionAtom.positionEnd);
             }
         } else {
-            set(ActionAtom.scrollToPrevious, viewer);
+            set(ActionAtom.scrollToPrevious);
         }
     }),
     moveToIndexPage: atom(null, async (get, set, index: number) => {
@@ -141,20 +144,25 @@ export const ActionAtom = {
             ScrollManager.fromWritingType(writingType, true),
         );
     }),
-    scrollToNext: atom(null, (get, set, viewer: Viewer) => {
+    scrollToNext: atom(null, (get, set) => {
         const appStore = get(Atom.appStore);
-        const scroll = get(Atom.scrollManager).next({ ...appStore, viewer });
-        set(Atom.scrollManager, scroll);
-        scroll.applyScroll(viewer);
-    }),
-    scrollToPrevious: atom(null, (get, set, viewer: Viewer) => {
-        const appStore = get(Atom.appStore);
-        const scroll = get(Atom.scrollManager).previous({
+        const viewerManager = get(Atom.viewerManager);
+        const scroll = get(Atom.scrollManager).next({
             ...appStore,
-            viewer,
+            viewerManager,
         });
         set(Atom.scrollManager, scroll);
-        scroll.applyScroll(viewer);
+        scroll.applyScroll(viewerManager);
+    }),
+    scrollToPrevious: atom(null, (get, set) => {
+        const appStore = get(Atom.appStore);
+        const viewerManager = get(Atom.viewerManager);
+        const scroll = get(Atom.scrollManager).previous({
+            ...appStore,
+            viewerManager,
+        });
+        set(Atom.scrollManager, scroll);
+        scroll.applyScroll(viewerManager);
     }),
     updateHistory: atom(null, (get, set) => {
         const zipFileName = get(Atom.zipFileName);
@@ -167,9 +175,9 @@ export const ActionAtom = {
         set(Atom.historyManager, history);
         set(Atom.appStore, (a) => a.setHistories(history.histories));
     }),
-    updateScrollManager: atom(null, (get, set, viewer: Viewer) => {
+    updateScrollManager: atom(null, (get, set) => {
         if (!get(Atom.isUserScrolled)) return;
         set(Atom.isUserScrolled, false);
-        set(Atom.scrollManager, (s) => s.update(viewer));
+        set(Atom.scrollManager, (s) => s.update(get(Atom.viewerManager)));
     }),
 } as const;

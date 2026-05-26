@@ -1,13 +1,11 @@
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef, type JSX, type ReactNode } from "react";
 import { Atom } from "../../../atoms";
 import { PullManager } from "../../../models/pullManager";
-import type { ViewerBody, ViewerContent } from "../../../models/types";
-import { Viewer } from "../../../models/viewer";
+import type { ViewerBody } from "../../../models/viewerManager";
 
 export const BodyView = ({
     body,
-    content,
     onResize,
     onClick,
     onDoubleClick,
@@ -18,8 +16,7 @@ export const BodyView = ({
     children,
 }: {
     body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-    onResize: (width: number, height: number) => void;
+    onResize: () => void;
     onClick: () => void;
     onDoubleClick: () => void;
     onRightClick: () => void;
@@ -37,13 +34,13 @@ export const BodyView = ({
     const canLongPress = useRef(true);
     const setOnChevron = useSetAtom(Atom.onChevron);
     const setIsUserScrolled = useSetAtom(Atom.isUserScrolled);
+    const viewerManager = useAtomValue(Atom.viewerManager);
 
     useEffect(() => {
         if (body.current == null) return;
 
         const observer = new ResizeObserver(() => {
-            const { clientWidth, clientHeight } = body.current!;
-            onResize(clientWidth, clientHeight);
+            onResize();
         });
         observer.observe(body.current);
         return (): void => observer.disconnect();
@@ -51,7 +48,7 @@ export const BodyView = ({
 
     return (
         <div
-            className="fixed inset-0 flex h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
+            className="fixed inset-0 h-dvh w-dvw overflow-scroll overscroll-contain bg-black select-none"
             style={{ scrollbarWidth: "none" }}
             ref={body}
             onClick={() => {
@@ -86,8 +83,7 @@ export const BodyView = ({
                 window.clearTimeout(timerId.current);
                 setIsUserScrolled(true);
                 const x = ev.targetTouches[0].clientX;
-                const viewer = Viewer.create(body.current, content.current);
-                if (viewer.isReachedLimitX()) {
+                if (viewerManager.isReachedLimitX()) {
                     pullManager.current.add(prevX.current - x);
                     if (pullManager.current.canLeftPull()) {
                         setOnChevron("left");

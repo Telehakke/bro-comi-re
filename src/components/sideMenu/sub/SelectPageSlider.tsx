@@ -3,24 +3,17 @@ import { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, AppStateAtom, Atom } from "../../../atoms";
 import type { WritingType } from "../../../models/appState";
 import type { FileManager } from "../../../models/fileManager";
-import type { ViewerBody, ViewerContent } from "../../../models/types";
 import { Slider } from "../../common/Slider";
 
-export const SelectPageSlider = (props: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
+export const SelectPageSlider = (): JSX.Element => {
     const writingType = useAtomValue(AppStateAtom.writingType);
 
-    return <Part {...props} key={writingType} />;
+    return <Part key={writingType} />;
 };
 
 /* -------------------------------------------------------------------------- */
 
-const Part = (props: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
+const Part = (): JSX.Element => {
     const writingType = useAtomValue(AppStateAtom.writingType);
     const fileManager = useAtomValue(Atom.fileManager);
     const [index, setIndex] = useState(
@@ -50,7 +43,6 @@ const Part = (props: {
             <Thumbnail
                 blob={blob}
                 index={correctIndex(writingType, fileManager, index)}
-                {...props}
             />
         </div>
     );
@@ -71,24 +63,14 @@ const correctIndex = (
 
 /* -------------------------------------------------------------------------- */
 
-const moveToIndexPageAtom = atom(
-    null,
-    (_, set, index: number, viewer: ViewerBody, content: ViewerContent) => {
-        if (viewer == null || content == null) return;
+const moveToIndexPageAtom = atom(null, (_, set, index: number) => {
+    set(ActionAtom.moveToIndexPage, index);
+    set(ActionAtom.positionStart);
+    set(Atom.zoomManager, (z) => z.reset());
+    set(Atom.isOpenSideMenu, false);
+});
 
-        set(ActionAtom.moveToIndexPage, index);
-        set(ActionAtom.positionStart);
-        set(Atom.zoomManager, (z) => z.reset());
-        set(Atom.isOpenSideMenu, false);
-    },
-);
-
-const Thumbnail = (props: {
-    blob?: Blob;
-    index: number;
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
+const Thumbnail = (props: { blob?: Blob; index: number }): JSX.Element => {
     const image = useRef<HTMLImageElement | null>(null);
     const moveToIndexPage = useSetAtom(moveToIndexPageAtom);
 
@@ -108,11 +90,7 @@ const Thumbnail = (props: {
             className="m-auto max-h-50 max-w-50"
             ref={image}
             onClick={() => {
-                moveToIndexPage(
-                    props.index,
-                    props.body.current,
-                    props.content.current,
-                );
+                moveToIndexPage(props.index);
             }}
         />
     );

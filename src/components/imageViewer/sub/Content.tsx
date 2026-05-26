@@ -1,185 +1,200 @@
-import { atom, useAtomValue, useSetAtom } from "jotai";
-import React, { useEffect, useRef, type CSSProperties, type JSX } from "react";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useEffect, type CSSProperties, type JSX, type RefObject } from "react";
 import { AppStateAtom, Atom } from "../../../atoms";
 import type { ContentFit } from "../../../models/appState";
-import type { ViewerBody, ViewerContent } from "../../../models/types";
-import { Viewer } from "../../../models/viewer";
-import type { ZoomManager } from "../../../models/zoomManager";
+import type {
+    ViewerBody,
+    ViewerCanvas,
+    ViewerManager,
+} from "../../../models/viewerManager";
+import { ZoomManager } from "../../../models/zoomManager";
 
-const applyScrollAtom = atom(null, (get, _, viewer: Viewer) => {
-    get(Atom.scrollManager).applyScroll(viewer);
+const applyScrollAtom = atom(null, (get) => {
+    get(Atom.scrollManager).applyScroll(get(Atom.viewerManager));
 });
 
 export const Content = ({
     body,
-    content,
+    canvas,
 }: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
+    body: RefObject<ViewerBody>;
+    canvas: RefObject<ViewerCanvas>;
 }): JSX.Element => {
-    const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
-    const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
     const sharpeningFilter = useAtomValue(Atom.sharpeningFilter);
     const filterStrength = useAtomValue(AppStateAtom.sharpeningFilterStrength);
     const onSharpeningFilter = useAtomValue(AppStateAtom.onSharpeningFilter);
+    const onInvertFilter = useAtomValue(Atom.onInvertFilter);
+    const viewerManager = useAtomValue(Atom.viewerManager);
+    const zoomManager = useAtomValue(Atom.zoomManager);
     const applyScroll = useSetAtom(applyScrollAtom);
+    const contentFit = useAtomValue(AppStateAtom.contentFit);
 
     useEffect(() => {
-        if (content.current == null) return;
+        if (canvas.current == null) return;
 
         if (!sharpeningFilter.hasSVG()) {
             sharpeningFilter.addSVG();
             sharpeningFilter.setStrength(filterStrength);
         }
         if (onSharpeningFilter) {
-            sharpeningFilter.applyFilter(content.current);
+            sharpeningFilter.applyFilter(canvas.current);
         } else {
-            sharpeningFilter.clearFilter(content.current);
+            sharpeningFilter.clearFilter(canvas.current);
         }
-    }, [content, filterStrength, onSharpeningFilter, sharpeningFilter]);
+    }, [canvas, filterStrength, onSharpeningFilter, sharpeningFilter]);
 
     useEffect(() => {
-        if (content.current == null) return;
+        if (body.current == null) return;
 
         const observer = new MutationObserver(() => {
-            // <LeftImage>と<RightImage>が拡大・縮小されるとスクロールする
-            applyScroll(Viewer.create(body.current, content.current));
+            // 拡大・縮小されるとスクロールする
+            applyScroll();
         });
-        observer.observe(content.current, { attributes: true, subtree: true });
+        observer.observe(body.current, { attributes: true, subtree: true });
         return (): void => observer.disconnect();
-    }, [applyScroll, content, body]);
+    }, [applyScroll, canvas, body]);
 
     return (
-        <div className="m-auto">
-            <div
-                className={`relative grid size-max items-start ${leftBlob != null && rightBlob != null && "grid-cols-2"}`}
-                style={{
-                    paddingLeft: "env(safe-area-inset-left)",
-                    paddingRight: "env(safe-area-inset-right)",
-                }}
-                ref={content}
-            >
-                <LeftImage body={body} content={content} />
-                <RightImage body={body} content={content} />
-                <div className="absolute inset-0" />
-            </div>
+        <div
+            className={`flex ${onInvertFilter ? "invert" : ""}`}
+            style={contentStyle(zoomManager, contentFit, viewerManager)}
+        >
+            <CanvasView canvas={canvas} />
         </div>
     );
 };
 
-/* -------------------------------------------------------------------------- */
-
-const setupAtom = atom(null, (get, set, viewer: Viewer) => {
-    const scroll = get(Atom.scrollManager);
-    scroll.applyScroll(viewer);
-    if (viewer.content == null) return;
-
-    const width = viewer.content.clientWidth;
-    const height = viewer.content.clientHeight;
-    set(Atom.zoomManager, (z) => z.setContentSize({ width, height }));
-});
-
-const LeftImage = ({
-    body,
-    content,
-}: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
-    const image = useRef<HTMLImageElement | null>(null);
-    const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
-    const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
-    const onInvertFilter = useAtomValue(Atom.onInvertFilter);
-    const contentFit = useAtomValue(AppStateAtom.contentFit);
-    const zoomManager = useAtomValue(Atom.zoomManager);
-    const viewer = Viewer.create(body.current, content.current);
-    const setup = useSetAtom(setupAtom);
-
-    useEffect(() => {
-        if (image.current == null || leftBlob == null) return;
-
-        const imageURL = URL.createObjectURL(leftBlob);
-        image.current.src = imageURL;
-        return (): void => URL.revokeObjectURL(imageURL);
-    }, [leftBlob, image]);
-
-    if (leftBlob == null) return <></>;
-    return (
-        <img
-            className={`size-auto justify-self-end object-contain ${onInvertFilter && "invert"}`}
-            style={imageStyle(contentFit, zoomManager, rightBlob, viewer)}
-            ref={image}
-            onLoad={() => setup(Viewer.create(body.current, content.current))}
-        />
-    );
-};
-
-const RightImage = ({
-    body,
-    content,
-}: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
-    const image = useRef<HTMLImageElement | null>(null);
-    const leftBlob = useAtomValue(Atom.imageBlobManager).currentLeft.blob;
-    const rightBlob = useAtomValue(Atom.imageBlobManager).currentRight.blob;
-    const onInvertFilter = useAtomValue(Atom.onInvertFilter);
-    const contentFit = useAtomValue(AppStateAtom.contentFit);
-    const zoomManager = useAtomValue(Atom.zoomManager);
-    const viewer = Viewer.create(body.current, content.current);
-    const setup = useSetAtom(setupAtom);
-
-    useEffect(() => {
-        if (image.current == null || rightBlob == null) return;
-
-        const imageURL = URL.createObjectURL(rightBlob);
-        image.current.src = imageURL;
-        return (): void => URL.revokeObjectURL(imageURL);
-    }, [rightBlob]);
-
-    if (rightBlob == null) return <></>;
-    return (
-        <img
-            className={`size-auto object-contain ${onInvertFilter && "invert"}`}
-            style={imageStyle(contentFit, zoomManager, leftBlob, viewer)}
-            ref={image}
-            onLoad={() => setup(Viewer.create(body.current, content.current))}
-        />
-    );
-};
-
-const imageStyle = (
-    contentFit: ContentFit,
+const contentStyle = (
     zoomManager: ZoomManager,
-    otherBlob: Blob | undefined,
-    viewer: Viewer,
+    contentFit: ContentFit,
+    viewerManager: ViewerManager,
 ): CSSProperties => {
-    const scale = zoomManager.scale;
-    let paddingLeft =
-        viewer.content != null
-            ? parseInt(getComputedStyle(viewer.content).paddingLeft)
-            : 0;
-    paddingLeft = Number.isInteger(paddingLeft) ? paddingLeft : 0;
-    let paddingRight =
-        viewer.content != null
-            ? parseInt(getComputedStyle(viewer.content).paddingRight)
-            : 0;
-    paddingRight = Number.isInteger(paddingRight) ? paddingRight : 0;
-    const padding = (Math.max(paddingLeft, paddingRight) * scale) / 100;
-    const maxWidth =
-        otherBlob == null
-            ? `calc(${scale}dvw - ${padding}px)`
-            : `calc(${scale / 2}dvw - ${padding / 2}px)`;
-    const maxHeight = `${scale}dvh`;
+    const scale = `${zoomManager.scale}%`;
+    if (viewerManager.isCanvasWiderThanViewer() == null) {
+        return { width: "100%", height: "100%" };
+    }
     switch (contentFit) {
         case "all":
-            return { maxWidth, maxHeight, WebkitTouchCallout: "none" };
+            return {
+                width: viewerManager.isCanvasWiderThanViewer() ? scale : "100%",
+                height: viewerManager.isCanvasWiderThanViewer()
+                    ? "100%"
+                    : scale,
+            };
         case "fill":
-            if (viewer.isHorizontalFit()) {
-                return { maxHeight, WebkitTouchCallout: "none" };
-            } else {
-                return { maxWidth, WebkitTouchCallout: "none" };
-            }
+            return {
+                width: viewerManager.isCanvasWiderThanViewer() ? "100%" : scale,
+                height: viewerManager.isCanvasWiderThanViewer()
+                    ? scale
+                    : "100%",
+            };
+    }
+};
+
+/* -------------------------------------------------------------------------- */
+
+const CanvasView = ({
+    canvas,
+}: {
+    canvas: RefObject<ViewerCanvas>;
+}): JSX.Element => {
+    const imageBlobManager = useAtomValue(Atom.imageBlobManager);
+    const [viewerManager, setViewerManager] = useAtom(Atom.viewerManager);
+    const contentFit = useAtomValue(AppStateAtom.contentFit);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        (async (): Promise<void> => {
+            const [img1, img2] = await Promise.all([
+                loadImage(imageBlobManager.currentLeft.blob),
+                loadImage(imageBlobManager.currentRight.blob),
+            ]);
+            if (!isMounted) return;
+
+            if (canvas.current == null) return;
+
+            const ctx = canvas.current.getContext("2d");
+            if (ctx == null) return;
+
+            canvas.current.width = (img1?.width ?? 0) + (img2?.width ?? 0);
+            canvas.current.height = Math.max(
+                img1?.height ?? 0,
+                img2?.height ?? 0,
+            );
+
+            if (img1 != null) ctx.drawImage(img1, 0, 0);
+            if (img2 != null) ctx.drawImage(img2, img1?.width ?? 0, 0);
+
+            setViewerManager((v) => v.setCanvas(canvas.current));
+        })();
+        return (): void => {
+            isMounted = false;
+        };
+    }, [canvas, imageBlobManager, setViewerManager]);
+
+    return (
+        <canvas
+            className="m-auto"
+            style={{
+                paddingLeft: "env(safe-area-inset-left)",
+                paddingRight: "env(safe-area-inset-right)",
+                ...canvasStyle(contentFit, viewerManager),
+            }}
+            ref={canvas}
+        />
+    );
+};
+
+const loadImage = async (
+    blob?: Blob,
+): Promise<HTMLImageElement | undefined> => {
+    return new Promise((resolve) => {
+        if (blob == null) {
+            resolve(undefined);
+            return;
+        }
+
+        const img = new Image();
+        img.onload = (): void => {
+            URL.revokeObjectURL(url);
+            resolve(img);
+        };
+        img.onerror = (): void => {
+            URL.revokeObjectURL(url);
+            resolve(undefined);
+        };
+
+        const url = URL.createObjectURL(blob);
+        img.src = url;
+    });
+};
+
+const canvasStyle = (
+    contentFit: ContentFit,
+    viewerManager: ViewerManager,
+): CSSProperties => {
+    if (viewerManager.isCanvasWiderThanViewer() == null) {
+        return { width: "100%", height: "100%", objectFit: "contain" };
+    }
+    switch (contentFit) {
+        case "all":
+            return {
+                width: viewerManager.isCanvasWiderThanViewer()
+                    ? "100%"
+                    : "auto",
+                height: viewerManager.isCanvasWiderThanViewer()
+                    ? "auto"
+                    : "100%",
+            };
+        case "fill":
+            return {
+                width: viewerManager.isCanvasWiderThanViewer()
+                    ? "auto"
+                    : "100%",
+                height: viewerManager.isCanvasWiderThanViewer()
+                    ? "100%"
+                    : "auto",
+            };
     }
 };

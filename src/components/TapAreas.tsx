@@ -3,106 +3,94 @@ import React, { useEffect, useRef, useState, type JSX } from "react";
 import { ActionAtom, AppStateAtom, Atom } from "../atoms";
 import { TapAreaLengthEnum } from "../models/appState";
 import { SmoothScroll } from "../models/smoothScroll";
-import type { ViewerBody, ViewerContent } from "../models/types";
-import { Viewer } from "../models/viewer";
 
-const handleLeftEdgeClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    set(ActionAtom.updateScrollManager, viewer);
+const handleLeftEdgeClickAtom = atom(null, (get, set) => {
+    set(ActionAtom.updateScrollManager);
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(ActionAtom.goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom);
     } else if (writingType === "vertical") {
-        set(ActionAtom.goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom);
     } else if (writingType === "horizontal") {
-        set(ActionAtom.goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom);
     }
 });
 
-const handleLeftEdgeSubClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    set(ActionAtom.updateScrollManager, viewer);
+const handleLeftEdgeSubClickAtom = atom(null, (get, set) => {
+    set(ActionAtom.updateScrollManager);
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(ActionAtom.goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom);
     } else if (writingType === "vertical") {
-        set(ActionAtom.goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom);
     } else if (writingType === "horizontal") {
-        set(ActionAtom.goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom);
     }
 });
 
-const handleRightEdgeClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    set(ActionAtom.updateScrollManager, viewer);
+const handleRightEdgeClickAtom = atom(null, (get, set) => {
+    set(ActionAtom.updateScrollManager);
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(ActionAtom.goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom);
     } else if (writingType === "vertical") {
-        set(ActionAtom.goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom);
     } else if (writingType === "horizontal") {
-        set(ActionAtom.goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom);
     }
 });
 
-const handleRightEdgeSubClickAtom = atom(null, (get, set, viewer: Viewer) => {
-    set(ActionAtom.updateScrollManager, viewer);
+const handleRightEdgeSubClickAtom = atom(null, (get, set) => {
+    set(ActionAtom.updateScrollManager);
     const { shouldAdvance, writingType } = get(Atom.appStore);
     if (shouldAdvance) {
-        set(ActionAtom.goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom);
     } else if (writingType === "vertical") {
-        set(ActionAtom.goToNextAtom, viewer);
+        set(ActionAtom.goToNextAtom);
     } else if (writingType === "horizontal") {
-        set(ActionAtom.goToPreviousAtom, viewer);
+        set(ActionAtom.goToPreviousAtom);
     }
 });
 
-const handleBottomClickAtom = atom(null, (_, set, viewer: Viewer) => {
-    set(ActionAtom.updateScrollManager, viewer);
-    set(ActionAtom.goToNextAtom, viewer);
+const handleBottomClickAtom = atom(null, (_, set) => {
+    set(ActionAtom.updateScrollManager);
+    set(ActionAtom.goToNextAtom);
 });
 
-const handleBottomSubClickAtom = atom(null, (_, set, viewer: Viewer) => {
-    set(ActionAtom.updateScrollManager, viewer);
-    set(ActionAtom.goToPreviousAtom, viewer);
+const handleBottomSubClickAtom = atom(null, (_, set) => {
+    set(ActionAtom.updateScrollManager);
+    set(ActionAtom.goToPreviousAtom);
 });
 
 /* -------------------------------------------------------------------------- */
 
 type Delta = { x: number; y: number };
 
-const handleHorizontalScrollAtom = atom(
-    null,
-    (get, set, delta: Delta, body: ViewerBody) => {
-        if (body == null) return;
+const handleHorizontalScrollAtom = atom(null, (get, set, delta: Delta) => {
+    const body = get(Atom.viewerManager).body;
+    if (body == null) return;
 
-        const { scrollSpeed } = get(Atom.appStore);
-        const x = scrollSpeed * delta.x + body.scrollLeft;
-        const y = body.scrollTop;
-        body.scroll(x, y);
-        set(Atom.isUserScrolled, true);
-    },
-);
+    const { scrollSpeed } = get(Atom.appStore);
+    const x = scrollSpeed * delta.x + body.scrollLeft;
+    const y = body.scrollTop;
+    body.scroll(x, y);
+    set(Atom.isUserScrolled, true);
+});
 
-const handleVerticalScrollAtom = atom(
-    null,
-    (get, set, delta: Delta, body: ViewerBody) => {
-        if (body == null) return;
+const handleVerticalScrollAtom = atom(null, (get, set, delta: Delta) => {
+    const body = get(Atom.viewerManager).body;
+    if (body == null) return;
 
-        const { scrollSpeed } = get(Atom.appStore);
-        const x = body.scrollLeft;
-        const y = scrollSpeed * delta.y + body.scrollTop;
-        body.scroll(x, y);
-        set(Atom.isUserScrolled, true);
-    },
-);
+    const { scrollSpeed } = get(Atom.appStore);
+    const x = body.scrollLeft;
+    const y = scrollSpeed * delta.y + body.scrollTop;
+    body.scroll(x, y);
+    set(Atom.isUserScrolled, true);
+});
 
 /* -------------------------------------------------------------------------- */
 
-export const TapAreas = ({
-    body,
-    content,
-}: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
+export const TapAreas = (): JSX.Element => {
     const tapAreaWidth = useAtomValue(AppStateAtom.tapAreaWidth);
     const tapAreaHeight = useAtomValue(AppStateAtom.tapAreaHeight);
     const handleLeftEdgeClick = useSetAtom(handleLeftEdgeClickAtom);
@@ -119,51 +107,23 @@ export const TapAreas = ({
             <TapArea
                 className="inset-x-0 bottom-0"
                 style={{ height: TapAreaLengthEnum[tapAreaHeight].length }}
-                onClick={() =>
-                    handleBottomClick(
-                        Viewer.create(body.current, content.current),
-                    )
-                }
-                onSubClick={() =>
-                    handleBottomSubClick(
-                        Viewer.create(body.current, content.current),
-                    )
-                }
-                onScroll={(delta) => horizontalScroll(delta, body.current)}
+                onClick={() => handleBottomClick()}
+                onSubClick={() => handleBottomSubClick()}
+                onScroll={(delta) => horizontalScroll(delta)}
             />
             <TapArea
                 className="inset-y-0 left-0"
                 style={{ width: TapAreaLengthEnum[tapAreaWidth].length }}
-                onClick={() =>
-                    handleLeftEdgeClick(
-                        Viewer.create(body.current, content.current),
-                    )
-                }
-                onSubClick={() =>
-                    handleLeftEdgeSubClick(
-                        Viewer.create(body.current, content.current),
-                    )
-                }
-                onScroll={(delta) =>
-                    handleHorizontalScroll(delta, body.current)
-                }
+                onClick={() => handleLeftEdgeClick()}
+                onSubClick={() => handleLeftEdgeSubClick()}
+                onScroll={(delta) => handleHorizontalScroll(delta)}
             />
             <TapArea
                 className="inset-y-0 right-0"
                 style={{ width: TapAreaLengthEnum[tapAreaWidth].length }}
-                onClick={() =>
-                    handleRightEdgeClick(
-                        Viewer.create(body.current, content.current),
-                    )
-                }
-                onSubClick={() =>
-                    handleRightEdgeSubClick(
-                        Viewer.create(body.current, content.current),
-                    )
-                }
-                onScroll={(delta) =>
-                    handleHorizontalScroll(delta, body.current)
-                }
+                onClick={() => handleRightEdgeClick()}
+                onSubClick={() => handleRightEdgeSubClick()}
+                onScroll={(delta) => handleHorizontalScroll(delta)}
             />
         </>
     );

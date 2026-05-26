@@ -1,7 +1,6 @@
 import { useAtom } from "jotai";
 import { type JSX } from "react";
 import { Atom } from "../../atoms";
-import type { ViewerBody, ViewerContent } from "../../models/types";
 import { Card } from "../common/Card";
 import { SideMenuDialog } from "../common/SideMenuDialog";
 import { CloseButton } from "./sub/CloseButton";
@@ -20,10 +19,7 @@ import { ViewSplitCountSegmentGroup } from "./sub/ViewSplitCountSegmentGroup";
 import { WritingTypeSegmentGroup } from "./sub/WritingTypeSegmentGroup";
 import { ZoomStepSlider } from "./sub/ZoomStepSlider";
 
-export const SideMenu = (props: {
-    body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
-}): JSX.Element => {
+export const SideMenu = (): JSX.Element => {
     const [isOpenSideMenu, setIsOpenSideMenu] = useAtom(Atom.isOpenSideMenu);
 
     return (
@@ -40,7 +36,7 @@ export const SideMenu = (props: {
                 style={{ marginLeft: "env(safe-area-inset-left)" }}
             >
                 <CloseButton />
-                <SelectPageSlider {...props} />
+                <SelectPageSlider />
                 <Card>
                     <WritingTypeSegmentGroup />
                     <ContentFitSegmentGroup />
@@ -74,7 +70,7 @@ export const SideMenu = (props: {
                 </Card>
 
                 <Card>
-                    <OnSharpeningFilterSwitch {...props} />
+                    <OnSharpeningFilterSwitch />
                     <SharpeningFilterStrengthSlider />
                 </Card>
                 <Card footer="全画面への切り替えはiPhone以外で使用できます">

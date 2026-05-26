@@ -12,20 +12,20 @@ import { Home } from "./components/home/Home";
 import { ImageViewer } from "./components/imageViewer/ImageViewer";
 import { SideMenu } from "./components/sideMenu/SideMenu";
 import { MenuButton } from "./components/sideMenu/sub/MenuButton";
-import type { ViewerBody, ViewerContent } from "./models/types";
+import type { ViewerBody, ViewerCanvas } from "./models/viewerManager";
 
 const pl = { paddingLeft: "env(safe-area-inset-left)" };
 const pr = { paddingRight: "env(safe-area-inset-right)" };
 
 export const App = (): JSX.Element => {
     const body = useRef<ViewerBody>(null);
-    const content = useRef<ViewerContent>(null);
+    const canvas = useRef<ViewerCanvas>(null);
     const shouldShowViewer = useAtomValue(Atom.shouldShowViewer);
 
     if (shouldShowViewer) {
         return (
             <div id="viewer" style={{ scrollbarWidth: "none" }}>
-                <ImageViewer body={body} content={content} />
+                <ImageViewer body={body} canvas={canvas} />
                 <Notification />
                 <div className="fixed inset-y-0 left-4" style={{ ...pl }}>
                     <ChevronLeft />
@@ -33,14 +33,14 @@ export const App = (): JSX.Element => {
                 <div className="fixed inset-y-0 right-4" style={{ ...pr }}>
                     <ChevronRight />
                 </div>
-                <TapAreas body={body} content={content} />
-                <SideMenu body={body} content={content} />
+                <TapAreas />
+                <SideMenu />
                 <div
                     className="fixed top-4 left-4 flex gap-4"
                     style={{ ...pl }}
                 >
                     <MenuButton />
-                    <InvertFilterButton body={body} content={content} />
+                    <InvertFilterButton />
                     <FullscreenButton />
                 </div>
                 <div className="fixed top-4 right-4" style={{ ...pr }}>

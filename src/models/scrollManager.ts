@@ -1,5 +1,5 @@
 import type { ViewSplitCount, WritingType } from "./appState";
-import type { Viewer } from "./viewer";
+import { ViewerManager } from "./viewerManager";
 
 const MIN = 0;
 const CENTER = 50;
@@ -35,10 +35,10 @@ export class ScrollManager {
         }
     };
 
-    readonly update = (viewer: Viewer): ScrollManager => {
+    readonly update = (viewerManager: ViewerManager): ScrollManager => {
         return new ScrollManager(
-            viewer.positionX() ?? this.x,
-            viewer.positionY() ?? this.y,
+            viewerManager.positionX() ?? this.x,
+            viewerManager.positionY() ?? this.y,
         );
     };
 
@@ -46,22 +46,22 @@ export class ScrollManager {
         return new ScrollManager(this.x + x, this.y + y);
     };
 
-    readonly applyScroll = (viewer: Viewer): void => {
-        const x = (viewer.spaceWidth() * this.x) / 100;
-        const y = (viewer.spaceHeight() * this.y) / 100;
-        viewer.body?.scroll(x, y);
+    readonly applyScroll = (viewerManager: ViewerManager): void => {
+        const x = (viewerManager.spaceWidth() * this.x) / 100;
+        const y = (viewerManager.spaceHeight() * this.y) / 100;
+        viewerManager.scroll(x, y);
     };
 
     readonly next = ({
         writingType,
         viewSplitCount,
-        viewer,
+        viewerManager,
     }: {
         writingType: WritingType;
         viewSplitCount: ViewSplitCount;
-        viewer: Viewer;
+        viewerManager: ViewerManager;
     }): ScrollManager => {
-        const h = viewer.spaceHeight();
+        const h = viewerManager.spaceHeight();
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
         let x: number | undefined = undefined;
@@ -80,13 +80,13 @@ export class ScrollManager {
     readonly previous = ({
         writingType,
         viewSplitCount,
-        viewer,
+        viewerManager,
     }: {
         writingType: WritingType;
         viewSplitCount: ViewSplitCount;
-        viewer: Viewer;
+        viewerManager: ViewerManager;
     }): ScrollManager => {
-        const h = viewer.spaceHeight();
+        const h = viewerManager.spaceHeight();
         const vOrigin = this.getVerticalOrigin();
         const hOrigin = this.getHorizontalOrigin();
         let x: number | undefined = undefined;
@@ -104,13 +104,13 @@ export class ScrollManager {
 
     readonly shouldMoveToNextPage = ({
         writingType,
-        viewer,
+        viewerManager,
     }: {
         writingType: WritingType;
-        viewer: Viewer;
+        viewerManager: ViewerManager;
     }): boolean => {
-        const notSpaceWidth = viewer.spaceWidth() <= 0;
-        const notSpaceHeight = viewer.spaceHeight() <= 0;
+        const notSpaceWidth = viewerManager.spaceWidth() <= 0;
+        const notSpaceHeight = viewerManager.spaceHeight() <= 0;
         const result1 = notSpaceWidth
             ? true
             : this.getHorizontalOrigin().isEnd(writingType);
@@ -122,13 +122,13 @@ export class ScrollManager {
 
     readonly shouldMoveToPreviousPage = ({
         writingType,
-        viewer,
+        viewerManager,
     }: {
         writingType: WritingType;
-        viewer: Viewer;
+        viewerManager: ViewerManager;
     }): boolean => {
-        const notSpaceWidth = viewer.spaceWidth() <= 0;
-        const notSpaceHeight = viewer.spaceHeight() <= 0;
+        const notSpaceWidth = viewerManager.spaceWidth() <= 0;
+        const notSpaceHeight = viewerManager.spaceHeight() <= 0;
         const result1 = notSpaceWidth
             ? true
             : this.getHorizontalOrigin().isStart(writingType);

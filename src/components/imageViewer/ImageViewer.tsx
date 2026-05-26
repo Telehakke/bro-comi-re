@@ -3,78 +3,74 @@ import React, { useEffect, useRef, type JSX } from "react";
 import { ActionAtom, Atom } from "../../atoms";
 import { behaveGamepad } from "../../models/behaveGamepad";
 import { behaveKeyDown } from "../../models/behaveKeyDown";
-import type { ViewerBody, ViewerContent } from "../../models/types";
-import { Viewer } from "../../models/viewer";
+import type { ViewerBody, ViewerCanvas } from "../../models/viewerManager";
 import { BodyView } from "./sub/BodyView";
 import { Content } from "./sub/Content";
 
-const goToLeftAtom = atom(null, (get, set, viewer: Viewer) => {
+const goToLeftAtom = atom(null, (get, set) => {
     if (get(Atom.isOpenSideMenu)) return;
 
     if (get(Atom.isUserScrolled)) {
         set(Atom.isUserScrolled, false);
-        set(Atom.scrollManager, (s) => s.update(viewer));
+        set(Atom.scrollManager, (s) => s.update(get(Atom.viewerManager)));
     }
 
     const { writingType } = get(Atom.appStore);
     switch (writingType) {
         case "vertical":
-            set(ActionAtom.goToNextAtom, viewer);
+            set(ActionAtom.goToNextAtom);
             break;
         case "horizontal":
-            set(ActionAtom.goToPreviousAtom, viewer);
+            set(ActionAtom.goToPreviousAtom);
             break;
     }
 });
 
-const goToRightAtom = atom(null, (get, set, viewer: Viewer) => {
+const goToRightAtom = atom(null, (get, set) => {
     if (get(Atom.isOpenSideMenu)) return;
 
     if (get(Atom.isUserScrolled)) {
         set(Atom.isUserScrolled, false);
-        set(Atom.scrollManager, (s) => s.update(viewer));
+        set(Atom.scrollManager, (s) => s.update(get(Atom.viewerManager)));
     }
 
     const { writingType } = get(Atom.appStore);
     switch (writingType) {
         case "vertical":
-            set(ActionAtom.goToPreviousAtom, viewer);
+            set(ActionAtom.goToPreviousAtom);
             break;
         case "horizontal":
-            set(ActionAtom.goToNextAtom, viewer);
+            set(ActionAtom.goToNextAtom);
             break;
     }
 });
 
-const zoomInAtom = atom(null, (get, set, viewer: Viewer) => {
+const zoomInAtom = atom(null, (get, set) => {
     if (get(Atom.isOpenSideMenu)) return;
 
-    set(Atom.scrollManager, (s) => s.update(viewer));
+    set(Atom.scrollManager, (s) => s.update(get(Atom.viewerManager)));
     const { zoomStep } = get(Atom.appStore);
     const zoom = get(Atom.zoomManager).zoomIn(zoomStep);
     set(Atom.zoomManager, zoom);
     set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
-const zoomOutAtom = atom(null, (get, set, viewer: Viewer) => {
+const zoomOutAtom = atom(null, (get, set) => {
     if (get(Atom.isOpenSideMenu)) return;
 
-    set(Atom.scrollManager, (s) => s.update(viewer));
+    set(Atom.scrollManager, (s) => s.update(get(Atom.viewerManager)));
     const { zoomStep } = get(Atom.appStore);
     const zoom = get(Atom.zoomManager).zoomOut(zoomStep);
     set(Atom.zoomManager, zoom);
     set(Atom.messageManager, (m) => m.setMessage(`${zoom.scale}%`));
 });
 
-const scrollAtom = atom(
-    null,
-    (get, set, x: number, y: number, viewer: Viewer) => {
-        const scroll = get(Atom.scrollManager).add(x, y);
-        scroll.applyScroll(viewer);
-        set(Atom.scrollManager, scroll);
-        set(Atom.isUserScrolled, true);
-    },
-);
+const scrollAtom = atom(null, (get, set, x: number, y: number) => {
+    const scroll = get(Atom.scrollManager).add(x, y);
+    scroll.applyScroll(get(Atom.viewerManager));
+    set(Atom.scrollManager, scroll);
+    set(Atom.isUserScrolled, true);
+});
 
 const moveToLeftPageAtom = atom(null, (get, set) => {
     const { writingType } = get(Atom.appStore);
@@ -113,16 +109,16 @@ const moveToRightPageAtom = atom(null, (get, set) => {
 
 export const ImageViewer = ({
     body,
-    content,
+    canvas,
 }: {
     body: React.RefObject<ViewerBody>;
-    content: React.RefObject<ViewerContent>;
+    canvas: React.RefObject<ViewerCanvas>;
 }): JSX.Element => {
     const timerId = useRef<number | undefined>(undefined);
     const goToLeft = useSetAtom(goToLeftAtom);
     const goToRight = useSetAtom(goToRightAtom);
-    const setZoomManager = useSetAtom(Atom.zoomManager);
     const setShouldShowInfo = useSetAtom(Atom.shouldShowInfo);
+    const setViewerManager = useSetAtom(Atom.viewerManager);
     const zoomIn = useSetAtom(zoomInAtom);
     const zoomOut = useSetAtom(zoomOutAtom);
     const scroll = useSetAtom(scrollAtom);
@@ -131,25 +127,23 @@ export const ImageViewer = ({
 
     useEffect(() => {
         const handleKeyDown = (ev: KeyboardEvent): void => {
-            const viewer = Viewer.create(body.current, content.current);
             behaveKeyDown({
                 ev,
-                goToLeft: () => goToLeft(viewer),
-                goToRight: () => goToRight(viewer),
-                zoomIn: () => zoomIn(viewer),
-                zoomOut: () => zoomOut(viewer),
+                goToLeft: () => goToLeft(),
+                goToRight: () => goToRight(),
+                zoomIn: () => zoomIn(),
+                zoomOut: () => zoomOut(),
             });
         };
         document.body.addEventListener("keydown", handleKeyDown);
 
         const gamepadLoop = (): void => {
-            const viewer = Viewer.create(body.current, content.current);
             behaveGamepad({
-                goToLeft: () => goToLeft(viewer),
-                goToRight: () => goToRight(viewer),
-                zoomIn: () => zoomIn(viewer),
-                zoomOut: () => zoomOut(viewer),
-                scroll: (x, y) => scroll(x, y, viewer),
+                goToLeft: () => goToLeft(),
+                goToRight: () => goToRight(),
+                zoomIn: () => zoomIn(),
+                zoomOut: () => zoomOut(),
+                scroll: (x, y) => scroll(x, y),
             });
             requestAnimationFrame(gamepadLoop);
         };
@@ -158,15 +152,12 @@ export const ImageViewer = ({
             document.body.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("gamepadconnected", gamepadLoop);
         };
-    }, [body, content, goToLeft, goToRight, scroll, zoomIn, zoomOut]);
+    }, [goToLeft, goToRight, scroll, zoomIn, zoomOut]);
 
     return (
         <BodyView
             body={body}
-            content={content}
-            onResize={(width, height) =>
-                setZoomManager((z) => z.setBodySize({ width, height }))
-            }
+            onResize={() => setViewerManager((v) => v.setBody(body.current))}
             onClick={() => {
                 window.clearTimeout(timerId.current);
                 timerId.current = window.setTimeout(() => {
@@ -175,18 +166,14 @@ export const ImageViewer = ({
             }}
             onDoubleClick={() => {
                 window.clearTimeout(timerId.current);
-                zoomIn(Viewer.create(body.current, content.current));
+                zoomIn();
             }}
-            onRightClick={() =>
-                zoomOut(Viewer.create(body.current, content.current))
-            }
-            onLongPress={() =>
-                zoomOut(Viewer.create(body.current, content.current))
-            }
+            onRightClick={() => zoomOut()}
+            onLongPress={() => zoomOut()}
             onLeftSidePull={() => moveToLeftPage()}
             onRightSidePull={() => moveToRightPage()}
         >
-            <Content body={body} content={content} />
+            <Content body={body} canvas={canvas} />
         </BodyView>
     );
 };
