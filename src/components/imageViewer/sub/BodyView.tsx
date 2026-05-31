@@ -30,7 +30,6 @@ export const BodyView = ({
     const canClick = useRef(true);
     const canDoubleClick = useRef(true);
     const canRightClick = useRef(true);
-    const canLongPress = useRef(true);
     const setOnChevron = useSetAtom(Atom.onChevron);
     const setIsUserScrolled = useSetAtom(Atom.isUserScrolled);
     const viewerManager = useAtomValue(Atom.viewerManager);
@@ -76,10 +75,6 @@ export const BodyView = ({
             }}
             onTouchStart={(ev) => {
                 timerId.current = window.setTimeout(() => {
-                    if (!canLongPress.current) {
-                        canLongPress.current = true;
-                        return;
-                    }
                     onSubClick();
                     canClick.current = false;
                     canDoubleClick.current = false;
@@ -90,6 +85,9 @@ export const BodyView = ({
                 beginPosition.current = { x, y };
                 prevX.current = x;
                 pullManager.current = new PullManager();
+                canClick.current = true;
+                canDoubleClick.current = true;
+                canRightClick.current = true;
             }}
             onTouchMove={(ev) => {
                 setIsUserScrolled(true);
