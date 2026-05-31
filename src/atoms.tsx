@@ -4,7 +4,7 @@ import { appStore } from "./models/appStore";
 import { FileManager } from "./models/fileManager";
 import { HistoryManager } from "./models/historyManager";
 import { ImageBlobManager } from "./models/imageBlobManager";
-import { MessageManager } from "./models/messageManager";
+import { MessageManager, type Visibility } from "./models/messageManager";
 import { ScrollManager } from "./models/scrollManager";
 import { SharpeningFilter } from "./models/sharpeningFilter";
 import { ViewerManager } from "./models/viewerManager";
@@ -15,6 +15,7 @@ export const Atom = {
     fileManager: atom(new FileManager()),
     historyManager: atom(new HistoryManager()),
     imageBlobManager: atom(ImageBlobManager.forCurrent()),
+    infoState: atom<Visibility>("visible"),
     isOpenSideMenu: atom(false),
     isUserScrolled: atom(false),
     messageManager: atom(MessageManager.create()),
@@ -23,7 +24,6 @@ export const Atom = {
     onInvertFilter: atom(false),
     scrollManager: atom(new ScrollManager()),
     sharpeningFilter: atom(() => new SharpeningFilter()),
-    shouldShowInfo: atom(true),
     shouldShowViewer: atom(false),
     viewerManager: atom(new ViewerManager(null, null)),
     zipFileName: atom<string | undefined>(undefined),

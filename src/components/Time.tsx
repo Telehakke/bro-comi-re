@@ -1,27 +1,6 @@
-import { useAtomValue } from "jotai";
 import { useEffect, useState, type JSX } from "react";
-import { Atom } from "../atoms";
 
 export const Time = (): JSX.Element => {
-    const shouldShowInfo = useAtomValue(Atom.shouldShowInfo);
-
-    const className = {
-        _: "data-[visible=false]:opacity-0",
-        fadeInOut:
-            "data-[visible=true]:animate-fade-in data-[visible=false]:animate-fade-out",
-    };
-
-    return (
-        <div
-            className={Object.values(className).join(" ")}
-            data-visible={shouldShowInfo}
-        >
-            <Text />
-        </div>
-    );
-};
-
-const Text = (): JSX.Element => {
     const [text, setText] = useState("");
 
     useEffect(() => {

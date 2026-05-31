@@ -1,26 +1,13 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { EllipsisVertical } from "lucide-react";
 import type { JSX, ReactNode } from "react";
 import { Atom } from "../../../atoms";
 
 export const MenuButton = (): JSX.Element => {
-    const shouldShowInfo = useAtomValue(Atom.shouldShowInfo);
-
-    const className = {
-        _: "data-[visible=false]:opacity-0",
-        fadeInOut:
-            "data-[visible=true]:animate-fade-in data-[visible=false]:animate-fade-out",
-    };
-
     return (
-        <div
-            className={Object.values(className).join(" ")}
-            data-visible={shouldShowInfo}
-        >
-            <Button>
-                <Icon />
-            </Button>
-        </div>
+        <Button>
+            <Icon />
+        </Button>
     );
 };
 

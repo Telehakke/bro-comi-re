@@ -2,16 +2,12 @@ import { useAtomValue } from "jotai";
 import { useRef, type JSX } from "react";
 import { Atom } from "./atoms";
 import { ChevronLeft, ChevronRight } from "./components/ChevronIcons";
-import { FullscreenButton } from "./components/FullscreenButton";
-import { InvertFilterButton } from "./components/InvertFilterButton";
+import { Infos } from "./components/Infos";
 import { Notification } from "./components/Notification";
-import { Progress } from "./components/Progress";
 import { TapAreas } from "./components/TapAreas";
-import { Time } from "./components/Time";
 import { Home } from "./components/home/Home";
 import { ImageViewer } from "./components/imageViewer/ImageViewer";
 import { SideMenu } from "./components/sideMenu/SideMenu";
-import { MenuButton } from "./components/sideMenu/sub/MenuButton";
 import type { ViewerBody, ViewerCanvas } from "./models/viewerManager";
 
 const pl = { paddingLeft: "env(safe-area-inset-left)" };
@@ -35,23 +31,7 @@ export const App = (): JSX.Element => {
                 </div>
                 <TapAreas />
                 <SideMenu />
-                <div
-                    className="fixed top-4 left-4 flex gap-4"
-                    style={{ ...pl }}
-                >
-                    <MenuButton />
-                    <InvertFilterButton />
-                    <FullscreenButton />
-                </div>
-                <div className="fixed top-4 right-4" style={{ ...pr }}>
-                    <Time />
-                </div>
-                <div
-                    className="fixed inset-x-0 bottom-0"
-                    style={{ ...pl, ...pr }}
-                >
-                    <Progress />
-                </div>
+                <Infos {...pl} {...pr} />
             </div>
         );
     } else {

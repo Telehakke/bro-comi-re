@@ -59,7 +59,7 @@ export const Content = ({
             className={`flex ${onInvertFilter ? "invert" : ""}`}
             style={contentStyle(zoomManager, contentFit, viewerManager)}
         >
-            <CanvasView canvas={canvas} />
+            <CanvasView canvasRef={canvas} />
         </div>
     );
 };
@@ -94,9 +94,9 @@ const contentStyle = (
 /* -------------------------------------------------------------------------- */
 
 const CanvasView = ({
-    canvas,
+    canvasRef,
 }: {
-    canvas: RefObject<ViewerCanvas>;
+    canvasRef: RefObject<ViewerCanvas>;
 }): JSX.Element => {
     const imageBlobManager = useAtomValue(Atom.imageBlobManager);
     const [viewerManager, setViewerManager] = useAtom(Atom.viewerManager);
@@ -104,6 +104,10 @@ const CanvasView = ({
 
     useEffect(() => {
         let isMounted = true;
+        const canvas = canvasRef.current;
+        if (canvas == null) return;
+        const ctx = canvas.getContext("2d");
+        if (ctx == null) return;
 
         (async (): Promise<void> => {
             const [img1, img2] = await Promise.all([
@@ -112,26 +116,17 @@ const CanvasView = ({
             ]);
             if (!isMounted) return;
 
-            if (canvas.current == null) return;
-
-            const ctx = canvas.current.getContext("2d");
-            if (ctx == null) return;
-
-            canvas.current.width = (img1?.width ?? 0) + (img2?.width ?? 0);
-            canvas.current.height = Math.max(
-                img1?.height ?? 0,
-                img2?.height ?? 0,
-            );
-
+            canvas.width = (img1?.width ?? 0) + (img2?.width ?? 0);
+            canvas.height = Math.max(img1?.height ?? 0, img2?.height ?? 0);
             if (img1 != null) ctx.drawImage(img1, 0, 0);
             if (img2 != null) ctx.drawImage(img2, img1?.width ?? 0, 0);
-
-            setViewerManager((v) => v.setCanvas(canvas.current));
+            setViewerManager((v) => v.setCanvas(canvas));
         })();
         return (): void => {
             isMounted = false;
+            setViewerManager((v) => v.setCanvas(null));
         };
-    }, [canvas, imageBlobManager, setViewerManager]);
+    }, [canvasRef, imageBlobManager, setViewerManager]);
 
     return (
         <canvas
@@ -141,7 +136,7 @@ const CanvasView = ({
                 paddingRight: "env(safe-area-inset-right)",
                 ...canvasStyle(contentFit, viewerManager),
             }}
-            ref={canvas}
+            ref={canvasRef}
         />
     );
 };

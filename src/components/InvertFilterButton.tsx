@@ -7,24 +7,12 @@ export const InvertFilterButton = (): JSX.Element => {
     const shouldShowInvertButton = useAtomValue(
         AppStateAtom.shouldShowInvertButton,
     );
-    const shouldShowInfo = useAtomValue(Atom.shouldShowInfo);
-
-    const className = {
-        _: "data-[visible=false]:opacity-0",
-        fadeInOut:
-            "data-[visible=true]:animate-fade-in data-[visible=false]:animate-fade-out",
-    };
 
     if (!shouldShowInvertButton) return <></>;
     return (
-        <div
-            className={Object.values(className).join(" ")}
-            data-visible={shouldShowInfo}
-        >
-            <Button>
-                <Icon />
-            </Button>
-        </div>
+        <Button>
+            <Icon />
+        </Button>
     );
 };
 

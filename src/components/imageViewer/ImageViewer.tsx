@@ -117,7 +117,7 @@ export const ImageViewer = ({
     const timerId = useRef<number | undefined>(undefined);
     const goToLeft = useSetAtom(goToLeftAtom);
     const goToRight = useSetAtom(goToRightAtom);
-    const setShouldShowInfo = useSetAtom(Atom.shouldShowInfo);
+    const setShouldShowInfo = useSetAtom(Atom.infoState);
     const setViewerManager = useSetAtom(Atom.viewerManager);
     const zoomIn = useSetAtom(zoomInAtom);
     const zoomOut = useSetAtom(zoomOutAtom);
@@ -161,15 +161,17 @@ export const ImageViewer = ({
             onClick={() => {
                 window.clearTimeout(timerId.current);
                 timerId.current = window.setTimeout(() => {
-                    setShouldShowInfo((v) => !v);
+                    setShouldShowInfo((v) => {
+                        if (v === "visible") return "hidden";
+                        return "visible";
+                    });
                 }, 300);
             }}
             onDoubleClick={() => {
                 window.clearTimeout(timerId.current);
                 zoomIn();
             }}
-            onRightClick={() => zoomOut()}
-            onLongPress={() => zoomOut()}
+            onSubClick={() => zoomOut()}
             onLeftSidePull={() => moveToLeftPage()}
             onRightSidePull={() => moveToRightPage()}
         >

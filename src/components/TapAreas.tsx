@@ -138,7 +138,8 @@ const TapArea = (props: {
 }): JSX.Element => {
     const div = useRef<HTMLDivElement | null>(null);
     const timerId = useRef<number | undefined>(undefined);
-    const prevClient = useRef({ x: 0, y: 0 });
+    const beginPosition = useRef({ x: 0, y: 0 });
+    const prevPosition = useRef({ x: 0, y: 0 });
     const smoothScroll = useRef(new SmoothScroll());
     const canClick = useRef(true);
     const canRightClick = useRef(true);
@@ -150,23 +151,37 @@ const TapArea = (props: {
         if (el == null) return;
 
         const handleTouchMove = (ev: TouchEvent): void => {
+            // 背景要素にスクロールイベントが伝播するのを止める
             ev.preventDefault();
+
+            // Android端末ではスクロール操作時にCSSのactiveが解除されてしまうため、
+            // JavaScriptを用いて背景色の表示をコントロールする
             setIsActive(true);
-            window.clearTimeout(timerId.current);
-            const { clientX, clientY } = ev.changedTouches[0];
-            const diffX = prevClient.current.x - clientX;
-            const diffY = prevClient.current.y - clientY;
+
+            const x = ev.targetTouches[0].clientX;
+            const y = ev.targetTouches[0].clientY;
+
+            // ロングプレスの判定をされやすくする
+            const deltaX = Math.abs(beginPosition.current.x - x);
+            const deltaY = Math.abs(beginPosition.current.y - y);
+            if (Math.max(deltaX, deltaY) >= 20) {
+                window.clearInterval(timerId.current);
+            }
+
+            const diffX = prevPosition.current.x - x;
+            const diffY = prevPosition.current.y - y;
             smoothScroll.current.add(diffX, diffY);
             props.onScroll({
                 x: smoothScroll.current.averageX(),
                 y: smoothScroll.current.averageY(),
             });
-            prevClient.current = { x: clientX, y: clientY };
-            canClick.current = false;
+            prevPosition.current = { x, y };
         };
 
         const handleWheel = (ev: WheelEvent): void => {
+            // 背景要素にホイールイベントが伝播するのを止める
             ev.preventDefault();
+
             setIsActive(true);
             smoothScroll.current.add(ev.deltaX, ev.deltaY);
             props.onScroll({
@@ -192,27 +207,32 @@ const TapArea = (props: {
     const handleContextMenu = (
         ev: React.MouseEvent<HTMLDivElement, MouseEvent>,
     ): void => {
+        // ブラウザデフォルトのメニューを開かない
         ev.preventDefault();
-        window.clearTimeout(timerId.current);
-        if (!canRightClick.current) return;
+
+        if (!canRightClick.current) {
+            canRightClick.current = true;
+            return;
+        }
         props.onSubClick();
-        canLongPress.current = false;
     };
 
     const handleTouchStart = (ev: React.TouchEvent<HTMLDivElement>): void => {
         setIsActive(true);
         timerId.current = window.setTimeout(() => {
-            if (!canLongPress) return;
+            if (!canLongPress.current) {
+                canLongPress.current = true;
+                return;
+            }
             props.onSubClick();
             canClick.current = false;
             canRightClick.current = false;
         }, 500);
-        const { clientX, clientY } = ev.changedTouches[0];
-        prevClient.current = { x: clientX, y: clientY };
+        const x = ev.targetTouches[0].clientX;
+        const y = ev.targetTouches[0].clientY;
+        beginPosition.current = { x, y };
+        prevPosition.current = { x, y };
         smoothScroll.current = new SmoothScroll();
-        canClick.current = true;
-        canRightClick.current = true;
-        canLongPress.current = true;
     };
 
     const handleTouchEnd = (): void => {
@@ -222,7 +242,8 @@ const TapArea = (props: {
 
     const className = {
         _: "fixed transition select-none",
-        activeBg: isActive && "bg-blue-500/15",
+        activeBg: "active:bg-blue-500/15",
+        activeBg2: isActive ? "bg-blue-500/15" : undefined,
         props: props.className,
     };
 
@@ -231,21 +252,18 @@ const TapArea = (props: {
             className={Object.values(className).join(" ")}
             style={props.style}
             ref={div}
-            onMouseDown={() => {
-                setIsActive(true);
-            }}
-            onMouseUp={() => {
-                setIsActive(false);
-            }}
-            onMouseLeave={() => {
-                setIsActive(false);
-            }}
             onClick={() => {
-                if (canClick.current) props.onClick();
+                if (!canClick.current) {
+                    canClick.current = true;
+                    return;
+                }
+                props.onClick();
             }}
             onContextMenu={handleContextMenu}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+            // iPhoneでホームバーが表示された際に背景色を消す
+            onTouchCancel={() => setIsActive(false)}
         />
     );
 };

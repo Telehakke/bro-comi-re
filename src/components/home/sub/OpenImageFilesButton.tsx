@@ -1,4 +1,5 @@
 import { atom, useSetAtom } from "jotai";
+import { FileImage } from "lucide-react";
 import { useRef, type JSX } from "react";
 import { ActionAtom, Atom } from "../../../atoms";
 import { FileManager } from "../../../models/fileManager";
@@ -32,9 +33,10 @@ export const OpenImageFilesButton = (): JSX.Element => {
                 }}
             />
             <button
-                className="h-12 rounded-full border px-6"
+                className="flex flex-col gap-2 rounded-2xl border px-4 py-2 text-xs"
                 onClick={() => input.current?.click()}
             >
+                <FileImage className="m-auto size-8" />
                 画像ファイルを開く
             </button>
         </>
