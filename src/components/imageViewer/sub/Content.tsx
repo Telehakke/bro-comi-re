@@ -50,7 +50,11 @@ export const Content = ({
             // 拡大・縮小されるとスクロールする
             applyScroll();
         });
-        observer.observe(body.current, { attributes: true, subtree: true });
+        observer.observe(body.current, {
+            attributes: true,
+            subtree: true,
+            attributeFilter: ["width", "height"],
+        });
         return (): void => observer.disconnect();
     }, [applyScroll, canvas, body]);
 
@@ -70,23 +74,19 @@ const contentStyle = (
     viewerManager: ViewerManager,
 ): CSSProperties => {
     const scale = `${zoomManager.scale}%`;
-    if (viewerManager.isCanvasWiderThanViewer() == null) {
+    if (viewerManager.isImageWiderThanViewer() == null) {
         return { width: "100%", height: "100%" };
     }
     switch (contentFit) {
         case "all":
             return {
-                width: viewerManager.isCanvasWiderThanViewer() ? scale : "100%",
-                height: viewerManager.isCanvasWiderThanViewer()
-                    ? "100%"
-                    : scale,
+                width: viewerManager.isImageWiderThanViewer() ? scale : "100%",
+                height: viewerManager.isImageWiderThanViewer() ? "100%" : scale,
             };
         case "fill":
             return {
-                width: viewerManager.isCanvasWiderThanViewer() ? "100%" : scale,
-                height: viewerManager.isCanvasWiderThanViewer()
-                    ? scale
-                    : "100%",
+                width: viewerManager.isImageWiderThanViewer() ? "100%" : scale,
+                height: viewerManager.isImageWiderThanViewer() ? scale : "100%",
             };
     }
 };
@@ -109,22 +109,30 @@ const CanvasView = ({
         const ctx = canvas.getContext("2d");
         if (ctx == null) return;
 
-        (async (): Promise<void> => {
-            const [img1, img2] = await Promise.all([
-                loadImage(imageBlobManager.currentLeft.blob),
-                loadImage(imageBlobManager.currentRight.blob),
-            ]);
+        Promise.all([
+            loadImage(imageBlobManager.currentLeft.blob),
+            loadImage(imageBlobManager.currentRight.blob),
+        ]).then(([img1, img2]) => {
+            // 描画が間に合わないほどの間隔でファイルが渡された場合、描画をスキップする
             if (!isMounted) return;
 
-            canvas.width = (img1?.width ?? 0) + (img2?.width ?? 0);
-            canvas.height = Math.max(img1?.height ?? 0, img2?.height ?? 0);
-            if (img1 != null) ctx.drawImage(img1, 0, 0);
-            if (img2 != null) ctx.drawImage(img2, img1?.width ?? 0, 0);
-            setViewerManager((v) => v.setCanvas(canvas));
-        })();
+            const width = (img1?.width ?? 0) + (img2?.width ?? 0);
+            const height = Math.max(img1?.height ?? 0, img2?.height ?? 0);
+            setViewerManager((v) =>
+                v.setCanvas(canvas).setImageSize({ width, height }),
+            );
+
+            // canvasのstyleが更新されてから描画することで、
+            // 前の画像と今の画像の縦横比が大きく異なる場合のチラつきを低減する
+            window.setTimeout(() => {
+                canvas.width = width;
+                canvas.height = height;
+                if (img1 != null) ctx.drawImage(img1, 0, 0);
+                if (img2 != null) ctx.drawImage(img2, img1?.width ?? 0, 0);
+            }, 1);
+        });
         return (): void => {
             isMounted = false;
-            setViewerManager((v) => v.setCanvas(null));
         };
     }, [canvasRef, imageBlobManager, setViewerManager]);
 
@@ -169,25 +177,21 @@ const canvasStyle = (
     contentFit: ContentFit,
     viewerManager: ViewerManager,
 ): CSSProperties => {
-    if (viewerManager.isCanvasWiderThanViewer() == null) {
+    if (viewerManager.isImageWiderThanViewer() == null) {
         return { width: "100%", height: "100%", objectFit: "contain" };
     }
     switch (contentFit) {
         case "all":
             return {
-                width: viewerManager.isCanvasWiderThanViewer()
-                    ? "100%"
-                    : "auto",
-                height: viewerManager.isCanvasWiderThanViewer()
+                width: viewerManager.isImageWiderThanViewer() ? "100%" : "auto",
+                height: viewerManager.isImageWiderThanViewer()
                     ? "auto"
                     : "100%",
             };
         case "fill":
             return {
-                width: viewerManager.isCanvasWiderThanViewer()
-                    ? "auto"
-                    : "100%",
-                height: viewerManager.isCanvasWiderThanViewer()
+                width: viewerManager.isImageWiderThanViewer() ? "auto" : "100%",
+                height: viewerManager.isImageWiderThanViewer()
                     ? "100%"
                     : "auto",
             };

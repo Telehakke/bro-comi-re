@@ -1,21 +1,28 @@
 export type ViewerBody = HTMLDivElement | null;
 export type ViewerCanvas = HTMLCanvasElement | null;
+type Size = { width: number; height: number };
 
 export class ViewerManager {
     readonly body: ViewerBody;
     readonly canvas: ViewerCanvas;
+    readonly imageSize: Size | undefined;
 
-    constructor(body: ViewerBody, canvas: ViewerCanvas) {
+    constructor(body: ViewerBody, canvas: ViewerCanvas, imageSize?: Size) {
         this.body = body;
         this.canvas = canvas;
+        this.imageSize = imageSize;
     }
 
     readonly setBody = (body: ViewerBody): ViewerManager => {
-        return new ViewerManager(body, this.canvas);
+        return new ViewerManager(body, this.canvas, this.imageSize);
     };
 
     readonly setCanvas = (canvas: ViewerCanvas): ViewerManager => {
-        return new ViewerManager(this.body, canvas);
+        return new ViewerManager(this.body, canvas, this.imageSize);
+    };
+
+    readonly setImageSize = (size: Size): ViewerManager => {
+        return new ViewerManager(this.body, this.canvas, size);
     };
 
     /** ビューアー内の水平方向の空間の合計 */
@@ -56,15 +63,15 @@ export class ViewerManager {
         return x <= 0 || x >= 100;
     };
 
-    /** ビューアー縦横比よりもキャンバスの方が横に長いかどうか */
-    isCanvasWiderThanViewer = (): boolean | undefined => {
-        if (this.body == null || this.canvas == null) return undefined;
+    /** ビューアー縦横比よりも画像の方が横に長いかどうか */
+    readonly isImageWiderThanViewer = (): boolean | undefined => {
+        if (this.body == null || this.imageSize == null) return undefined;
         if (this.body.clientHeight === 0) return undefined;
-        if (this.canvas.height === 0) return undefined;
+        if (this.imageSize.height === 0) return undefined;
 
         const bodyRatio = this.body.clientWidth / this.body.clientHeight;
-        const canvasRatio = this.canvas.width / this.canvas.height;
-        return bodyRatio <= canvasRatio;
+        const imageRatio = this.imageSize.width / this.imageSize.height;
+        return bodyRatio <= imageRatio;
     };
 
     /** ビューアーをスクロール */
