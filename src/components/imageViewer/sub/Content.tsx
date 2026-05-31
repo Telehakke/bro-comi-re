@@ -122,14 +122,13 @@ const CanvasView = ({
                 v.setCanvas(canvas).setImageSize({ width, height }),
             );
 
-            // canvasのstyleが更新されてから描画することで、
-            // 前の画像と今の画像の縦横比が大きく異なる場合のチラつきを低減する
+            // canvasのstyleを先に更新させるため、描画を遅延する
             window.setTimeout(() => {
                 canvas.width = width;
                 canvas.height = height;
                 if (img1 != null) ctx.drawImage(img1, 0, 0);
                 if (img2 != null) ctx.drawImage(img2, img1?.width ?? 0, 0);
-            }, 1);
+            }, 10);
         });
         return (): void => {
             isMounted = false;
