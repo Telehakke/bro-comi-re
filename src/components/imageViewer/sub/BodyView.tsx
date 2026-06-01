@@ -97,7 +97,7 @@ export const BodyView = ({
                 // ロングプレスの判定をされやすくする
                 const deltaX = Math.abs(beginPosition.current.x - x);
                 const deltaY = Math.abs(beginPosition.current.y - y);
-                if (Math.max(deltaX, deltaY) >= 20) {
+                if (Math.max(deltaX, deltaY) >= 10) {
                     window.clearTimeout(timerId.current);
                 }
 

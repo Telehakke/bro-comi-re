@@ -16,6 +16,7 @@ export const Atom = {
     historyManager: atom(new HistoryManager()),
     imageBlobManager: atom(ImageBlobManager.forCurrent()),
     infoState: atom<Visibility>("visible"),
+    isLandscape: atom(true),
     isOpenSideMenu: atom(false),
     isUserScrolled: atom(false),
     messageManager: atom(MessageManager.create()),

@@ -167,6 +167,7 @@ const ensureHistories = (
 /* -------------------------------------------------------------------------- */
 
 export const TapAreaLengthEnum = {
+    none: { value: "none", label: "-", length: "0px" },
     s: { value: "s", label: "S", length: "75px" },
     m: { value: "m", label: "M", length: "100px" },
     l: { value: "l", label: "L", length: "125px" },

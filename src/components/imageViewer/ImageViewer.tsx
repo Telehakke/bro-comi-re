@@ -1,4 +1,4 @@
-import { atom, useSetAtom } from "jotai";
+import { atom, useAtomValue, useSetAtom } from "jotai";
 import React, { useEffect, useRef, type JSX } from "react";
 import { ActionAtom, Atom } from "../../atoms";
 import { behaveGamepad } from "../../models/behaveGamepad";
@@ -124,9 +124,25 @@ export const ImageViewer = ({
     const scroll = useSetAtom(scrollAtom);
     const moveToLeftPage = useSetAtom(moveToLeftPageAtom);
     const moveToRightPage = useSetAtom(moveToRightPageAtom);
+    const isOpenSideMenu = useAtomValue(Atom.isOpenSideMenu);
+    const setIsLandscape = useSetAtom(Atom.isLandscape);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(orientation: landscape)");
+        setIsLandscape(mediaQuery.matches);
+        const handleChange = (ev: MediaQueryListEvent): void => {
+            setIsLandscape(ev.matches);
+        };
+        mediaQuery.addEventListener("change", handleChange);
+        return (): void =>
+            mediaQuery.removeEventListener("change", handleChange);
+    }, [setIsLandscape]);
 
     useEffect(() => {
         const handleKeyDown = (ev: KeyboardEvent): void => {
+            // メニュー項目をキーボード操作できるよう、メニュー表示中は早期リターン
+            if (isOpenSideMenu) return;
+
             behaveKeyDown({
                 ev,
                 goToLeft: () => goToLeft(),
@@ -152,7 +168,7 @@ export const ImageViewer = ({
             document.body.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("gamepadconnected", gamepadLoop);
         };
-    }, [goToLeft, goToRight, scroll, zoomIn, zoomOut]);
+    }, [goToLeft, goToRight, isOpenSideMenu, scroll, zoomIn, zoomOut]);
 
     return (
         <BodyView

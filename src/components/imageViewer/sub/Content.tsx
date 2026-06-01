@@ -100,6 +100,7 @@ const CanvasView = ({
     const imageBlobManager = useAtomValue(Atom.imageBlobManager);
     const [viewerManager, setViewerManager] = useAtom(Atom.viewerManager);
     const contentFit = useAtomValue(AppStateAtom.contentFit);
+    const isLandscape = useAtomValue(Atom.isLandscape);
 
     useEffect(() => {
         let isMounted = true;
@@ -138,8 +139,7 @@ const CanvasView = ({
         <canvas
             className="m-auto"
             style={{
-                paddingLeft: "env(safe-area-inset-left)",
-                paddingRight: "env(safe-area-inset-right)",
+                ...safeAriaStyle(isLandscape),
                 ...canvasStyle(contentFit, viewerManager),
             }}
             ref={canvasRef}
@@ -169,6 +169,18 @@ const loadImage = async (
         const url = URL.createObjectURL(blob);
         img.src = url;
     });
+};
+
+const safeAriaStyle = (isLandscape: boolean): CSSProperties => {
+    const env = (name: string): string => {
+        return `env(safe-area-inset-${name}, 0px)`;
+    };
+    return {
+        paddingLeft: isLandscape ? env("left") : undefined,
+        paddingRight: isLandscape ? env("right") : undefined,
+        paddingTop: isLandscape ? undefined : env("top"),
+        paddingBottom: isLandscape ? undefined : env("bottom"),
+    };
 };
 
 const canvasStyle = (
