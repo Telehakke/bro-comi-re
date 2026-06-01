@@ -53,7 +53,6 @@ export const Content = ({
         observer.observe(body.current, {
             attributes: true,
             subtree: true,
-            attributeFilter: ["width", "height"],
         });
         return (): void => observer.disconnect();
     }, [applyScroll, canvas, body]);
