@@ -173,7 +173,7 @@ const loadImage = async (
 
 const safeAriaStyle = (isLandscape: boolean): CSSProperties => {
     const env = (name: string): string => {
-        return `env(safe-area-inset-${name}, 0px)`;
+        return `env(safe-area-inset-${name},0)`;
     };
     return {
         paddingLeft: isLandscape ? env("left") : undefined,

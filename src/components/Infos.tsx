@@ -10,10 +10,12 @@ import { Time } from "./Time";
 export const Infos = ({
     paddingLeft,
     paddingRight,
+    paddingTop,
     paddingBottom,
 }: {
     paddingLeft?: string;
     paddingRight?: string;
+    paddingTop?: string;
     paddingBottom?: string;
 }): JSX.Element => {
     const divRef = useRef<HTMLDivElement | null>(null);
@@ -42,13 +44,16 @@ export const Infos = ({
         >
             <div
                 className="fixed top-4 left-4 flex gap-4"
-                style={{ paddingLeft }}
+                style={{ paddingLeft, paddingTop }}
             >
                 <MenuButton />
                 <InvertFilterButton />
                 <FullscreenButton />
             </div>
-            <div className="fixed top-4 right-4" style={{ paddingRight }}>
+            <div
+                className="fixed top-4 right-4"
+                style={{ paddingRight, paddingTop }}
+            >
                 <Time />
             </div>
             <div

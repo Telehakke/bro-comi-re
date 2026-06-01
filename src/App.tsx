@@ -48,11 +48,15 @@ const style = (
 ): Partial<{
     paddingLeft: string;
     paddingRight: string;
+    paddingTop: string;
     paddingBottom: string;
 }> => {
     return {
-        paddingLeft: isLandscape ? "env(safe-area-inset-left)" : undefined,
-        paddingRight: isLandscape ? "env(safe-area-inset-right)" : undefined,
-        paddingBottom: isLandscape ? undefined : "env(safe-area-inset-bottom)",
+        paddingLeft: isLandscape ? "env(safe-area-inset-left,0)" : undefined,
+        paddingRight: isLandscape ? "env(safe-area-inset-right,0)" : undefined,
+        paddingTop: isLandscape ? undefined : "env(safe-area-inset-top,0)",
+        paddingBottom: isLandscape
+            ? undefined
+            : "env(safe-area-inset-bottom,0)",
     };
 };
