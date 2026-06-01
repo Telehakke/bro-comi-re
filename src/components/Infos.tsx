@@ -10,9 +10,11 @@ import { Time } from "./Time";
 export const Infos = ({
     paddingLeft,
     paddingRight,
+    paddingBottom,
 }: {
-    paddingLeft: string;
-    paddingRight: string;
+    paddingLeft?: string;
+    paddingRight?: string;
+    paddingBottom?: string;
 }): JSX.Element => {
     const divRef = useRef<HTMLDivElement | null>(null);
     const [infoState, setInfoState] = useAtom(Atom.infoState);
@@ -51,7 +53,7 @@ export const Infos = ({
             </div>
             <div
                 className="fixed inset-x-0 bottom-0"
-                style={{ paddingLeft, paddingRight }}
+                style={{ paddingLeft, paddingRight, paddingBottom }}
             >
                 <Progress />
             </div>
