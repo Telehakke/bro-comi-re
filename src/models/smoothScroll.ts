@@ -1,25 +1,14 @@
-const LENGTH = 10;
-const INIT_VALUE = [...Array(LENGTH)].map(() => 0);
-
 export class SmoothScroll {
-    private value: { x: number[]; y: number[] };
+    private readonly max = 1;
+    private readonly increaseValue = 0.1;
+    private weighting = 0;
 
-    constructor() {
-        this.value = { x: [...INIT_VALUE], y: [...INIT_VALUE] };
-    }
-
-    readonly add = (x: number, y: number): void => {
-        this.value.x.shift();
-        this.value.x.push(x);
-        this.value.y.shift();
-        this.value.y.push(y);
-    };
-
-    readonly averageX = (): number => {
-        return this.value.x.reduce((acc, v) => acc + v, 0) / LENGTH;
-    };
-
-    readonly averageY = (): number => {
-        return this.value.y.reduce((acc, v) => acc + v, 0) / LENGTH;
+    readonly position = (x: number, y: number): [number, number] => {
+        console.log(this.weighting);
+        if (this.weighting >= this.max) {
+            return [x, y];
+        }
+        this.weighting += this.increaseValue;
+        return [x * this.weighting, y * this.weighting];
     };
 }

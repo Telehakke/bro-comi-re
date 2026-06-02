@@ -169,11 +169,8 @@ const TapArea = (props: {
 
             const diffX = prevPosition.current.x - x;
             const diffY = prevPosition.current.y - y;
-            smoothScroll.current.add(diffX, diffY);
-            props.onScroll({
-                x: smoothScroll.current.averageX(),
-                y: smoothScroll.current.averageY(),
-            });
+            const [newX, newY] = smoothScroll.current.position(diffX, diffY);
+            props.onScroll({ x: newX, y: newY });
             prevPosition.current = { x, y };
         };
 
@@ -181,12 +178,11 @@ const TapArea = (props: {
             // 背景要素にホイールイベントが伝播するのを止める
             ev.preventDefault();
 
+            const deltaX = ev.deltaX;
+            const deltaY = ev.deltaY;
             setIsActive(true);
-            smoothScroll.current.add(ev.deltaX, ev.deltaY);
-            props.onScroll({
-                x: smoothScroll.current.averageX(),
-                y: smoothScroll.current.averageY(),
-            });
+            const [newX, newY] = smoothScroll.current.position(deltaX, deltaY);
+            props.onScroll({ x: newX, y: newY });
             window.clearTimeout(timerId.current);
             timerId.current = window.setTimeout(() => {
                 smoothScroll.current = new SmoothScroll();

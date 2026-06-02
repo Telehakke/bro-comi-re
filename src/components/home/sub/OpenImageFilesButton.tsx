@@ -17,6 +17,18 @@ export const OpenImageFilesButton = (): JSX.Element => {
     const input = useRef<HTMLInputElement | null>(null);
     const openImageFiles = useSetAtom(openImageFilesAtom);
 
+    const className = {
+        _: "rounded-2xl px-4 py-2 text-xs transition",
+        flex: "flex flex-col gap-2",
+        bg: "bg-white dark:bg-neutral-900",
+        hoverBg: "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+        activeBg: "active:bg-neutral-200 dark:active:bg-neutral-700",
+        border: "border border-neutral-300 dark:border-neutral-600",
+        focusBorder: "focus-visible:border-transparent",
+        outline:
+            "-outline-offset-2 outline-blue-500/75 focus-visible:outline-2",
+    };
+
     return (
         <>
             <input
@@ -33,7 +45,7 @@ export const OpenImageFilesButton = (): JSX.Element => {
                 }}
             />
             <button
-                className="flex flex-col gap-2 rounded-2xl border px-4 py-2 text-xs"
+                className={Object.values(className).join(" ")}
                 onClick={() => input.current?.click()}
             >
                 <FileImage className="m-auto size-8" />
