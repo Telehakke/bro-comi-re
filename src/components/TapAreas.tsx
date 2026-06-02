@@ -143,6 +143,7 @@ const TapArea = (props: {
     const smoothScroll = useRef(new SmoothScroll());
     const canClick = useRef(true);
     const canRightClick = useRef(true);
+    const canLongPress = useRef(true);
     const [isActive, setIsActive] = useState(false);
 
     useEffect(() => {
@@ -210,11 +211,16 @@ const TapArea = (props: {
             return;
         }
         props.onSubClick();
+        canLongPress.current = false;
     };
 
     const handleTouchStart = (ev: React.TouchEvent<HTMLDivElement>): void => {
         setIsActive(true);
         timerId.current = window.setTimeout(() => {
+            if (!canLongPress.current) {
+                canLongPress.current = true;
+                return;
+            }
             props.onSubClick();
             canClick.current = false;
             canRightClick.current = false;
@@ -226,6 +232,7 @@ const TapArea = (props: {
         smoothScroll.current = new SmoothScroll();
         canClick.current = true;
         canRightClick.current = true;
+        canLongPress.current = true;
     };
 
     const handleTouchEnd = (): void => {

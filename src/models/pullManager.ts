@@ -11,6 +11,10 @@ export class PullManager {
         this.count += value;
     };
 
+    readonly reset = (): void => {
+        this.count = 0;
+    };
+
     readonly canLeftPull = (): boolean => {
         return this.count < -TRIGGER;
     };

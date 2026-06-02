@@ -4,7 +4,6 @@ export class SmoothScroll {
     private weighting = 0;
 
     readonly position = (x: number, y: number): [number, number] => {
-        console.log(this.weighting);
         if (this.weighting >= this.max) {
             return [x, y];
         }
