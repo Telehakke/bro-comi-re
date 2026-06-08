@@ -153,15 +153,16 @@ export const ImageViewer = ({
         };
         document.body.addEventListener("keydown", handleKeyDown);
 
-        const gamepadLoop = (): void => {
+        const gamepadLoop = (ev: GamepadEvent): void => {
             behaveGamepad({
+                ev,
                 goToLeft: () => goToLeft(),
                 goToRight: () => goToRight(),
                 zoomIn: () => zoomIn(),
                 zoomOut: () => zoomOut(),
                 scroll: (x, y) => scroll(x, y),
             });
-            requestAnimationFrame(gamepadLoop);
+            requestAnimationFrame(() => gamepadLoop(ev));
         };
         window.addEventListener("gamepadconnected", gamepadLoop);
         return (): void => {

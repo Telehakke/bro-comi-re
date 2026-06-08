@@ -1,13 +1,15 @@
 const prevPressed: boolean[] = [];
 
 export const behaveGamepad = (props: {
+    ev: GamepadEvent;
     goToLeft: () => void;
     goToRight: () => void;
     zoomIn: () => void;
     zoomOut: () => void;
     scroll: (x: number, y: number) => void;
 }): void => {
-    const gamepad = navigator.getGamepads()[0];
+    const index = props.ev.gamepad.index;
+    const gamepad = navigator.getGamepads()[index];
     if (gamepad == null) return;
 
     gamepad.buttons.forEach((b, i) => {
