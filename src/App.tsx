@@ -18,7 +18,7 @@ export const App = (): JSX.Element => {
 
     if (shouldShowViewer) {
         return (
-            <div id="viewer" style={{ scrollbarWidth: "none" }}>
+            <div style={{ scrollbarWidth: "none" }}>
                 <ImageViewer body={body} canvas={canvas} />
                 <Notification />
                 <div
