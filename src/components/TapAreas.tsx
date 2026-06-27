@@ -144,6 +144,7 @@ const TapArea = (props: {
     const canClick = useRef(true);
     const canRightClick = useRef(true);
     const canLongPress = useRef(true);
+    const canTouchMove = useRef(false);
     const [isActive, setIsActive] = useState(false);
 
     useEffect(() => {
@@ -161,18 +162,20 @@ const TapArea = (props: {
             const x = ev.targetTouches[0].clientX;
             const y = ev.targetTouches[0].clientY;
 
-            // ロングプレスの判定をされやすくする
             const deltaX = Math.abs(beginPosition.current.x - x);
             const deltaY = Math.abs(beginPosition.current.y - y);
-            if (Math.max(deltaX, deltaY) >= 10) {
-                window.clearInterval(timerId.current);
-            }
-
             const diffX = prevPosition.current.x - x;
             const diffY = prevPosition.current.y - y;
+            prevPosition.current = { x, y };
+
+            if (!canTouchMove.current && Math.max(deltaX, deltaY) < 10) {
+                return;
+            }
+
+            canTouchMove.current = true;
+            window.clearInterval(timerId.current);
             const [newX, newY] = smoothScroll.current.position(diffX, diffY);
             props.onScroll({ x: newX, y: newY });
-            prevPosition.current = { x, y };
         };
 
         const handleWheel = (ev: WheelEvent): void => {
@@ -233,6 +236,7 @@ const TapArea = (props: {
         canClick.current = true;
         canRightClick.current = true;
         canLongPress.current = true;
+        canTouchMove.current = false;
     };
 
     const handleTouchEnd = (): void => {
