@@ -168,7 +168,7 @@ const TapArea = (props: {
             const diffY = prevPosition.current.y - y;
             prevPosition.current = { x, y };
 
-            if (!canTouchMove.current && Math.max(deltaX, deltaY) < 10) {
+            if (!canTouchMove.current && Math.max(deltaX, deltaY) < 20) {
                 return;
             }
 
